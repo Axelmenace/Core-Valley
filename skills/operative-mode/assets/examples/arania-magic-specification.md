@@ -251,3 +251,478 @@ Every technique of every type (breathing technique, martial technique, spell, pr
   - Wyric Oaths;
   - Teria;
   - the institutions (Great Clans, Templar Orders, Adventurer Guilds).
+
+---
+
+## SPEC-Breathwork · v1.0.0
+
+### A. Identity
+- **Name:** Breathwork. "The art of channeling Prana across the meridians of the body via the usage of Breathing Techniques" [BREATHWORK].
+- `I` **Seed:** breath turns Prana into a body beyond the human, one rung at a time.
+- **Boundary:**
+  - *Covered:* cultivation (Prana Base), Prana Replenishment, breathing techniques, martial techniques, prana skills, Aura.
+  - *Excluded:* spells (Arcana), Powers (Intentwork), formulae (Alchemy).
+- `I` **Mundane Baseline:** Earth physics.
+
+### B. Mechanism Core
+- **Substrate:** Prana, held in the Root Aperture.
+- **Operation:**
+  1. *Activation:* the Mudrā–Mantra–Mandala rite (hand seal, the technique's name spoken aloud, its mandala visualized) starts the breathing technique.
+  2. *Channeling:* Prana circulates through open meridians, from one open acupoint to the next.
+  3. *Effect:* the body is enhanced in proportion to the volume of Prana being channelled. Prana substitutes for muscle and does not alter the body, which lets enhancement pass the human limit. Every cultivator gains strength, and the technique's type adds its own enhancement.
+  4. *Techniques:* martial techniques and prana skills can be used only while channeling [BREATHWORK; ARTIFICES].
+- **Invariants:**
+  - Prana Level and Sublevel set the *quantity* of the reserve; Realm sets its *quality*.
+  - Each realm step resets the reserve's capacity to its base [PRANA BASE].
+  - Each Aperture holds only its own colour of Prana [PRANA].
+  - Enhancement is linear in the volume being channelled.
+  - A Style's techniques share one effect and one meridian architecture, and differ only in Magnitude.
+  - Most breathing techniques use less than 10% of the body's meridians [BREATHING TECHNIQUES].
+- **Prohibitions:**
+  - A breathing style is never changed.
+  - Without channeling there is no technique.
+  - No Prana Control means no technique.
+  - Shades never cultivate [SHADE CORES].
+  - Prana does not alter the body's tissue.
+- **Interfaces:** Arcana and Alchemy draw on the same reserve and the same stones (M1). The One Power substitutes for Prana (M4). Wyra requires Breathwork (M5).
+- **Generativity:** Mixed. The nine Breathing Types are Enumerated. Martial Styles, Prana Styles and Paths are a Grammar.
+
+### C. Variables
+| Variable | Value | Reason |
+| --- | --- | --- |
+| Transference | 1 | Roots are inborn and unchangeable. Techniques move only as sprites (M6) |
+| Prevalence | 2 | Highborn cultivators only. Lowborn are more than 90% of the population |
+| Source | Internal · renewable | The Root Aperture. **Renewal:** Natural Replenishment from the atmosphere (fastest at leylines); Spirit Stone Replenishment (a thumb-sized stone saves about a week of natural replenishment); monster flesh; Gathering Mixtures (M5). **Depletion:** no channeling and no techniques; an Intented may use S1 |
+| Flux | Individual + · world 0 `I` | Progression up to the T1 plateau. `I` No world-level drift is declared |
+| Naturalness | 4 | All living things hold Prana. Crystallites rise with weather and terrain. Monsters cultivate passively [CULTIVATION; MONSTERS] |
+| Ease of Use | 3 | The activation rite takes up to half a minute. Meridians open only through sustained practice. Perfect Proficiency needs practice, experience and insight. No one can keep a breathing technique up around the clock [CULTS] |
+| Reliability | 3 `I` | Techniques perform at their rank and Quality. Variance comes only from Proficiency and DP2 |
+| Consistency | 3 | Familial: by Breathing Type, element, Linasul nature and Path |
+
+### D1. Effect Grammar
+
+**Domains.**
+- **Breathing Styles:** nine Types, each fixed to a Mudrā, an enhancement and an element. Sereia (Investiture; Kinetic Force; Fire; Sul) … Kei (Disposition; Physical Balance; Shadow; Sul). The full table is in [BREATHING TECHNIQUES] and [CULTIVATOR PATHS]. Each Type defines a class: Fighters, Tankers, Strikers, Walkers, Seers, Rangers, Watchers, Dancers, Standers.
+- **Martial Styles:** Weapon, Body or Movement, by element (Earth, Wind, Water, Fire, Aether, Shadow) and subelement. Weapon and Movement techniques have no Mortal rank [MARTIAL ARTS].
+- **Prana Styles:** the Seven Prime Prana Skills, which are Spiritual Sense, Prana Projection, Arcane Body, Flight, Special Domain, Spatial Travel and Core Space [PRANIC SKILLS].
+- **Paths:** specialties within a class ("as many as there are stars"), each expressing a Maxim, each with its own Technique Set [CULTIVATOR PATHS].
+- A request lies in the Domain of its Style and element. A request outside the cultivator's root element exists in the system but is inaccessible to that cultivator.
+
+**Power Axes.**
+- *Primary:* Rank on the Common Scale, gated by Prana Base. The Rank of a martial technique reflects its Prana Base requirement, not its Prana Control requirement [MARTIAL ARTS].
+- *Secondary:* Quality, gated by Prana Control (M3).
+- *Tertiary:* Proficiency (M3).
+
+**Envelopes and Benchmarks.**
+
+| Rung | Benchmark (corpus) | `I` Magnitude anchor | `I` Gate Ceiling |
+| --- | --- | --- | --- |
+| 0 | Basic strength and endurance; Internal Energy only; Unique Mortal breathing techniques carry Internal Skills | Peak human | 1 |
+| 1 | Copper Spiritual Sense | Breaks timber | 1 |
+| 2 | Silver Spiritual Sense; the vortex becomes a stable platform | Breaks stone | 1 |
+| 3 | Gold Prana Projection ("beams and bullets … devastating damage"); Golden Space (a few soul-bonded items) | Breaches a wall | 2 |
+| 4 | Adamantine Arcane Bodies; True Space (a palace or courtyard) | Fells a keep | 2 |
+| 5 | Mithril Flight; Special Domain (99% hit chance inside); Seed World (kilometres) | Breaks a town's walls | 3 |
+| 6 | Immortal Spatial Travel; Minor World (more than 100× a Seed World; can host cultivators) | Levels a city district | 3 |
+
+**Rules for Prana skills.**
+- A Prana skill can be used at any Prana Base once its minimum is met [PRANIC SKILLS].
+- Each Prana skill has dimensions of its own, priced by the same Cost Function:
+  - *Flight:* Duration, Force, Proficiency.
+  - *Spatial Travel:* Stability, Distance, Accuracy.
+  - *Arcane Body:* Durability and Sapience, split from the same Prana.
+
+**Cost Function.** `I`
+- **Unit:** one **Draw** is the Prana a Common martial technique of rank *r* spends per use, measured in rank-*r* Prana.
+- **Per use:** martial technique, 1 Draw. Prana skill, 3 Draws: Projection "consumes a critical amount" [PRANIC SKILLS].
+- **Channeling:** 1 Draw per minute per step of volume (volume 1–5).
+- **Quality efficiency:** Uncommon ×0.8, Rare ×0.65, Unique ×0.5. Higher Quality "is more efficient in its Prana usage" [BREATHING TECHNIQUES].
+- **Reserve capacity:** Level *n* holds 10*n* Draws of the realm's Prana, plus 2 for each sublevel past Early. It resets at each new realm.
+- **Sye:** Great Techniques and Arcane Bodies add a Sye surcharge (see Combination below and the corpus).
+- **Price vector:** ⟨Prana Draws, Sye, activation time⟩.
+
+**Modifiers.**
+- *Voluntary restriction of Prana Base:* lowers Access, and with it the aura [PRANA BASE].
+- *Channeling volume (1–5):* scales enhancement linearly and costs as above.
+- *Artifice purity:* weapon techniques only (M5).
+
+**Access Rule.**
+
+| Gate | Kind |
+| --- | --- |
+| A Spiritual Root is required to cultivate. Roots are a granular form of Upper Soul Depth, and only Highborn are born with them [SPIRITUAL ROOTS; THE SOUL] | M |
+| A Female Soul cannot activate a Spiritual Root [THE SOUL; SPIRITUAL ROOTS] | M |
+| Roots awaken at twelve, or never [SPIRITUAL ROOTS] | M |
+| The breathing technique's element must match the root's element. One breathing technique per root. The style is fixed for life. A breakthrough requires the next rank of the same style [BREATHING TECHNIQUES] | M |
+| Incompatible elements (Water/Fire, Earth/Wind, Aether/Shadow) cannot be absorbed [CULTIVATION] | M |
+| Meridians must be opened through practice before a technique that uses them [BREATHING TECHNIQUES] | M |
+| Prime Prana Skills by realm: Spiritual Sense from rung 1; Projection and Core Space from 3; Arcane Body from 4; Flight and Special Domain from 5; Spatial Travel at 6 [PRANIC SKILLS] | M |
+| Ghouls cultivate only by Blood Cultivation, and cannot replenish from spirit stones or Natural Prana [GHOULS] | M |
+| Blood Cultivation is universally banned [CULTIVATION] | I |
+| Adventurer Halls and Templar Orders admit by root tier [ADVENTURERS; TEMPLARS] | I |
+
+**Progression.** T1 and T2. Bottlenecks fall at the Intermediary Levels. Transitions use T5 with DP1 at rung 3 and above.
+
+**Combination Rule.**
+- **Great Techniques:** any number of techniques of any types, ranks and qualities, used together for one effect. They are ranked by Magnitude (Mortal … Immortal) and Complexity (Common … Unique), and their Sye cost is "far greater" than a single technique of equal effect [GREAT TECHNIQUES].
+  - `I` *Surcharge:* 1 Sye unit per constituent per use, at the constituent's rung.
+  - *Conversion:* a Great Technique converts into a singular technique with little chance of failure (`I` Near-certain). This loses the use of the constituents and lowers the Sye cost.
+- **Several roots:** a cultivator with several roots runs one breathing technique per root, and so may use several classes [BREATHING TECHNIQUES].
+
+**Apex Rule.** The Ascendant Realm, with Spatial Travel and the Minor World. Beyond it lies the Empyrean, which expels the cultivator from the Middle Plane.
+
+**Signature Effects.**
+- **Unique Breathing Techniques:** one special ability each (a prana skill, or at Mortal rank an Internal Skill) [BREATHING TECHNIQUES].
+- **Physiques:** innate embodiments of Prana. They are Mortal, Superior or Supreme, impose burdens in proportion to their gifts, and "a person with a physique rarely owns their own life" [PHYSIQUES]. Each is carded on its own, and each is a Retained Disparity.
+- **Shade Cores:** a dead cultivator's Shade keeps the Prana Core, the Aperture and the sprites, and uses its techniques undiminished, but never cultivates again [SHADE CORES].
+
+**Stages and Products.**
+- **Activation** (the rite): `I` 10 to 30 seconds by Proficiency (No 30 s … Perfect 10 s). It is interrupted by restraint of the hands or the voice, or by loss of concentration on the mandala.
+- **Maintenance** (channeling): drains per the Cost Function.
+- **Release:** a technique, priced per use.
+- **Products:** spirit stones charged by injected Prana (S2), and beast cores (the input to SPEC-Alchemy).
+
+### E. Limitations
+- **Costs:** Prana; Sye for Great Techniques, Arcane Bodies and Aura Pressure; activation time.
+- **Consequences:**
+  - *Prana Deviation:* from refining or consuming above one's Prana Control [MONSTERS], and in a disturbed Spellrituale [ARCANA].
+  - *Heavenly Tribulations* (DP1).
+  - *Sye Deviation* (Radiant Strings).
+  - *Plateau* (T1).
+- **Countermeasures:**
+  - Cultivators are ordinary humans whenever they are not channeling.
+  - Hazard formulae.
+  - Shield Techniques are the main form of defence [MARTIAL ARTS].
+  - Mind Barrier Extracts against Aura Pressure.
+
+---
+
+## SPEC-Intentwork · v1.0.0
+
+### A. Identity
+- **Name:** Intentwork, "usage of the One Power … in contrast to Breathwork" [INTENTWORK].
+- `I` **Seed:** a will that grasps a truth draws on the force beneath reality.
+- **Boundary:** Intents, Maxims, Powers, and the One Power. Prana enters only through substitution S1.
+
+### B. Mechanism Core
+- **Substrate:** the One Power. **Intent** is "the imprint of a cultivator's will upon reality … meaning made force"; it is not emotion, technique or raw power.
+- **Operation:**
+  1. An individual comprehends a Truth (of a weapon, of a Real Domain, or of a moral principle), which forms an Intent.
+  2. Spending Sye opens access to the One Power, to the degree the Sea of Consciousness allows.
+  3. The Intented shapes the One Power into **Powers**, whose form follows the Intent.
+  4. Full embodiment of a principle turns the Intent into a **Maxim**, and the Intented becomes an Enlightened.
+- **Invariants:**
+  - How much of the One Power can be reached depends on the Sye that can be spent, which is the Sea's rank.
+  - Control over it depends on Sye Control.
+  - "Unlike techniques and spells, the power of a Power can be increased with the One Power."
+  - Intented do not use breathing techniques.
+- **Prohibitions:** Powers use the One Power only.
+- **Metaphysical frame:** the One Maxim emanates into Supreme Maxims, then Great Maxims, then Maxims, then Intents. Individuals comprehend a Maxim, never the One Maxim [THE ONE MAXIM]. `I` No Intented reaches beyond a Maxim; this is the system's Apex.
+- **Generativity:** Grammar.
+
+### C. Variables
+| Variable | Value | Reason |
+| --- | --- | --- |
+| Transference | 0 | Comprehension cannot be handed over. Some physiques carry it from birth |
+| Prevalence | 1 `I` | Rare relative to cultivators |
+| Source | Internal · renewable | Sye, in the Sea of Consciousness. **Depletion Effect:** overuse can leave the user unconscious for days. `I` Sye renews with rest at the same rate as Natural Replenishment, scaled to the Sea |
+| Flux | Individual + | Comprehension deepens |
+| Naturalness | 3 `I` | The One Power is part of reality's structure. Intents are not found in nature |
+| Ease of Use | 4 `I` | Comprehension is the barrier. Use, once comprehended, needs no rite |
+| Reliability | 3 `I` | |
+| Consistency | 2 | The Powers of Moral Intents are "wholly unique" |
+
+### D1. Effect Grammar
+- **Domains:**
+  - **Weapon Intents:** Sword, Saber, Shield and others. Their Powers resemble Weapon Techniques.
+  - **Domain Intents:** one Real Domain each. Their Powers resemble Spells.
+  - **Moral Intents:** Killing, King's, Heroic and others. Their Powers are unique.
+- **Power Axes:**
+  - *Primary:* rank, gated by the Sea of Consciousness (M2).
+  - *Secondary:* Quality. Power Sprites carry the same four Qualities (M6).
+  - *Tertiary:* Proficiency, set by Sye Control. `I` Elementary gives Low, Intermediary Medium, Advanced High and Expert Perfect. A newly comprehended Intent starts at No Proficiency.
+- **Envelope:** a rank-*r* Power is equal in strength to a rank-*r* technique (E2), so it shares SPEC-Breathwork's Envelopes.
+  - **Malleability:** `I` the Magnitude a Power actually reaches is ¼ of its Envelope at Elementary Sye Control, ½ at Intermediary, ¾ at Advanced and the full Envelope at Expert.
+- **Cost Function:** `I` Price = ⟨Sye: 1 unit of rank-*r* Sye per use, ×Quality efficiency as in Breathwork⟩. A Sea of rank *r* holds 20 units at its rank. Comprehending an Intent also costs Sye, more for stronger Intents [INTENTWORK].
+- **Access Rule:**
+  - Comprehension. Physiques may grant it on awakening.
+  - Base Sye Capacity is similar across people, except for the Intented [SYE].
+  - Sye Control is inherited (T4).
+  - The corpus states no gate of root, soul sex or birth class for Intentwork, so by Condition Invariance none applies.
+- **Ranks:** Savant, Preceptor, Seer, Oracle, Sage, Archsage, Enlightened. Each is set by its Sea, and each reaches the One Power at the level of the equivalent Prana Realm.
+- **Combination:** Powers count as techniques for Great Techniques [GREAT TECHNIQUES].
+- **Apex:** the Enlightened, who has an Immortal Sea and a Maxim, and stands equal to an Immortal.
+
+### E. Limitations
+- **Costs:** Sye.
+- **Consequences:** unconsciousness from Sye depletion.
+- **Countermeasures:** `I` none beyond those that act on Sye generally: Aura Pressure, and Mind Barrier Extracts in defence.
+
+---
+
+## SPEC-Arcana · v1.0.0
+
+### A. Identity
+- **Name:** Arcana: "all spells (arcane techniques) … are merely the manipulation of Real Domains" [ARCANA].
+- `I` **Seed:** reality, written in the old tongue and paid for in Prana, through a power that holds the Domain.
+- **Boundary:** spells, spellmarks, arrays and Spellrituales; access through Dominators (Luminaries and other Revenants, Bloodline Ancestors, Relics).
+
+### B. Mechanism Core
+- **Substrate:** Real Domains. A Domain is a category of reality (Personal, Organizational, Material, Phenomenal, Elemental or Conceptual) that has been nourished by enough Sye [THE DOMAINS].
+- **Operation:** spellcraft "bears a striking resemblance to coding, however … it is reality which is directly being manipulated" [ARCANA].
+  1. **Spellforming:** chant the incantation (a poem in Eldred Speak, held by the Arcane sprite), spending Prana and Prana Control. The result is a spellrune inscribed on material.
+  2. **Spellcasting:** visualize the spellrune while near its spellmark.
+- **Processes:** Transmutation (turning any Real Domain into one under one's control); Transformation (reconfiguring Domains already under control); Conjuration (creating one's own Real Domain from nothing). A spell may use one, two or all three.
+- **Spell nature:** enchantment, neutral or curse.
+- **Invariants:**
+  - Each spell uses the Domains of a single Dominator [TEMPLARS].
+  - The burden of Prana and Prana Control falls only on forming, never on casting.
+  - A spell's effect is maintained with Prana, and can be extended with enough of it.
+  - Spell Styles share one effect and differ only in Magnitude.
+- **Prohibitions:**
+  - The Ultimate Domain has no Dominator, no Relic and no Bloodline, and cannot be dominated [THE DOMAINS].
+  - Low-grade metals cannot hold high-tier spells.
+  - No spell crosses Dominators.
+- **Interfaces:** Prana is shared with Breathwork; Sye feeds the Domains (M7); mithril (M5).
+- **Generativity:** Grammar. Spellcraft "mostly comes in the form of slight variations on existing spells".
+
+### C. Variables
+| Variable | Value | Reason |
+| --- | --- | --- |
+| Transference | Capability 2 · spellmarks 4 | **Capability:** gained through patronage, a Bloodline (inherited, or passed on through Essence Blood) or possession of a Relic. **Spellmarks:** anyone near one who visualizes its rune correctly can cast it, which is why "it is simple courtesy among spellcasters to keep their distance from one another" |
+| Prevalence | 2 | "All spellformers are Highborn cultivators" (a Derived gate, below) |
+| Source | Mixed: internal renewable Prana; agentive, shared access | **Forming** spends the caster's Prana (M1). **Access** is lent by a Dominator whose power rests on its Share Ledger (M7) |
+| Flux | Per Domain `I` | Battleground Domains move. Stable Domains hold |
+| Naturalness | 2 `I` | |
+| Ease of Use | 3 | Incantations are memorized as poems. Forming takes from under a minute to an hour. Control is gated by Complexity |
+| Reliability | 3 `I` | Spellmarks perform as formed. Mithril and nearby rival casters are the variance |
+| Consistency | 3 `I` | Familial, by Dominator and affinity |
+
+### D1. Effect Grammar
+
+**Domains and the Domain Registry.**
+- The Registry is kept in the Record. Real Domains are ranked Supreme, Greater and Lesser, and each entry records its Sye count, its Dominators with their shares, and whether it is Stable or a Battleground [DOMINATORS].
+- **Genesis Rule:** a Domain becomes a Real Domain when its Sye passes the threshold, and it is then open to domination by any Dominator [THE DOMAINS; DOMINATORS].
+  - `I` *Thresholds:* Held for a Lesser Domain, Strong for a Greater, Great for a Supreme, on the M7 scale.
+  - `I` *Lapse:* a Domain lapses when it falls below its threshold for a full year.
+- **Affinity:** mundane spells can be formed by anyone; special spells require an affinity, some of them elemental, set by the root's element [ARCANA].
+
+**Power Axes.**
+- *Primary:* Tier I–VI (Cantrip, Charm, Gramarie, Ensorcell, Archspell, Spiel), gated by Prana Base, and **capped by the source of access**: the Dominator's rank, the Bloodline's quality or the Relic's quality (E4).
+- *Secondary:* Complexity (Common … Unique), gated by Prana Control.
+- `I` Each process beyond the first adds one step of Complexity.
+
+**Cost Function.** `I`
+- *Forming:* Prana = 1 Draw at the tier's rung × Complexity factor (Common 1, Uncommon 1.5, Rare 2, Unique 3).
+- *Forming time:* Tier I 1 min, II 5, III 10, IV 20, V 40, VI 60, consistent with "short of a minute … to an hour" [ARCANA].
+- *Casting:* no Prana.
+- *Maintenance:* extending the effect costs 0.1 Draw per base duration added.
+- **Price vector:** ⟨forming Prana, forming time, spellmark metal, casting 0, extension Prana⟩.
+
+**Spellrituale.**
+- Joint forming shares the Prana and Control burden and "drastically" lowers the Control demanded of each spellformer. It requires trust and synchronicity; a disturbance in a few members can cause Prana deviation in all of them [ARCANA].
+- `I` The forming Prana is divided equally. The Control requirement falls one step with 3 or more participants and two steps with 9 or more.
+- `I` Each member draws for disturbance at Remote, or Unlikely if trust is not Established. A disturbance is a Failure with Opening for everyone.
+
+**Access Rule.**
+
+| Gate | Kind |
+| --- | --- |
+| Access to a Real Domain through one of: (a) patronage by a Revenant, for templars; (b) an active Bloodline, giving the Domains of its Ancestors; (c) physical possession of a Relic plus a Soul Imprint [TEMPLARS; BLOODLINES; RELICS] | M |
+| A templar can receive the patronage of only one Revenant, and a Revenant patronizes only one order [TEMPLARS] | `I` M for the templar (it follows from "one Dominator per spell"); I for "one order per Revenant" |
+| A higher-quality Bloodline needs a higher root tier to activate; no Bloodline exists at Mortal tier [BLOODLINES] | M |
+| A Bloodline without its spells gives nothing: "having a Bloodline doesn't matter if you don't have the requisite spells" [BLOODLINES] | M |
+| Arcane Sprites must be refined (M6) | M |
+| "All spellformers are Highborn cultivators" [ARCANA] | D (from forming needing Prana Base, roots belonging only to the Highborn, and roots requiring a male soul to activate): M |
+| Clans guard their most important spells as an existential secret [BLOODLINES]; Halls hold Relics as collective property [ADVENTURERS] | I |
+
+**Stages and Products.**
+
+| Product | Vessel | Trigger | Shelf | Uses | Transferability |
+| --- | --- | --- | --- | --- | --- |
+| **Spellmark** | A small metal piece of the tier's grade: Copper … Orichalcum | Any spellcaster nearby who visualizes the rune correctly | `I` Robust | One; the rune fades | 4 |
+| **Array** | The surface on which the whole incantation is inscribed. Inscribing counts as forming, and a Spellrituale may do it | A declared condition, such as coming within range | `I` As the surface lasts | One | 0, fixed in place |
+| **Arsenal** | A pouch of spellmarks | — | — | — | Inventory |
+
+- **Release** is resolved by the Odds and Price of casting alone (§25.8.4).
+- Templar orders form high-tier spellmarks by Spellrituale and trade them for spirit stones in the wider spellformer community [ARCANA].
+
+**Envelopes and Benchmarks.** Envelopes are shared with SPEC-Breathwork rung for rung (E3: tier I is rung 1, and so on). `I` The Benchmarks are wards, the corpus's principal use of arrays [ARCANA]: I a door, II a hall, III a gatehouse, IV a castle's curtain wall, V a borough, VI a charter city. All are Common in Complexity.
+
+**Pricing one request** (the Procedure of §25.8.1). A Golden Core templar with Medium Prana Control asks to ward a gatehouse against fire for a night.
+- **Domain:** Fire, through his patron's Domains, so the patron must dominate a Fire Domain.
+- **Placement:** one gatehouse sits in a Gramarie's Envelope, so Tier III. Protection (Transformation) plus pushing back flame (Conjuration of a barrier) is two processes, which makes it Uncommon.
+- **Parity:** passes against the Tier III Benchmark.
+- **Access:** Tier III needs Gold Prana Base, and he has it; Uncommon needs Medium Control, and he has it; his patron must be at least a Major Apparition.
+- **Price:** 1.5 Gold Draws, 10 minutes of forming, a Gold spellmark, nothing to cast, and extension Prana for each base duration beyond the first.
+- Entered in the Codex.
+
+**Combination.** Spells count as techniques in Great Techniques [GREAT TECHNIQUES]. `I` Any number of spellmarks may be cast in sequence, but no single spell draws on two Dominators.
+
+**Apex.** Tier VI, the Spiel, through a Divine Dominator, Bloodline or Relic. The Ultimate Domain stays beyond reach.
+
+**Signature.** The caster's irises light, and a Prana Trail is left behind (M10).
+
+**Patron Terms (agentive Source).**
+- *Luminaries:* each draws a baseline of Sye from the seignory it patronizes, given freely in exchange for its service [APPARITIONS].
+- *Templars:* they keep their Sacred Oaths, which are Wyric Oaths, by offering subjugated Devourers to their patron. Doing so also increases the patron's power [TEMPLARS].
+- *Default:* `I` breaching the Sacred Oath triggers the Wyric Oathbreach penalty (Maleficent Crystallites in proportion to the oath's Weight, shared with its witnesses [LAW OF WYRIC OATHS 1.2, 12]). Patronage then lapses at the end of the Part in which the breach occurred, unless the patron's Price is met.
+
+*Stake Card: a Luminary* `I`
+- **Want:** a secure, passive flow of Sye; a larger share of its Domains.
+- **Line:** never coerces Sye through Radiant Strings. That is what separates it from a Devourer [APPARITIONS].
+- **Price:** subjugated Devourers and their Domains attributed to it; continued service from its seignory.
+- **Leverage:** access to its Real Domains.
+- **Tell:** its templars' subjugation orders.
+
+*Stake Card: a Devourer* `I`
+- **Want:** Sye, by any means.
+- **Line:** none toward humans.
+- **Price:** a steady supply of Radiant-String victims; Sye volunteered by Great Clans [CULTS].
+- **Leverage:** its Special Domain (99% hit chance within it), and recruits bound to it by Radiant Strings.
+
+**Share Ledger.** For each Real Domain: each Dominator's share, plus whether the Domain is Stable (a monopoly, duopoly or oligopoly holding a majority) or a Battleground (open contest) [DOMINATORS]. Shares move only on the M7 causes. On a Battleground, each contender holds a Clock.
+
+### E. Limitations
+- **Costs:** forming Prana and Control, forming time, incantation memory (the sprite), and spellmark metal.
+- **Consequences:**
+  - Prana Trails, which last for days.
+  - Prana deviation in a disturbed Spellrituale.
+  - Lost knowledge when the Arcane sprite is lost.
+- **Countermeasures:**
+  - Mithril.
+  - Distance: rivals can cast your spellmarks.
+  - Narrative erasure of a caster's patron.
+
+---
+
+## SPEC-Alchemy · v1.0.0
+
+### A. Identity
+- **Name:** Alchemy, "the production of formulae" [ALCHEMY].
+- `I` **Seed:** Prana-touched flora and beast matter, refined into medicine and poison for body, mind and soul.
+- **Boundary:** formulae, and the alchemical refinement of beast cores. Sprite Recipes are a Metaphysic production (M6), not Alchemy.
+
+### B. Mechanism Core
+- **Substrate:** spiritflora (plants under the influence of Prana) and monster parts.
+- **Operation:** graded ingredients go through some of the seven processes, with spirit stones consumed and the alchemist working the tools. The result is a formula in a glass vial, which is drunk or applied and acts on Body, Mind or Soul.
+- **Invariants:**
+  - Every process consumes spirit stones.
+  - Grade is the main determinant of a formula's value, then duration, stability and Scales severity.
+- **Prohibitions:** formulae affect solely the Body, the Mind and the Soul [FORMULAE]. By the Closed Catalogue, they act on nothing else.
+- **Interfaces:** the Couplings out to Breathwork, Sye and Aura (M5).
+- **Generativity:** Production Rule.
+
+### C. Variables
+| Variable | Value | Reason |
+| --- | --- | --- |
+| Transference | Craft 1 · formulae 4 | **Craft:** guild training and initiation. **Formulae:** sold on the market, with Brews in most small settlements |
+| Prevalence | 3 | Brews are everywhere, Remedies in boroughs, Draughts in charter cities, Serums through connections, and only a few Elixirs exist |
+| Source | External · finite | Ingredients and spirit stones, consumed |
+| Flux | 0 `I` | |
+| Naturalness | 4 | Spiritflora grow wild, and lower grades grow with little care |
+| Ease of Use | 3 | Initiates train from 12 to 18; Chemists from 18 to 35; Grand Chemists after 35. There are five Star ranks, and the work needs an athanor, crucible, alembic, mortar and pestle, vials and scales |
+| Reliability | 2 `I` | Toxins, stability and the grade draw are the variance |
+| Consistency | 3 | Six categories, each familial |
+
+### D3. Production Rule
+
+**Inputs.**
+- *Spiritflora:* graded E (dandelion), D (lavender), C (witch hazel), B (ghost orchid), A (moonbloom), S (World Tree Leaf). Condition: Fresh, Preserved, Aged (more or less potent depending on the plant), Degraded. Graveherbs are spiritflora corrupted by miasma.
+- *Monster parts and beast cores:* ranked on the Common Scale.
+- *Normal materials.*
+- *Spirit stones:* by grade.
+
+**Processes.** Calcination, Dissolution, Separation, Conjunction, Fermentation, Distillation, Coagulation.
+
+**Producer.** Star rank 1–5, and the experience ranks above. The guild of the charter city confers rank and initiation.
+
+**Output Space.**
+- **Grade:** Brew, Remedy, Draught, Serum, Elixir.
+- **Category:** Tonic (restorative), Philter (enhancement), Extract (defensive), Mixture (transformative), Corruptant (degradation), Hazard (offensive).
+- **Duration:** Instantaneous, Brief, Short, Medium, Long, Extended, Permanent.
+- **Stability:** Unstable, Fragile, Robust, Timeless.
+- **Scales severity:** None, Mild, Moderate, Severe, Extreme.
+- **Legality:** Unrestricted, Regulated, Controlled, Forbidden, Taboo. Legality is an Institutional gate on trade and use.
+
+**Grade Function.** `I`
+- *Ceiling:* the highest grade reachable is the lower of the alchemist's Star rank (1 Brew … 5 Elixir) and the principal ingredient's ceiling (E or D Brew, C Remedy, B Draught, A Serum, S Elixir).
+- *Odds:* Even when attempting the ceiling grade; Likely one grade below it; Near-certain two or more below. A Degraded principal ingredient costs one rung.
+- *Bands:*
+  - Clean Success: the target grade at its recipe's Stability.
+  - Success at Cost: the target grade, with Stability one step lower or Scales one step worse.
+  - Failure with Opening: one grade lower.
+  - Clean Failure: ruined; ingredients and spirit stones lost.
+
+**Side-Effect Function.**
+- Toxins determine purity. A high degree of toxins can lead to the Scales: an incurable, painful, cancer-like sickness that is fatal at its worst and appears as a thin hard layer on the skin [FORMULAE].
+- `I` *Base severity:* Brew None; Remedy and Draught Mild; Serum and Elixir Moderate. A Degraded input worsens it one step, and Success at Cost may worsen it one more.
+
+**Duration and Stability.** Set per recipe and entered in the Codex.
+
+**Beast core refinement** [MONSTERS].
+- Refining takes days to months, and consumption hours to weeks.
+- Raw consumption is dangerous and gives minimal benefit.
+- Prana Deviation threatens a consumer whose Prana Control is insufficient for the core's realm.
+- `I` Refinement is a Production at the core's rung, with the Star rank needed equal to the rung minus 1, and a minimum of 1.
+
+**Codex.** Opens with the corpus's named classes:
+- Prana Gathering Mixtures, Prana Cultivation Mixtures and Breakthrough Mixtures (one for each realm transition);
+- Meridian Mending Tonics, Soul Repairing Tonics, Deep Clarity Philters, Golden Insight Philters and Mind Barrier Extracts.
+
+**Access Rule.**
+
+| Gate | Kind |
+| --- | --- |
+| "All alchemists are cultivators" [ALCHEMISTS] | `I` I: read as a condition of guild initiation |
+| "All alchemists are Highborn"; "all alchemists are men" [ALCHEMISTS] | D: follows from the cultivator gate together with the root gates of SPEC-Breathwork. Kind I, because it depends on an Institutional gate. If the author reads the cultivator gate as M (the craft itself needs channelled Prana), all three become M by one amendment |
+| Rank through the guild of each charter city [ALCHEMISTS] | I |
+
+### E. Limitations
+- **Costs:** ingredients, spirit stones, time.
+- **Consequences:** the Scales; Prana Deviation from unrefined or over-rank beast cores.
+- **Countermeasures:** formulae of other categories (for example Soul Repairing Tonics against Radiant Strings). Legality.
+
+---
+
+## Lens Sheets
+
+**L1. A Lowborn tenant of a canton.**
+- **Hardness:** 1. **Apparent Rationality:** 1.
+- **Known:**
+  - That cultivators exist: their aura, which can be felt (M10).
+  - That spellcasters' eyes light.
+  - That formulae can be bought (Brews, Remedies).
+- **Believed:**
+  - That cults are wandering humanitarian religious organizations [CULTS] ✗.
+  - The songs of their canton's Luminary (content: Claims; their circulation feeds M7).
+- **Perception:** cultivators are feared and owed deference, under Aura Pressure. The Luminary is a protector.
+
+**L2. A Highborn clansman, Golden Core, of a Major Bloodline.**
+- **Hardness:** 3 in Breathwork; 3 in Arcana where his Bloodline is active; 2 in Alchemy; 1 in Intentwork. **Apparent Rationality:** 3.
+- **Known:**
+  - His own Technique Set (each entry tied to its sprite).
+  - The Common Scale.
+  - His Bloodline's spells, taught within the clan.
+  - The utility of cults [CULTS].
+- **Believed:** `I` the house's own account of its Great Ancestor (a Claim, which circulates and feeds his Bloodline's Domains).
+- **Perception:** cultivation and Bloodline are the substance of Honor, and of the family's survival.
+
+**L3. An Inner Mage of a Gold sect, a holyknight.**
+- **Hardness:** 3 in Arcana (his patron's Domains); 2 in Breathwork. **Apparent Rationality:** 3.
+- **Known:**
+  - The Sacred Oath's Terms.
+  - The subjugation procedure.
+  - How a narrative is constructed and attributed (M7).
+- **Believed:** `I` his order's doctrine of the Supremacy of the Elevated Soul [CULTS] (a Claim, outside the four systems).
+- **Perception:** Devourers are unlawful and must be subjugated and erased. Cults are illegal orders that serve them.
+
+---
+
+## Disclosure Profile
+
+Set by each Mode at ratification (§25.11). Arania offers more Authoritative channels than most settings (M10): an aura that cannot be falsified, Prana Trails, glowing irises, stone colours and the root test. A Mode that pairs a Highborn Character with a Target Hardness below 2 therefore uses Competence Delegation (§25.11): the Character perceives these signs, and the User is told only what they show. A Lowborn Character's Lens (L1) gives Target Hardness 1 naturally.
+
+## Sealing
+
+The author holds this document in full. A Mode played inside Arania seals META-Arania and the four Specifications together at the highest Commitment Level available (§25.12), and reseals them on each Amendment.
