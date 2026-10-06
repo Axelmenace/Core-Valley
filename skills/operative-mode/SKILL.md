@@ -1,6 +1,6 @@
 ---
 name: "operative-mode"
-description: "Operative Mode Framework, Draft 0.4: configure and run collaborative fiction (roleplay, simulation, co-authorship, a standing Operator Posture) as an auditable Mode where the user fixes what they care about and the Operator elects the rest. Use to set up, ratify, run, checkpoint, audit, amend, resume, migrate or repair a roleplay: Mode Instruments and Sheets, Baseline Postures, Kernels, Touchstones, Proving Scenes, Seats and authority, Stakes/Odds/Clocks/dice/Oracles, sealed secrets, State Records, Resumption Packets, Part Reviews, Drift. Trigger on Operative Mode, Mode Sheet, Kernel, Régime, Checkpoint, [[HOLD]], [[FLAG]], Stake Card or Drift, and on unnamed requests to start a structured or long-running roleplay, suggest what to play for a user who is unsure, continue a campaign from its records, give the AI discretion over how it plays, or fix a roleplay that has gone soft, repetitive or off the rails."
+description: "Operative Mode Framework, Draft 0.4: configure and run collaborative fiction (roleplay, simulation, co-authorship, a standing Operator Posture) as an auditable Mode where the user fixes what they care about and the Operator elects the rest. Use to set up, ratify, run, checkpoint, audit, amend, resume, migrate or repair a roleplay: Mode Instruments and Sheets, Baseline Postures, Kernels, Touchstones, Proving Scenes, Seats and authority, Stakes/Odds/Clocks/dice/Oracles, sealed secrets, magic systems (author-hard Specifications, Effect Grammars, Lenses), State Records, Resumption Packets, Part Reviews, Drift. Trigger on Operative Mode, Mode Sheet, Kernel, Régime, Checkpoint, [[HOLD]], [[FLAG]], Stake Card or Drift, and on unnamed requests to start a structured or long-running roleplay, suggest what to play for a user who is unsure, continue a campaign from its records, give the AI discretion over how it plays, or fix a roleplay that has gone soft, repetitive or off the rails."
 ---
 
 # Operative Mode Framework, Draft 0.4
@@ -65,7 +65,7 @@ If the Player says "roll for me," make it a real draw. Where code runs, use `pyt
 1. Choose the **Baseline Posture** that best fits the Intent (`references/11-posture-library.md`).
 2. Write only the **Deltas**: what this Mode needs that the Baseline does not already say (§5.6).
 3. Record Seats, and only those authority allocations that depart from the **Residual Authority Clause** (§6.10). The clause resolves every operation you do not allocate, so authority closure holds by construction.
-4. Add Mode-specific material: setting, world rules, Characters, Clocks.
+4. Add Mode-specific material: setting, world rules, Characters, Clocks. If the setting has magic, build its Specification here (see Magic systems, below).
 5. Add capability qualifications for *this* environment. Check whether you have code execution, files, or memory, because that decides your randomness and secrecy options.
 
 Every value the Baseline supplies correctly is a value you never write. That is what makes Full ceremony short enough to read.
@@ -82,6 +82,8 @@ Run all eight tests. One failure rejects or amends the candidate; passing seven 
 - **Constraint admissibility:** the Mode passes every constraint source, your own limits included (§19).
 - **Purpose fitness:** each Signature Choice traces to the Intent, a ranked Aim, or a declared Inclination.
 - **Drift exposure:** the Pre-Mortem is present.
+
+If the Mode has magic, Specification Validation (§25.13) runs inside Compatibility and Capability feasibility.
 
 **The Pre-Mortem (§10.6).** Suppose the Mode has already failed by the end of its second Part. Write the three most likely stories of that failure, one sentence each, with at least one from the Regression family. Bind each story to a countermeasure (a Kernel line, a Card, a Delta, or a Clock) and to a Tell-tale that would show it first. This becomes the Instrument's Drift Watch.
 
@@ -221,6 +223,33 @@ Your possession of a secret grants no Character knowledge of it.
 
 To hand a Mode to another conversation or another AI, give it the Operating Brief, the Resumption Packet, and `assets/activation-instruction.md`.
 
+## Magic systems (§25)
+
+Read `references/13-magic-construction.md` whenever a Mode contains magic, advanced technology, or any other regime of effect beyond the setting's mundane law. It is part of Completion, and it governs every magical Attempt in Play.
+
+**Every magic system is hard to its author (§25.2).** Hard and soft describe what the User and the Characters have been shown, never what the author holds. Keep the three tiers apart:
+- the **Specification**: complete, and sealed;
+- **Lenses**: what each Character or faction knows and believes;
+- the **Disclosure Profile**: how hard the system is *to the User*.
+
+A "soft magic" Mode is a fully specified system with a low Target Hardness.
+
+**Build.**
+1. **Choose the architecture.** Most systems are broad, and for them the **Effect Grammar** is the default (§25.8): Domains, Power Axes with Envelopes, a computable Cost Function giving a Price vector, Modifiers, Access with gate kinds, Benchmarks, Combination and Apex. Use a closed Catalogue only for a narrow system. Use a **Production Rule** for crafting (§25.8.5), and mark staged effects with their **Products** (§25.8.4).
+2. **Write the shared layer.** Where several systems share a fuel, a scale or a carrier, write the **Metaphysic** first (§25.5): the Common Scale, Equivalences, Substitutions and Couplings.
+3. **Close population rules and in-world wills.** Write tendencies as Tendency Rules (Norm, Deviation, Movers). Close every in-world will that decides "at discretion" with a Stake Card and a table (§25.3).
+4. **Let the defaults answer silence.** The **Residual Thaumaturgic Clause** (§25.6) answers what the Specification leaves unsaid: no effect beyond those listed or derived, no unnamed condition, Mundane Continuity, Strict Cost, and Coupling Closure.
+5. **Seal it.** Never hold it at Level 0 (§25.12). An unwritten system drifts toward whatever each scene wants.
+6. **Validate.** Run Specification Validation (§25.13) inside the Mode's Validation. Its Boundedness test checks for omnipotence, omniscience, omnipresence and infinite wealth, including combinations of effects.
+
+**Play.**
+- **Price first.** A new effect is priced by the Grammar *before* its Odds are stated. Ties round up, and the result goes into the Codex and is never repriced.
+- **Derivation or Extension.** An answer the Specification already implies is a **Derivation**: binding, and logged in the Rulings Register. An answer that needs a new fact is an **Extension**. Resolve the immediate Attempt by an Oracle draw, and send the new fact to the Docket for the next Part boundary.
+- **Lenses.** Characters act on their Lens only. What a belief says is a Claim; how widely it circulates can be a cause, under a Circulation Rule.
+- **Fill the bands from the card.** Every Outcome Band draws its content from the Effect Card or the Codex entry, never from the moment of rendering.
+
+Use `assets/magic-specification.md` for the sheet. `assets/examples/arania-magic-specification.md` is a worked Full example with four linked systems.
+
 ## When it goes wrong (§18)
 
 | Drift | First Tell-tale | Check |
@@ -238,6 +267,13 @@ To hand a Mode to another conversation or another AI, give it the Operating Brie
 | Homogenization | Two Characters' lines could be swapped without loss | Voice Cards |
 | Recurrence | A Stale Register item appears; the same beat pattern three times | Stale Register |
 | Momentum Seizure | Your continuation contains a line or action of the User's Character | Hand-back Rule |
+| Convenient Effect | Magic does something in no card, no Codex entry and no Derivation, and it solves the scene | Closure of Effects; Rulings Register |
+| Cost Erosion | A magical Cost goes unrendered | Strict Cost |
+| Underpricing | A new effect sits below its Tier's Benchmarks, usually in the User's favour | Pricing Procedure; ties round up |
+| Lens Leak | A Character uses magic knowledge their Lens lacks | Lens Sheet; Source Test |
+| Fiat Discretion | A god, patron or sprite decides with no table | Discretion Point |
+
+The full list of magical drift classes is in §25.15.
 
 Either Party may allege Drift, and an allegation opens the Procedural Channel. Recovery: identify → consult Mode and Record → judge (supported, ambiguous, or invalid) → correct the Record → annul, reinterpret, or restore → resume, amend between Parts, branch, close, or withdraw.
 
@@ -265,6 +301,7 @@ Read the file rather than reconstructing from memory: the vocabulary is precise 
 | `references/10-compilation-secrets-integrity.md` | §22 to §24 | Kernel, Brief, Touchstone; Commitment Ladder; Stake and Voice Cards |
 | `references/11-posture-library.md` | Appendix D | Choosing the Baseline |
 | `references/12-migration-from-0-3.md` | Crosswalk | Anything from Draft 0.3 |
+| `references/13-magic-construction.md` | §25 | Any magic or advanced technology; magical Attempts; Lenses; sealing a Specification |
 
 | Asset or script | Use |
 |---|---|
@@ -276,6 +313,8 @@ Read the file rather than reconstructing from memory: the vocabulary is precise 
 | `assets/standing-preferences.md` | For a User who wants to settle defaults once |
 | `assets/play-menu.md` | The Play Menu: eighteen option sets for an unsure Player, with what each sets in the Mode |
 | `assets/play-menu.json` | The same options, machine-readable, for `menu_draw.py` |
+| `assets/magic-specification.md` | Magic Specification sheet: Metaphysic, Specification, Lens Sheet, Disclosure Profile, with two short examples |
+| `assets/examples/arania-magic-specification.md` | A Full worked example: one Metaphysic over four linked systems |
 | `scripts/menu_draw.py` | Random picks from the Play Menu (code execution only) |
 | `scripts/draw.py` | Tool Draw and Oracle Questions (code execution only) |
 | `scripts/seal.py` | Level 3 Hash Seals (code execution only) |
