@@ -177,7 +177,7 @@ One card per effect, ten lines at most (§25.4.2).
 - **Tiers 1 to 7.** Area (radius) and Range double per Tier, from 2 m and 10 m at T1, so T5 reaches 32 m and 160 m. Magnitude: T1 a lit match → T4 a house fire → T7 a city block. Duration: T1 one minute, T3 ten minutes, T5 one hour, T7 one day. Gate Ceiling: T1–2 at 1, T3–5 at 2, T6–7 at 3 (admissible only where the Instrument admits it). Default rung: Likely at the caster's own Tier, one rung down per Tier above it.
 - **Cost:** mana = 2^Tier. Each Modifier adds 50%, rounded up.
 - **Modifiers:** silent casting; ×2 range; ×2 duration; +1 target. Two or more Modifiers on one effect raise its Tier by one.
-- **Access:** a caster's Rank sets their highest Tier. Rank rises when a caster survives a draw of an effect one Tier above their Rank.
+- **Access:** a caster's Rank sets their highest Tier. Rank rises on the caster's tenth Clean Success at their own Tier since their last rise, counted in the Record.
 - **Combination:** two active effects at most; like effects do not stack; a multi-Domain effect is priced in each Domain and pays the higher Price.
 - **Apex:** Tier 7. Nothing alters a Prohibition or affects more than one city block.
 - **Interface:** a status window, Authoritative. It shows the caster's own Rank, pool and Codexed spells, and nothing about anyone else.
