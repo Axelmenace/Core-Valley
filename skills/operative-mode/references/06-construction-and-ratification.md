@@ -73,6 +73,8 @@ Not every ambiguity can be resolved before Play. **[B]** Material unresolved unc
 - **Purpose fitness.** Each Signature Choice (§11.8) traces to the Intent, to a ranked Aim, or to a declared Operator Inclination.
 - **Drift exposure.** The Pre-Mortem is present, and each of its failure stories is bound to a countermeasure and a Tell-tale.
 
+Where the Mode contains magic, the Specification Validation battery (§25.13) is part of Compatibility and Capability feasibility, and one failure in it rejects or amends the candidate.
+
 ### 10.6 The Pre-Mortem
 
 **[S]** Before Election closes, the Operator supposes that the Mode has already failed by the end of its second Part, and writes the three most probable stories of that failure, one sentence each. At least one story belongs to the Regression family (§0.6).

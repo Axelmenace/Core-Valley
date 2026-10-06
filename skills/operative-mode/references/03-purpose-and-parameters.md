@@ -107,7 +107,7 @@ The Instrument therefore writes only seven things:
 3. the Deltas, each with its source, force, and (for an Operator Election) a reason of one line;
 4. Seat allocations, and authority allocations that depart from the Residual Authority Clause (§6.10);
 5. the Kernel and the Touchstone (§22);
-6. Mode-specific material no Baseline can carry: setting, world rules, Characters, Clocks, and the particulars of the Constraint Profile;
+6. Mode-specific material no Baseline can carry: setting, world rules, magic Specifications (§25), Characters, Clocks, and the particulars of the Constraint Profile;
 7. capability qualifications and declared fallbacks.
 
 Nothing is written that the Baseline already says. A full Draft 0.3 Mode Sheet is a valid Instrument whose Baseline is declared as None.

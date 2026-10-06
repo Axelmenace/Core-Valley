@@ -61,6 +61,7 @@ Persistent across Parts: …
 
 MODE-SPECIFIC MATERIAL
 Setting and world rules: …
+Magic: <META and SPEC ids · Commitment Level · digest; Disclosure Profile (Target Hardness, Orientation, Exposition Bound); Lens Sheets live in the Record> (§25)
 Characters: <names; Stake Cards and Voice Cards live in the Record>
 Clocks at Activation: <name, segments, tick conditions, completion effect, visibility>
 

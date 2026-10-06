@@ -73,7 +73,7 @@ Arania ranks almost everything magical on a single seven-rung ladder. **[C]** A 
 - **E6.** Beast grade = Prana Realm ceiling at the same rung, and beast core grade = realm at the same rung [MONSTERS].
 
 **Substitutions:**
-- **S1. One Power → Prana.** When a cultivator is depleted of Prana, an Intented can use the One Power instead in prana skills, martial techniques, spells and breathing techniques [INTENTWORK]. `I` The rate is 1:1 at the same rung, and spending it draws Sye exactly as a Power of that rung would. Nothing else is lost.
+- **S1. One Power → Prana.** When a cultivator is depleted of Prana, an Intented can use the One Power instead in prana skills, martial techniques and spells [INTENTWORK]. `I` The rate is 1:1 at the same rung, and spending it draws Sye exactly as a Power of that rung would. Nothing else is lost.
 - **S2. Prana → spirit stone.** Prana can be injected into a spirit stone, raising its Concentration Level up to its ceiling [SPIRIT STONES]. `I` Prana stored this way and later drawn out for Replenishment is recovered at 1:1. A stone moves reserve from one cultivator to another. It never adds to a Prana Base.
 
 ### M5. Couplings

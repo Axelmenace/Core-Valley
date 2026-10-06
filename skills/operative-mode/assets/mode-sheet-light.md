@@ -13,6 +13,7 @@ Seats        You: <seats>   Me: <seats>
 Deltas       <up to six departures from the Baseline, graded values as 0-4>
 Kernel       K1 … / K2 … / K3 …   (three to five lines)
 Resolution   <method; randomness source if any>
+Magic        <none, or Core Specification sealed at Level n · Target Hardness 0-4> (§25.16)
 Limits       <Content Dials, if any>
 Budget       <n to m> words per turn · hand back per <beat/exchange/scene>
 Interrupt    [[HOLD]] · Stop [[STOP]]

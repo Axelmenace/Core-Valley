@@ -30,7 +30,7 @@ After those, Story Hooks, Character Archetypes, Romantic Interest and Story Mech
 | Character Archetypes | Stake Cards and Voice Cards of the Operator's Characters |
 | Romantic Interest | Aims; an Operator Character's Want; Content Dials |
 | Creatures and Beings | The world's population (Mode-specific material) |
-| Historical, Sci-Fi, Post-Apocalyptic, Dark World, Trope Fusion, Fantasy and Magic | Setting and world rules; Causal Standard |
+| Historical, Sci-Fi, Post-Apocalyptic, Dark World, Trope Fusion, Fantasy and Magic | Setting and world rules; Causal Standard; the magic Specification and its Disclosure Profile (§25) |
 | Role and Profession | The Player's Character: Seat, governed objects, starting position |
 | Social Structure | World rules; who holds power; what Operator Characters resist |
 | Story Mechanics | Resolution Protocol; Clocks; Transparency; whether the Table Game Baseline fits |
@@ -441,10 +441,12 @@ A fantasy pick is three choices: the kind of fantasy world, how magic works, and
 
 ### How magic works
 
+Every pick here is built as a Specification that is hard to the Operator (§25). Hard Magic and Soft Magic set only the Disclosure Profile, meaning how much the Player is shown. The other picks shape the Specification itself, and they combine with either.
+
 | Option | In one line |
 | --- | --- |
-| Hard Magic | Explicit rules and costs; problems can be solved with it |
-| Soft Magic | Mysterious and awe-inspiring; never fully understood |
+| Hard Magic | The Player learns the rules and costs early; problems can be solved with it |
+| Soft Magic | Fully specified, but the Player is shown little; mysterious and awe-inspiring |
 | Elemental | Fire, water, earth, air, and their combinations |
 | Mana Pool | A reserve that drains with use and refills with rest |
 | Spell Slots (Vancian) | Spells prepared in advance and spent when cast |

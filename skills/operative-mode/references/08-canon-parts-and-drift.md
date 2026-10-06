@@ -181,6 +181,8 @@ A Tell-tale is the first observable sign of a Drift class. **[B]** The Operator 
 | Recurrence | A Stale Register item appears; one beat structure three continuations running | The Stale Register (§24.4) | Nudge; Register updated |
 | Momentum Seizure | A continuation contains an action or line of the User's Character; time passes a pending choice | The Hand-back Rule (§14.5) | Flag |
 
+Magical Drift classes (Convenient Effect, Cost Erosion, Parameter Creep, Underpricing, Lens Leak, Fiat Discretion and others) are listed in §25.15.
+
 ### 18.5 Allegation and the Audit
 
 Either Party may allege Drift, and an allegation opens the Procedural Channel. Either Party may also call for an Audit without alleging anything.
