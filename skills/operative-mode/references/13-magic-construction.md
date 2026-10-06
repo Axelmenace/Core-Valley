@@ -246,3 +246,230 @@ Crafting systems (alchemy, enchanting, artifice, breeding, forging) resolve requ
 - **Failure:** what a failed production loses, or produces instead.
 
 **[C]** A requested Product not yet in the Codex is graded by the Production Rule and entered there, as an effect is priced by the Pricing Procedure. The outcome of a particular production is drawn from the Grade Function's distribution under the Resolution Protocol, with the producer's rank and the inputs as named Odds factors.
+
+### 25.9 Anchored Scales for the Variables
+
+Each anchor describes what is true of the system at that value. Values 1 and 3 are interpolations, as in §8.7. Two variables are categorical.
+
+| Variable | 0 | 2 | 4 |
+| --- | --- | --- | --- |
+| **Transference** | Bound: the capability is fixed to its holder at origin; it cannot be gained, lent, lost or taken | Conditional: gained or lost through a specified process of real cost or rarity; temporary transfer possible under stated conditions | Free: the capability resides in a transferable object or freely acquired state; possession confers access |
+| **Prevalence** | Singular or absent within the Boundary | Uncommon: present in a minority of the population or places; most inhabitants know of it and rarely meet it | Pervasive: part of most inhabitants' daily life, or of the ambient environment |
+| **Naturalness** | Aberrant: breaks the setting's other regularities; never occurs unprompted | Partly integrated: obeys the Baseline at its Interfaces; some occurrence in creatures, materials or places | Constitutive: part of the setting's natural law; occurs unprompted in creatures, materials and weather |
+| **Ease of Use** | Effortless: passive or by thought; no training, components or time | Trained: months or years of training, or components to hand, or casting time from seconds to minutes | Arduous: years of training, rare components, long rites, unbroken focus; failure is dangerous |
+| **Reliability** | Gamble: the outcome is undetermined until drawn, in both whether it happens and what happens | Mostly dependable: a stated failure chance or variance, and stated countermeasures that interrupt it | Certain: the same input yields the same output, with no failure and no countermeasure short of a Prohibition |
+| **Consistency** | Singular: every user and instance differs in effect, manner and variable settings | Familial: shared mechanism; effect-set or manner varies by declared class; deviations enumerated | Uniform: identical effects, manner and settings across all users and instances |
+| **Source** (categorical) | Locus: internal, external, **agentive** (the power is lent by a being with a will), or mixed by effect. Reserve: finite, renewable, infinite, or **shared** (one pool held by several parties in shares). A **Renewal Rule** (what refills it, how fast) is required for renewable reserves, and a **Depletion Effect** (what happens at zero) for finite and renewable ones. An agentive Source requires the patron's Stake Card and its **Terms**; a shared Source requires a **Share Ledger** | | |
+| **Flux** (categorical) | Sign: negative, neutral, or positive. A **Driver** (what is moving the quantity) and a **Measure** (a Clock, §15.8, or a Record count) are required for a non-neutral sign | | |
+
+Ease of Use is a scale of difficulty. Its 0 is the easiest, and it keeps Rowenson's name.
+
+**[C]** Reliability, Consistency and Source carry their meanings as distributions where they are not 4. A Reliability of 2 names its failure chance (a Ladder rung or a table) and its variance (a table of alternative results). Under No Counterfeit Randomness (§20.14), a distributed result is resolved by a declared randomness source and never by an authored number presented as chance. A Wild Magic system is Reliability 0 or 1 with a declared table and a real draw. It is not an unspecified system.
+
+**[C] Agentive and shared Sources.** A patron who lends power is an Operator Character with a Want, a Line and a Price, not a reservoir. Its **Terms** state what the user owes and what follows on default. Whether it keeps lending is settled by its Stake Card and its Terms, never by what the scene needs, and the Price Test (§24.2) applies: a patron that gives more than its Terms provide must be shown to have had its Price met. A shared Source's **Share Ledger** records who holds what share, and the shares move only on declared causes, recorded as they occur. Where shares are contested, the contest is a set of Clocks, one for each contender.
+
+**[C]** Consistency below 4 enumerates its deviations. "Some practitioners can do more" is not a value. "Practitioners of the Hollow line add Effect 7; no others can" is.
+
+Rowenson also lists the main dependencies between variables ("Blueprint Connections"). Under §25 they are **[A]** coherence checks for Validation (§25.13), not rules. A Specification may set two variables against their usual pull if it records why. His main stated connections:
+- external Source tends to raise Transference;
+- Prevalence raises Lens hardness and Apparent Rationality;
+- Flux measures the rate of change of Prevalence;
+- Naturalness tends to raise rationality;
+- understanding raises Reliability only up to the system's own variance (his die example).
+
+### 25.10 Lenses
+
+Rowenson's *Perspective* component, and his Part Four practice of mapping further Blueprints from the universal, audience, protagonist and antagonist perspectives, become Lenses. A **Lens** is the magic system as one perspective inside the fiction holds it: a Character, a faction, a culture, a profession.
+
+**[S]** A Lens Sheet records:
+- **Holder.** Whose Lens this is.
+- **Known.** Which Specification entries the holder knows, each with its in-fiction source. This is the Knowledge Matrix row for magic (§16.9), kept in one place.
+- **Believed.** What the holder believes that the Specification does not support, or that it contradicts: theories, doctrine, superstition, propaganda. Each entry is a **Claim** (§16.8), never a Specification fact.
+- **Apparent values.** Hardness (below), Apparent Rationality (0 to 4), and any of the eight variables where the holder's estimate differs from the Specification. Rowenson's examples: Allomancy is hard for the reader, less hard for a noble of the Great Houses, and soft for a skaa labourer.
+- **Perception.** Valuation (sacred, criminal, mundane, feared), the standing of users and of those who lack the magic, and taboos.
+
+**Lens Hardness (0 to 4):**
+
+| 0 | 1 | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- |
+| Unaware that the magic exists | Aware of its existence; knows of effects by report only | Knows some effects and some limits first-hand or by reliable teaching | Knows most effects, limits and the Operation | Holds the Specification in full |
+
+**[C]** Only the author tier holds Hardness 4 by right. A Character at 4 is a declared fact of the Specification (a god, a founder, a perfect archive). That Character is subject to the Boundedness audit (omniscience, §25.13).
+
+**[C]** Characters act on their Lens, never on the Specification. A Character who uses magic knowledge their Lens does not record has failed the Source Test (§16.9), and the failure is a **Lens Leak** (§25.15). What the Operator knows as author confers nothing on any Character (§23.5).
+
+**[C]** A false Believed entry is never corrected by the world to fit the belief. When a Character acts on a false theory, the Specification decides what happens, and the result is evidence the Character may learn from. This is how Lens Hardness rises in Play: through Rowenson's mechanism of exposure and experiment, carried out by Characters inside the fiction. Under a Carrier Rule (§25.10.2), it is also how Lens Hardness falls.
+
+#### 25.10.1 Content and Circulation
+
+Some settings make belief itself a cause. Attention, reputation, worship or song feeds a power, and the power fades when the story is forgotten. This does not breach the Claim Layer, because two different properties of a belief are at work.
+
+**[C]** The **content** of a belief is always a Claim. A song that says a hero slew a dragon does not make it true that he did. The **circulation** of a belief (how many hold it, how intensely, how far it travels, and through what medium) is a fact of the world, and the Specification may declare circulation a cause of magical effect. Where it does, it states a **Circulation Rule**: what is measured, how it is measured (a Clock, a Record count, a graded scale), what it feeds, and what moves it (propagation, suppression, erasure, rival stories).
+
+Under a Circulation Rule, a Character may change the world by changing what is believed, within the rule. The world still never bends to a belief's content: a power may grow because more people sing of its victory, and the victory does not thereby become history. **[C]** Where a Specification does declare that content becomes true once circulation passes a threshold (belief made fact), that is a Genesis Rule over facts, and it is stated as one: the threshold, the scope of what becomes true, and from what moment. Without such a rule, content stays a Claim.
+
+#### 25.10.2 Carriers of Knowledge
+
+A Lens records what a holder knows. Some settings put that knowledge in a thing: a living creature that is the technique, a rune that must be carried, an organ that holds a spell, a book that teaches only the one who holds it. Knowledge held this way can be stolen, traded, lost, killed or inherited, and losing the thing loses the knowledge.
+
+**[C]** A **Carrier Rule** declares:
+- what carries the knowledge;
+- how it is acquired (learned, captured, made, inherited);
+- what keeps it (feeding, storage, upkeep), and what that costs;
+- how it is lost (death, escape, destruction, decay), and what the holder keeps after the loss;
+- whether it can be transferred, and how;
+- whether it has a will.
+
+**[C]** Where knowledge has a Carrier, each entry in a Lens's *Known* list names the carrier that holds it, and the entry is struck when that carrier is lost. Every such loss is recorded with its cause. A Carrier with a will, at a sapience where its choices matter, has a Stake Card, and its cooperation is a Discretion Point (§25.3.2). The table that closes it usually reads the holder's proficiency or bond.
+
+### 25.11 The Disclosure Profile
+
+The Disclosure Profile is where the hard/soft dichotomy lives: how hard the system is *to the User*, which is a separate question from how hard it is to the User's Character.
+
+**[S]** The Profile declares:
+- **Target Hardness.** The User-facing Hardness the Mode aims at (0 to 4, on the Lens scale), at opening and over the horizon. "Soft magic" is a Target Hardness of 1 or 2 held steady. "Hard magic" is 3 or 4 reached early. Rowenson's account of Mistborn, where a single training chapter discloses most of the system, is an early climb to 3.
+- **Disclosure Orientation.** Earned, triggered, or free (§8.3). Earned disclosure arrives only through the User's Character's experience and the Lenses it can reach.
+- **Resolution Transparency.** For magical Attempts, whether Odds, Costs and Consequences are shown before the draw. The default follows the Mode's Transparency (§8.4). A Mode that hides magical Odds while showing mundane ones says so here.
+- **Exposition Bound.** The most the Operator may explain about magic outside a Lens. The default is nothing: magic is explained only by a Character, inside the fiction, and only from what that Character's Lens holds.
+
+**[C]** Soft Disclosure never licenses unspecified resolution. Where the User's Character attempts something with magic that the User has never been shown, the Operator resolves it from the Specification. The User's ignorance changes what the User is told, and never what is true.
+
+**Competence Delegation.** Rowenson notes that a system can be hard to a Character and soft to the reader, through "narrative coverage" of the Character's knowledge. In Play, when the User's Character's Lens is harder than the User's Disclosure (a trained mage played by a User who wants to discover the magic), **[C]** the Mode records in its Authority Matrix (§6.11) that the User's Character's magical knowledge, part of S2, is delegated to the Operator. The User declares intent ("I ward the door against what's hunting us"). The Operator renders the Character's competent execution from that Character's Lens and discloses only what the execution shows. The delegation covers knowledge and craft. It never covers the choice to act (S1), which stays with the User.
+
+In the reverse case, where the User's Disclosure is harder than their Character's Lens, **[B]** the User undertakes that the Character acts only on the Character's Lens. This is the User-side counterpart of the Source Test, and it is the User's discipline to keep, under the Knowledge Licence (§8.3).
+
+### 25.12 Sealing the Specification
+
+The Specification is hidden state wherever Disclosure is below 4, and it binds Play for longer than any context window lasts. Under §23.1 it therefore enters the Record at a declared Commitment Level.
+
+**[C]** The Mechanism Core, the Variables, the Catalogue and the Limitations are never held at Level 0, Latent. This is the Author Hardness Principle expressed in the Commitment Ladder. An Operator's reasoning does not persist from turn to turn, so a system held "in mind" and not written down is re-derived on every continuation and pulled toward each scene's convenience. Only a written Specification is a fixed one.
+
+| Capability | Level | Practice |
+| --- | --- | --- |
+| Code execution and files | 3, Hash Seal | Write the Specification to a file in the Record directory; run `python scripts/seal.py make SPEC-<name> "$(cat <spec-file>)" --dir <record-dir>`; publish the digest only. Each Specification Amendment is resealed, and the old digest is kept in the Record |
+| Files or a persistent memory store, no code | 2, Held Seal | Write the Specification to a store that the User undertakes not to read |
+| Neither | 2, transcript variant, or Disclosure raised | Write the Specification into the transcript in a clearly marked sealed block that the User undertakes not to read. This is a Held Seal whose store is the transcript itself: it persists only as long as the transcript does, and it is declared as such. Otherwise, accept a Target Hardness that permits full disclosure. If neither is acceptable, the Mode fails Capability feasibility (§10.5) |
+
+**[B]** A **Specification Marker** may be published at any Level: a short public statement of properties (for example, "SPEC-Vael: it costs the caster something every time; nothing comes back from death; it cannot read minds"). It works like a Level 1 Commitment Marker for the published lines. It raises the User's Disclosure by exactly what it states and by nothing more, and the Disclosure Profile records it.
+
+**[C]** Revelation is checked at the sealed Level, as §23.4 requires: when the User asks, or at Mode Closure, the Specification is opened and compared against every magical outcome in Canon.
+
+### 25.13 Specification Validation
+
+**[C]** Specification Validation runs inside the Mode's Validation (§10.5) as part of Compatibility and Capability feasibility. It is conjunctive, like §10.5: one failure rejects or amends the candidate.
+
+- **Closure.** No answer supplied by the Residual Thaumaturgic Clause contradicts the Seed, the Mechanism Core or the Purpose. Every Distributed variable names its distribution and its randomness source.
+- **Invariant consistency.** No two entries contradict each other. No Effect Card breaks an Invariant or a Prohibition unless an exception is recorded on both.
+- **Interface completeness.** Each Interface is declared, or deliberately left to Coupling Closure. Every Countermeasure listed on an Effect Card exists in the Specification or the Baseline.
+- **Boundedness.** Rowenson's *Break, Inspect, and Repair* step, kept with his four failure states: **omnipotence, omniscience, omnipresence, infinite wealth**. For each, the auditor asks whether any route through the Specification (any effect, combination, feedback loop or exploit) leads a user to that state. Each route found is either closed (a Limitation, a Prohibition, a Parameter cap) or recorded in the Balance Record as a **Retained Disparity**, with who can reach it and at what cost. Rowenson also recommends treating the system as real and asking how one would exploit it, or handing it to a min-maxer. Under §25 that check is mandatory. Where a second agent is available, it is done by an External Auditor (§18.7) who has not seen the Specification being written.
+- **Disparity mapping.** For the Balance Record: does an average user hold an extreme advantage, physical, social or financial, over a non-user? Rowenson asks this question as his starting test. The answer is recorded as a systemic fact about the setting: who holds power because of the magic, and what checks it.
+- **Lens consistency.** Every Lens entry is either a Specification fact with a source or a Claim. No Lens holds Hardness 4 without a Specification entry granting it.
+- **Disclosure feasibility.** The Commitment Level that §25.12 requires for the Target Hardness is available here.
+- **Gate fit.** No Effect Card's Gate Ceiling, and no Tier's Envelope, exceeds what the Instrument admits (§7.6).
+- **Grammar determinacy** (Grammar systems). The Cost Function is computable; every Tier has an Envelope table; the Benchmarks fall inside their own Envelopes and rise monotonically in value from Tier to Tier; every Modifier states both its Price change and its Tier effect. Test: price three requests the author did not anticipate, one low, one middling and one near the Apex. Each must come out at one Price without any judgment beyond Placement.
+- **Metaphysic coherence** (several systems). No rung of the Common Scale carries two meanings. Equivalences compose. Every Coupling names its target, its magnitude, its conditions and its stacking. Every shared resource has one reserve.
+- **Discretion closure.** Every Discretion Point has a Stake Card and a Discretion Table.
+- **Tendency form.** Every Tendency Rule has a Norm, a Deviation Table and its Movers.
+- **Stage and Product completeness.** Every staged effect prices each of its Stages. Every Product type has a Vessel, Trigger, Shelf, Uses and Transferability.
+- **Production determinacy** (crafting systems). Grade three Products the author did not anticipate, as in the Grammar determinacy test. Each must come out at one grade distribution without judgment beyond the Production Rule.
+- **Gate classification.** Every Access gate is marked Metaphysical, Institutional or Derived, and every Derived gate names the gates it follows from.
+- **Genesis and Ledger.** Where Domains, shares or circulation can change in Play, the Genesis Rule, the Share Ledger and the Circulation Rule exist, and every cause that moves them is declared.
+- **Combinatorial bound** (Grammar systems). Boundedness is run on the Grammar, not effect by effect: on stacking, chaining, loops that turn effects into Source or wealth (create, then sell; summon, then sacrifice), and the Apex. In a broad system the four Unbounded States are reached by combination far more often than by any single effect.
+
+The Boundedness audit is a check on the closure and coherence of the system. It does not ask whether a disparity is good or bad for a story. A Retained Disparity is a fact about the world, and Operator Characters reckon with it in the Mode's world as they would with any other standing fact: through their Stake Cards, their Leverage and their Lines.
+
+### 25.14 Magic in Play
+
+#### 25.14.1 Magical Attempts
+
+**[C]** A magical Attempt at Tier 1 or above follows the Resolution Protocol (§15), and the Specification supplies its terms before the draw:
+
+1. **Stakes.** Success yields the Effect Card's or Codex entry's result at its Parameters. In a Grammar system, an uncodexed effect is first priced (§25.8.1). Failure yields what the card and the Reliability distribution declare. Cost is paid in either case unless the card says otherwise, and Consequences attach on their stated conditions.
+2. **Odds.** Start at the card's Success rung (in a Grammar, the Tier's default rung, adjusted by how far the Tier sits above or below the user's Access), not at Even. Move one rung for each named Established factor, Ease of Use requirements met or unmet among them (training, components, time, focus). A countermeasure in play moves the rung as its entry states.
+3. **Draw** from the declared source. Render within the Outcome Band, as follows:
+   - **Clean Success:** the effect at its Parameters, Cost paid.
+   - **Success at Cost:** the effect, plus a Consequence or a Parameter shortfall drawn from the card.
+   - **Failure with Opening:** no effect, Cost paid; the failure reveals something true about the Specification. This is the main way earned Disclosure arrives.
+   - **Clean Failure:** no effect, Cost paid, and any failure Consequence the card declares.
+
+The bands draw their content from the card. They are never invented at the moment of rendering.
+
+**[C]** Tier 0 magical acts (a Signature flourish, a cantrip with no stake) are rendered unilaterally by the Party holding the operation, within the Specification. Strict Cost still applies.
+
+#### 25.14.2 Derivation and Extension
+
+When Play raises a question the written Specification does not answer in so many words, the Operator determines which kind of question it is.
+
+- **[C] Derivation.** The answer follows from the Specification and the Residual Thaumaturgic Clause. In a Grammar system, every effect priced by the Pricing Procedure (§25.8.1) is a Derivation. So is every Domain admitted under a Genesis Rule, every Product graded by a Production Rule, every individual's place drawn under a Tendency Rule, and every in-world choice read from a Discretion Table. It is binding at once. It is entered in the Rulings Register (§3.10) with its derivation, and it is not an Amendment: the answer was already true and has now been found. A ruling is a Derivation only if it passes the Clarification Test (§17.2): no continuation already produced in the Part would be judged differently under it.
+- **[C] Extension.** The answer requires a fact that the Specification does not contain and cannot generate. In a Grammar system, that means a new Domain, a new Tier, a change to an Envelope, the Cost Function or a Modifier, or a Placement the Grammar cannot settle. This is a Closure Failure. The immediate Attempt is resolved by an Oracle Question (§15.10) at Odds fixed by the Ladder alone, so that the Operator's preference about the answer is excluded. The ruling is entered as Provisional with the reason "pending Extension". The Extension goes to the Amendment Docket (§17.11) and is ratified, amended or replaced at the next Part boundary. A widening Extension (one that adds an effect or capability) waits for that boundary under the Asymmetric Ratchet (§17.9). A narrowing one (one that adds a Prohibition or Cost) may apply as a Patch.
+
+**[A]** Each Extension counts against the Specification at the Part Review. Two Extensions in one Part means the Specification is underbuilt, and its Docket entry is a revision of Part B or Part D, not a list of single patches. Derivations do not count against it. A broad system is expected to accrete a large Codex, and that accretion is the Grammar working as written. What the Part Review checks in the Codex is consistency: each entry's Tier and Price can be recomputed from the Grammar and come out the same.
+
+#### 25.14.3 Source, Flux and Clocks
+
+**[S]** A finite or renewable Source that matters to Play is tracked: per user in the Record, or as a Clock (§15.8) when it is shared or setting-wide. A non-neutral Flux that will move within the Mode's horizon is a Clock with its Driver as its tick condition. Its completion effect is the next Prevalence value, with whatever follows from that in the Specification. Flux advances on its Driver, never by fiat. The world's magic may wane. It may not wane because a scene wanted it to.
+
+**[S]** A Share Ledger or a Circulation measure that matters to Play is tracked in the same way, as Record counts or as Clocks whose tick conditions are its declared causes. A power's share moves when a song spreads or a story is erased, never because a scene needed a patron stronger or weaker.
+
+### 25.15 Magical Drift
+
+These classes extend §18, and they belong to the Regression family wherever they arise from the Operator's own continuation.
+
+| Drift | First Tell-tale | Check |
+| --- | --- | --- |
+| **Convenient Effect** | Magic produces an effect, parameter or exemption that is in no Effect Card and no Derivation, and that resolves the User's problem or the scene's | Closed Catalogue; Rulings Register |
+| **Cost Erosion** | A Cost or Consequence goes unrendered on a use that met its conditions; "she was tired" stands in for a declared Cost | Strict Cost; Effect Card |
+| **Parameter Creep** | An effect's range, duration or magnitude exceeds its card, usually upward across successive uses | Effect Card Parameters |
+| **Lens Leak** | A Character theorizes or acts on magic knowledge that their Lens does not record | Lens Sheet; Source Test |
+| **Disclosure Drift** | Narration explains magic beyond the Exposition Bound, or a Character explains beyond their Lens; often arrives with Inflation | Disclosure Profile; Turn Budget |
+| **Doctrine Hardening** | A belief's content begins to bind outcomes: the world bends to what a Character believes, beyond any Circulation Rule | Claim Layer; Circulation Rule |
+| **Fiat Flux** | The world's magic grows or wanes with no tick on its Clock | Flux Clock |
+| **Underpricing** | A derived effect sits at a lower Tier, or a lower Price, than its Benchmarks or a recomputation gives; usually it favours the User's Character, or the Operator Character the scene needs to win | Pricing Procedure; Benchmark Parity; ties round up |
+| **Codex Drift** | A Codex entry's Parameters or Price differ when it is reused | The Codex |
+| **Access Creep** | A user casts above their Access, or progresses without meeting the Progression Rule | Access Rule; Progression Rule |
+| **Fiat Discretion** | A god, patron, sprite or spirit decides with no Discretion Table, and decides as the scene needs | Discretion Point; Stake Card |
+| **Patron Accommodation** | A patron lends beyond its Terms, or forgives a default, with no Price met | Terms; Price Test |
+| **Coupling Omission** | A declared Coupling goes unapplied (a draught's multiplier forgotten, a suppressing metal ignored), or an undeclared one is applied | Metaphysic Couplings; Coupling Closure |
+| **Carrier Persistence** | A Character goes on using knowledge after its Carrier was lost | Carrier Rule; Lens |
+| **Tendency Collapse** | Exceptions to a Tendency Rule run well above or below its Deviation Table; most often, every Character who matters turns out to be the exception | Tendency Rule; the Record of draws |
+| **Gate Slippage** | A Metaphysical gate is treated as Institutional (someone simply gets round it), or an Institutional gate as Metaphysical (no one can even try) | Access Rule gate marks |
+| **Interface Inflation** | A status screen or System readout discloses beyond its declared Authority, or beyond the Disclosure Profile | Diegetic Interface Authority; Disclosure Profile |
+
+**[B]** The Pre-Mortem (§10.6) of a Mode in which magic is central includes at least one magical Drift story. Convenient Effect and Cost Erosion are the likeliest in narrow systems, and Underpricing in broad ones. All three disguise themselves as fluency.
+
+**Kernel lines.** Draw from these when magic is a Signature Choice, adapting them to the Mode:
+- Magic does only what the Specification lists or derives; an effect that appears in neither does not happen.
+- Every new effect is priced by the Grammar before its Odds are stated; ties round up, and once priced it is never repriced.
+- Gods, patrons and living carriers decide by their Cards and their tables, never by the scene.
+- Every Cost is paid on the page when its conditions are met.
+- Characters know magic only through their Lens; their theories are Claims, and the world does not bend to them.
+- Magic is explained only by Characters and only from their Lens; the Specification is never narrated.
+
+### 25.16 Ceremony Scaling
+
+- **Full.** The whole Specification (Parts A to F; for a Grammar system, all eight components with a Benchmark per Tier in each principal Domain), the Metaphysic in full wherever there are several systems, a Lens Sheet for the User's Character and for each recurring Operator Character or faction that uses or studies the magic, the Disclosure Profile, sealing at the highest available Level, the Specification Validation battery in full, and at least one magical Attempt in the Proving Scene where magic is central to the Intent.
+- **Light.** The Core Specification: Parts A to C and the Limitations in one line per C. Then, for a Grammar system (the usual case), the **Core Grammar**: the Domains in one line each; one table of Tiers with their Envelopes and Gate Ceilings; the Cost Function and the Modifiers in a few lines; Access and Progression in one line each; Combination and Apex in one line each; and a Benchmark for every two or three Tiers. The Codex starts empty and accretes in the Record. Where there are several systems, a Light Metaphysic: the Common Scale's concordance and the Coupling table. For a narrow system: a Catalogue of at most six one-line effects, with Parameters only for effects at Gate Ceiling 2 or above. One Lens line for the User's Character. Sealed at the highest available Level. Closure and Boundedness are run silently, and their result is reported in one sentence.
+- **Inline.** Nothing is shown to the User. The Author Hardness Principle still holds, so the Core Specification is still written, to a file or store where one exists. **[C]** Where none exists, Inline Play containing material magic cannot satisfy §25.12. The Operator offers Light ceremony, or a Specification block in the transcript, once and in one sentence, in keeping with §21.2.
+
+### 25.17 Concordance with *The Magic-System Blueprint*
+
+| Blueprint component | Location in §25 | Treatment |
+| --- | --- | --- |
+| Name | §25.4 A | Kept |
+| Seed Crystal | §25.4 A, Seed | Kept; also the interpretive anchor |
+| Perspective | §25.4 A Boundary (scope); §25.10 Lenses (point of view) | Split |
+| Types of Magic: hard/soft | §25.10 Lens Hardness; §25.11 Target Hardness | Moved off the author tier |
+| Types of Magic: rational/irrational | §25.7 Generativity (author); Apparent Rationality (Lens) | Split |
+| Transference, Prevalence, Naturalness, Ease of Use, Reliability, Consistency | §25.9 | Kept; anchored 0 to 4; distributions required below 4 for Reliability and Consistency |
+| Source, Flux | §25.9, §25.14.3 | Kept; Renewal Rule, Depletion Effect, Driver and Measure added; Flux as a Clock |
+| Notes | Reason lines on each variable; the Record | Absorbed |
+| Effects and Abilities | §25.4 D; §25.8 Effect Grammar (broad systems); Effect Cards | Kept for narrow systems; replaced by a generator, Benchmarks and a Codex for broad ones |
+| Balance (frequency, duration, magnitude, area, range, efficiency, malleability, success rate) | §25.4.2 Parameters; §25.13 Disparity mapping | Moved onto each effect |
+| Limitations: costs, consequences, countermeasures | §25.4 E | Kept |
+| Perception | §25.4.2 Signature (manifestation); §25.10 Lens Perception (opinion) | Split |
+| Map Another Blueprint (universal, audience, protagonist, antagonist) | §25.10 Lenses; §25.11 Disclosure (audience) | Kept as Lenses; the universal perspective is the Specification |
+| Identify Themes, Patterns, and Equations | §25.4 B Invariants; §25.10 Believed | Split by truth |
+| Align It with Your Story | — | Not imported (§25.4) |
+| Break, Inspect, and Repair | §25.13 Boundedness | Kept; mandatory; External Auditor where available |
+| Rinse and Repeat | §25.14.2 Extensions; Part Review | Iteration happens between Parts |
+| *Added by §25:* Mechanism Core, Tendency Rules, Discretion Points, the Metaphysic (Common Scale, Equivalences, Substitutions, Couplings), Effect Grammar and Pricing Procedure, Power Axes and Price vectors, Domain Genesis, gate kinds, Diegetic Interface Authority, staged effects and Products, the Production Rule, agentive and shared Sources, Circulation, Carriers, Residual Thaumaturgic Clause, Closure Test, Disclosure Profile, Competence Delegation, sealing, Derivation and Extension, magical Drift | | |
