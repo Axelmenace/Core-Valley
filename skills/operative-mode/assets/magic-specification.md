@@ -4,6 +4,8 @@ Hand this back filled, never blank. Fill one Specification for each Substrate (�
 
 Most systems are broad: fill Part D as an Effect Grammar (§25.8). Use the Catalogue form only for a narrow system. At Light ceremony, a Grammar system uses Parts A to C, one line per C in Part E, and the Core Grammar; a narrow system uses at most six one-line effects (§25.16). The Residual Thaumaturgic Clause (§25.6) answers everything the sheet leaves unsaid. Record any line of the Clause you displace. Where the setting has several systems, fill the Metaphysic sheet first, then one Specification per system beneath it.
 
+To build this sheet from a Player's choices, use the Magic Menu (`magic-menu.md`); for a ready-made system, adopt the Standard System (`standard-magic-system.md`) and record any Tunings in Part B (§25.18).
+
 ---
 
 ## META-‹setting› · v‹M.m.p› · sealed with its Specifications (§25.5)

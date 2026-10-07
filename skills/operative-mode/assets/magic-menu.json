@@ -1,0 +1,277 @@
+{
+  "What Magic Is": {
+    "Options": [
+      "Mana",
+      "Elemental Spirits",
+      "Divine Grace",
+      "Words of Creation",
+      "Soul Force",
+      "Ley Lines",
+      "Bloodline Inheritance",
+      "Contracts",
+      "Residue of the Dead Gods",
+      "The System",
+      "Dream",
+      "Lost Technology"
+    ]
+  },
+  "The Reserve": {
+    "Options": [
+      "Mana Pool",
+      "Stamina / Vitality",
+      "Spell Slots (Vancian)",
+      "Cooldowns",
+      "Charges in Objects",
+      "Components",
+      "Life Span",
+      "Corruption Track",
+      "Favour",
+      "No Reserve, Backlash Only"
+    ]
+  },
+  "How It Is Cast": {
+    "Options": [
+      "Chanted Incantations",
+      "Chantless Casting (advanced)",
+      "Magic Circles",
+      "Gestures and Signs",
+      "Runes and Inscription",
+      "Focus Required",
+      "Will Alone",
+      "True Names",
+      "Song and Dance",
+      "Ritual",
+      "Equations"
+    ]
+  },
+  "How It Is Divided": {
+    "Options": [
+      "Elemental: Fire, Water, Wind, Earth",
+      "Light and Dark",
+      "Non-Elemental (Null)",
+      "Rare Affinities: Space, Summoning",
+      "Eight Schools",
+      "Five Phases (Wu Xing)",
+      "Aspects / Concepts",
+      "Colours",
+      "Spirits by Kind",
+      "Sigil Families",
+      "Single Domain",
+      "Freeform"
+    ]
+  },
+  "Where Power Comes From": {
+    "Options": [
+      "Within the Caster",
+      "The Surroundings",
+      "Within and Around",
+      "A Patron",
+      "A Bonded Partner",
+      "Objects",
+      "Sacrifice"
+    ]
+  },
+  "The Power Ladder": {
+    "Options": [
+      "Seven Named Ranks",
+      "Circles 1 to 9",
+      "Letter Ranks F to S",
+      "Stars",
+      "Realms",
+      "Two Axes",
+      "Unranked"
+    ]
+  },
+  "Who Can Use It": {
+    "Options": [
+      "Most People, Few Trained",
+      "Everyone Equally",
+      "The Born Gifted",
+      "Noble Blood",
+      "The Chosen",
+      "Contract-Holders",
+      "Only Outsiders"
+    ]
+  },
+  "Affinity": {
+    "Options": [
+      "Born Affinities",
+      "One Affinity Each",
+      "Learned, Not Born",
+      "Personality-Linked",
+      "Single Shared Art"
+    ]
+  },
+  "How Mages Grow": {
+    "Options": [
+      "Drain-and-Recover",
+      "Mastery by Use",
+      "Study",
+      "Levels and Experience",
+      "Breakthroughs",
+      "Deepening Pact",
+      "Fixed at Birth",
+      "Consuming Power"
+    ]
+  },
+  "Renewal": {
+    "Options": [
+      "Rest and Sleep",
+      "Potions and Mana Stones",
+      "Meditation",
+      "Ley Lines and Places",
+      "Time of Day, Moon or Season",
+      "Prayer or Worship",
+      "Eating and Drinking",
+      "Never"
+    ]
+  },
+  "Running Dry": {
+    "Options": [
+      "Mana Exhaustion",
+      "Cannot Cast, Nothing Else",
+      "Burns Life Instead",
+      "Madness",
+      "Permanent Loss",
+      "Death"
+    ]
+  },
+  "The Price Beyond Fuel": {
+    "Options": [
+      "None Beyond Fuel",
+      "Overreach Backlash",
+      "Physical Strain",
+      "Ageing",
+      "Corruption",
+      "Attention",
+      "Environmental Drain",
+      "A Debt"
+    ]
+  },
+  "Reliability": {
+    "Options": [
+      "Certain",
+      "Mostly Dependable",
+      "Risky",
+      "Wild"
+    ]
+  },
+  "Countermeasures": {
+    "Options": [
+      "Anti-Magic Material",
+      "Dispelling and Countering",
+      "Barriers",
+      "Interrupting the Caster",
+      "Opposed Elements",
+      "Iron or Salt",
+      "Faith",
+      "Distance"
+    ]
+  },
+  "How Common It Is": {
+    "Options": [
+      "None",
+      "Rare",
+      "Guarded",
+      "Widespread",
+      "Saturated"
+    ]
+  },
+  "Standing of Mages": {
+    "Options": [
+      "Respected Professionals",
+      "Ruling Class",
+      "Feared and Hunted",
+      "Holy Servants",
+      "State Assets",
+      "Ordinary Tradesfolk"
+    ]
+  },
+  "Institutions": {
+    "Options": [
+      "Magic Academy",
+      "Adventurers' Guild",
+      "Church",
+      "Mages' Guild or Tower",
+      "Royal Court Mages",
+      "Secret Orders",
+      "Sects",
+      "None"
+    ]
+  },
+  "The Interface": {
+    "Options": [
+      "Appraisal Crystal and Appraisal Spell",
+      "Status Window",
+      "Guild Card",
+      "Familiar's Sense",
+      "None"
+    ]
+  },
+  "How High It Reaches": {
+    "Options": [
+      "A Room",
+      "A Battlefield",
+      "A City",
+      "A Nation",
+      "A World"
+    ]
+  },
+  "What Magic Can Never Do": {
+    "Options": [
+      "Raise the Truly Dead",
+      "Travel in Time",
+      "Read Memories",
+      "Make Gold",
+      "Copy Magic or Life",
+      "Bind a Will Forever",
+      "Reach Inside the Living",
+      "Create Life",
+      "Prophecy",
+      "Grant Wishes"
+    ]
+  },
+  "How It Looks": {
+    "Options": [
+      "Glowing Circles and Coloured Light",
+      "Invisible",
+      "Runes in the Air",
+      "The Caster Changes",
+      "Sound and Scent",
+      "Distortion"
+    ]
+  },
+  "Crafting": {
+    "Options": [
+      "Potions (Alchemy)",
+      "Spell Scrolls",
+      "Magic Tools",
+      "Enchanted Arms and Armour",
+      "Golems and Constructs",
+      "Wards and Talismans",
+      "None"
+    ]
+  },
+  "The Outsider's Edge": {
+    "Options": [
+      "All Affinities",
+      "Vast Reserve",
+      "Chantless from the Start",
+      "Appraisal",
+      "Item Box",
+      "Rapid Growth",
+      "Modern Knowledge",
+      "A Unique Domain",
+      "None"
+    ]
+  },
+  "How Much the Player Is Shown": {
+    "Options": [
+      "Hard: Shown Early",
+      "Hard: Learned in Play",
+      "Soft: Mysterious",
+      "Visible Numbers",
+      "Hidden Numbers"
+    ]
+  }
+}

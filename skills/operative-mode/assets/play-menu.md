@@ -1,6 +1,6 @@
 # Play Menu
 
-*Play Menu v1.1, for the Operative Mode Framework, Draft 0.4. Machine-readable copy: `play-menu.json`; random picks: `scripts/menu_draw.py`.*
+*Play Menu v1.2, for the Operative Mode Framework, Draft 0.4. Machine-readable copy: `play-menu.json`; random picks: `scripts/menu_draw.py`. Magic is built in detail on the companion Magic Menu (`magic-menu.md`). Selectable picker: `play-menu.html`.*
 
 The Play Menu gives a Player who is unsure what to play eighteen sets of options to pick from, and every pick maps onto a part of the Mode the Operator then builds.
 
@@ -31,6 +31,7 @@ After those, Story Hooks, Character Archetypes, Romantic Interest and Story Mech
 | Romantic Interest | Aims; an Operator Character's Want; Content Dials |
 | Creatures and Beings | The world's population (Mode-specific material) |
 | Historical, Sci-Fi, Post-Apocalyptic, Dark World, Trope Fusion, Fantasy and Magic | Setting and world rules; Causal Standard; the magic Specification and its Disclosure Profile (§25) |
+| Magic Menu (companion file) | The magic Specification field by field; or the Standard System |
 | Role and Profession | The Player's Character: Seat, governed objects, starting position |
 | Social Structure | World rules; who holds power; what Operator Characters resist |
 | Story Mechanics | Resolution Protocol; Clocks; Transparency; whether the Table Game Baseline fits |
@@ -443,8 +444,11 @@ A fantasy pick is three choices: the kind of fantasy world, how magic works, and
 
 Every pick here is built as a Specification that is hard to the Operator (§25). Hard Magic and Soft Magic set only the Disclosure Profile, meaning how much the Player is shown. The other picks shape the Specification itself, and they combine with either.
 
+For more than a sketch, the Player can turn to the **Magic Menu** (`magic-menu.md`), which builds the system set by set, with Operator's Choice in every set, or take **The Standard System** (`standard-magic-system.md`) ready-made. A pick from this table is carried onto the Magic Menu as the matching option.
+
 | Option | In one line |
 | --- | --- |
+| The Standard System | Ready-made isekai magic: mana, affinities, chants, seven ranks (`standard-magic-system.md`) |
 | Hard Magic | The Player learns the rules and costs early; problems can be solved with it |
 | Soft Magic | Fully specified, but the Player is shown little; mysterious and awe-inspiring |
 | Elemental | Fire, water, earth, air, and their combinations |

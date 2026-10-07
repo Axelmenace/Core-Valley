@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en" data-kind="magic">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magic Menu</title>
+<style>
+:root{
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;
+  --sans:"Avenir Next","Segoe UI",Candara,"Trebuchet MS",sans-serif;
+  --r-sm:3px; --r-lg:10px;
+}
+/* Play Menu: a library catalogue, grey-green paper and oxblood ink */
+html[data-kind=play]{--bg:#EDF0EA;--panel:#F7F8F4;--ink:#1E2A30;--muted:#5D6A65;--rule:#C8CFC4;--accent:#8A2B35;--accent-ink:#FFF;--tint:#F1E1DF;--star:#8A6A1E;--focus:#2F6F86}
+/* Magic Menu: an indigo night, gold for the seal, violet for the Standard star */
+html[data-kind=magic]{--bg:#171C2B;--panel:#1F2639;--ink:#E6E2D5;--muted:#9AA0B2;--rule:#33405C;--accent:#C9A44C;--accent-ink:#1A1A1A;--tint:#2E2A22;--star:#A796E0;--focus:#7FC4D8}
+@media (prefers-color-scheme:dark){
+  html[data-kind=play]{--bg:#1A2125;--panel:#212A2F;--ink:#E3E6DF;--muted:#9BA6A1;--rule:#36434A;--accent:#D9767F;--accent-ink:#1A1A1A;--tint:#3A2A2D;--star:#D4B160;--focus:#7FC4D8}
+}
+@media (prefers-color-scheme:light){
+  html[data-kind=magic]{--bg:#ECEAF2;--panel:#F7F6FA;--ink:#221F33;--muted:#5F5B74;--rule:#CFCADF;--accent:#7A5C14;--accent-ink:#FFF;--tint:#EFE6CF;--star:#5B4A9E;--focus:#2F6F86}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--serif)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 16px}
+header.top{padding:40px 0 20px;border-bottom:1px solid var(--rule)}
+header.top h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1;margin:0 0 6px;font-weight:600;letter-spacing:-.01em}
+header.top .ver{color:var(--muted);font-family:var(--sans);font-size:.85rem;margin:0 0 14px}
+header.top p.lede{max-width:68ch;margin:0;color:var(--ink)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.tools input[type=search]{flex:1 1 240px;max-width:420px;padding:9px 12px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--panel)}
+.btn{border:1px solid var(--rule);background:var(--panel);padding:8px 14px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--sans);font-size:.9rem}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr) 340px;gap:28px;padding:24px 0 120px}
+nav.rail{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-family:var(--sans);font-size:.88rem}
+nav.rail h2{font:600 .95rem var(--serif);margin:14px 0 4px;color:var(--muted)}
+nav.rail a{display:flex;justify-content:space-between;gap:8px;padding:4px 6px;color:var(--ink);text-decoration:none;border-radius:var(--r-sm)}
+nav.rail a:hover{background:var(--panel)}
+nav.rail a .n{color:var(--muted)}
+nav.rail a.has .n{color:var(--accent);font-weight:700}
+nav.rail a.oc .n{color:var(--star)}
+main{min-width:0}
+section.cat{padding:22px 0 26px;border-bottom:1px solid var(--rule)}
+section.cat[hidden]{display:none}
+.cat-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.cat-head h2{margin:0;font-size:1.55rem;font-weight:600}
+.cat-head h2 .num{color:var(--muted);font-weight:400;margin-right:8px}
+.badge{font-family:var(--sans);font-size:.78rem;color:var(--muted);border:1px solid var(--rule);padding:1px 8px;border-radius:99px}
+.cat-sets{font-family:var(--sans);font-size:.82rem;color:var(--muted);margin:4px 0 0}
+details.about{margin:8px 0 0;max-width:72ch}
+details.about summary{cursor:pointer;color:var(--muted);font-family:var(--sans);font-size:.85rem}
+details.about p{margin:6px 0 0;font-size:.95rem}
+.cat-tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.oc-btn[aria-pressed=true]{background:var(--star);color:var(--bg);border-color:var(--star)}
+.cat.is-oc .opts{opacity:.45}
+.sub h3{font-size:1.05rem;margin:18px 0 6px;font-weight:600}
+.grp{font-family:var(--sans);font-size:.8rem;color:var(--muted);margin:14px 0 4px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px}
+.opt{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;text-align:left;width:100%;background:none;border:0;border-top:1px dotted var(--rule);padding:9px 6px 9px 2px;cursor:pointer;border-radius:0}
+.opt:hover{background:var(--panel)}
+.opt .seal{width:18px;height:18px;margin-top:3px;border:1.5px solid var(--muted);border-radius:50%;position:relative}
+.sub[data-mode=one] .opt .seal{border-radius:50%}
+.sub[data-mode=several] .opt .seal{border-radius:4px}
+.opt[aria-pressed=true]{background:var(--tint)}
+.opt[aria-pressed=true] .seal{background:var(--accent);border-color:var(--accent)}
+.opt[aria-pressed=true] .seal::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid var(--accent-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.opt .nm{font-weight:600}
+.opt .star{color:var(--star);margin-left:4px}
+.opt .ds{display:block;font-size:.88rem;color:var(--muted);line-height:1.4;margin-top:1px}
+.opt .rolled{font-family:var(--sans);font-size:.72rem;color:var(--accent);margin-left:6px}
+.opt[hidden]{display:none}
+aside.slip{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px}
+aside.slip h2{margin:0 0 4px;font-size:1.3rem}
+aside.slip .sub2{color:var(--muted);font-family:var(--sans);font-size:.82rem;margin:0 0 12px}
+.slip ul{list-style:none;padding:0;margin:0}
+.slip li{padding:7px 0;border-top:1px dotted var(--rule);font-size:.93rem}
+.slip li b{display:block;font-size:.78rem;font-family:var(--sans);color:var(--muted);font-weight:600}
+.slip li.oc span{color:var(--star)}
+.slip li.tune b::after{content:" · tuning";color:var(--accent)}
+.slip .empty{color:var(--muted);font-size:.93rem}
+.slip .left{margin-top:12px;font-size:.85rem;color:var(--muted)}
+.slip .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.slip textarea{width:100%;min-height:140px;margin-top:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--rule);border-radius:var(--r-sm);padding:8px}
+.toast{font-family:var(--sans);font-size:.82rem;color:var(--accent);min-height:1.2em;margin-top:6px}
+.approach{margin:22px 0 0;padding:18px;border:1px solid var(--accent);border-radius:var(--r-lg);background:var(--panel)}
+.approach h2{margin:0 0 8px;font-size:1.35rem}
+.approach .opts{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.std-note{margin:16px 0 0;padding:14px 16px;border-left:3px solid var(--star);background:var(--panel);max-width:72ch}
+.groups-hide section.cat{display:none}
+.mob-slip{display:none}
+@media (max-width:1100px){.layout{grid-template-columns:minmax(0,1fr) 320px}nav.rail{display:none}}
+@media (max-width:760px){
+  .layout{grid-template-columns:1fr}
+  aside.slip{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:70vh;padding-bottom:72px;border-radius:var(--r-lg) var(--r-lg) 0 0;transform:translateY(calc(100% - 0px));transition:transform .2s;z-index:5}
+  aside.slip.open{transform:none}
+  .mob-slip{display:block;position:fixed;right:16px;bottom:16px;z-index:6}
+  body{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1 id="title"></h1>
+  <p class="ver" id="ver"></p>
+  <p class="lede" id="lede"></p>
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search options" aria-label="Search options">
+    <button class="btn" id="rollCore"></button>
+    <button class="btn" id="reset">Clear all</button>
+  </div>
+  <div id="approachBox"></div>
+</header>
+<div class="layout">
+  <nav class="rail" id="rail" aria-label="Categories"></nav>
+  <main id="main"></main>
+  <aside class="slip" id="slip" aria-label="Your picks">
+    <h2>Your picks</h2>
+    <p class="sub2">Copy this into the conversation when you are done.</p>
+    <div id="slipBody"></div>
+    <div class="acts">
+      <button class="btn primary" id="copy">Copy picks</button>
+      <button class="btn" id="show">Show as text</button>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <textarea id="out" hidden readonly aria-label="Picks as text"></textarea>
+  </aside>
+</div>
+</div>
+<button class="btn primary mob-slip" id="mobSlip">Your picks</button>
+<script>
+const CONFIG = {"kind": "magic", "title": "Magic Menu", "version": "Magic Menu v1.0", "lede": "Start with the Approach. Every set has Operator's Choice. A star marks the Standard System's own value, so a tuned system shows exactly what you changed.", "core": {"label": "Roll the core four", "cats": ["What Magic Is", "The Reserve", "How It Is Cast", "How It Is Divided"]}, "groups": ["Core", "Power", "Limits", "The World", "Shape", "Extras"], "approach": [{"name": "The Standard System", "desc": "The Operator adopts standard-magic-system.md as written: the mana-and-affinity magic any isekai reader recognizes. Nothing else on this Menu is asked"}, {"name": "The Standard System, tuned", "desc": "The Standard System is adopted, and the Player changes only the sets they care about. Each changed set is recorded as a tuning (see below)"}, {"name": "Build from the Menu", "desc": "The Player picks from the sets below, and the Operator elects whatever is left"}, {"name": "Leave it to the Operator", "desc": "The Operator elects the whole system toward the Mode's Intent and declares the election, as at §11"}]};
+const CATS = [{"id": "m1", "num": 1, "name": "What Magic Is", "intro": "The Substrate: what magic is in the world's own terms. The pick becomes the Seed's first clause.", "sets": "Part A Seed; Part B Substrate", "group": "Core", "subs": [{"name": "", "mode": "one", "options": [{"name": "Mana", "desc": "An energy every living thing holds and the world is steeped in; spells give it shape", "group": "", "star": true}, {"name": "Elemental Spirits", "desc": "Small wills in fire, water, wind and stone, who act when asked well", "group": "", "star": false}, {"name": "Divine Grace", "desc": "Power that belongs to the gods, lent to those they favour", "group": "", "star": false}, {"name": "Words of Creation", "desc": "The language the world was made in; to speak it is to command", "group": "", "star": false}, {"name": "Soul Force", "desc": "The self's own substance, spent outward", "group": "", "star": false}, {"name": "Ley Lines", "desc": "Rivers of power under the land; strong where they cross, absent elsewhere", "group": "", "star": false}, {"name": "Bloodline Inheritance", "desc": "A power in certain blood, passed parent to child", "group": "", "star": false}, {"name": "Contracts", "desc": "Power owed under agreements with beings that can lend it", "group": "", "star": false}, {"name": "Residue of the Dead Gods", "desc": "What remains of fallen divinities, mined, refined or inhaled", "group": "", "star": false}, {"name": "The System", "desc": "A rule-engine laid over the world that grants skills and counts levels", "group": "", "star": false}, {"name": "Dream", "desc": "The waking world bends to what is dreamed hard enough", "group": "", "star": false}, {"name": "Lost Technology", "desc": "What looks like magic is the machinery of a vanished civilization", "group": "", "star": false}]}]}, {"id": "m2", "num": 2, "name": "The Reserve", "intro": "What casting spends, and how the spending is counted. This is the heart of the Cost Function.", "sets": "Part C Source (Reserve); Part D Cost Function", "group": "Core", "subs": [{"name": "", "mode": "one", "options": [{"name": "Mana Pool", "desc": "A personal reserve in points; each spell costs a number of them", "group": "", "star": true}, {"name": "Stamina / Vitality", "desc": "Casting tires the body the way labour does; no separate pool", "group": "", "star": false}, {"name": "Spell Slots (Vancian)", "desc": "A fixed number of castings per rank per day, prepared in advance", "group": "", "star": false}, {"name": "Cooldowns", "desc": "Each spell, once cast, cannot be cast again for a stated time", "group": "", "star": false}, {"name": "Charges in Objects", "desc": "Power stored in stones, wands or relics, spent and recharged", "group": "", "star": false}, {"name": "Components", "desc": "Each spell consumes a material: herbs, powders, gems, blood", "group": "", "star": false}, {"name": "Life Span", "desc": "Every casting spends days, months or years of the caster's life", "group": "", "star": false}, {"name": "Corruption Track", "desc": "No fuel; each casting adds to a mark that eventually changes the caster", "group": "", "star": false}, {"name": "Favour", "desc": "A patron's goodwill, spent with each request and earned back by service", "group": "", "star": false}, {"name": "No Reserve, Backlash Only", "desc": "Casting is free; failure is what costs", "group": "", "star": false}]}]}, {"id": "m3", "num": 3, "name": "How It Is Cast", "intro": "The Operation: what a caster actually does. Picks combine, and the first pick is the ordinary method; others become Modifiers (§25.8).", "sets": "Part B Operation; Part C Ease of Use; Part D Modifiers", "group": "Core", "subs": [{"name": "", "mode": "several", "options": [{"name": "Chanted Incantations", "desc": "Spoken verses; longer verses for greater spells", "group": "", "star": true}, {"name": "Chantless Casting (advanced)", "desc": "The same spells without words; rare, prized, costly", "group": "", "star": true}, {"name": "Magic Circles", "desc": "Geometric circles drawn or projected; required for the greatest workings", "group": "", "star": true}, {"name": "Gestures and Signs", "desc": "Hand shapes and movements carry the pattern", "group": "", "star": false}, {"name": "Runes and Inscription", "desc": "Symbols written or carved hold the spell until triggered", "group": "", "star": false}, {"name": "Focus Required", "desc": "A staff, wand, grimoire or orb is needed to cast at all", "group": "", "star": false}, {"name": "Will Alone", "desc": "Thought and intent; nothing outward", "group": "", "star": false}, {"name": "True Names", "desc": "Command a thing by speaking its real name", "group": "", "star": false}, {"name": "Song and Dance", "desc": "Melody, rhythm and movement", "group": "", "star": false}, {"name": "Ritual", "desc": "Long ceremonies with many participants and materials", "group": "", "star": false}, {"name": "Equations", "desc": "Magic as calculation; precision raises power", "group": "", "star": false}]}]}, {"id": "m4", "num": 4, "name": "How It Is Divided", "intro": "The Domains: how the territory of magic is cut up. Several picks combine (Elemental with a rare Space affinity, say).", "sets": "Part D Domains", "group": "Core", "subs": [{"name": "", "mode": "several", "options": [{"name": "Elemental: Fire, Water, Wind, Earth", "desc": "The classic four, with opposing pairs", "group": "", "star": true}, {"name": "Light and Dark", "desc": "Healing, holy and purifying; shadow, curse and illusion", "group": "", "star": true}, {"name": "Non-Elemental (Null)", "desc": "Force, barriers, strengthening and detection, open to anyone with mana", "group": "", "star": true}, {"name": "Rare Affinities: Space, Summoning", "desc": "Storage, teleportation, gates; familiars and called beings", "group": "", "star": true}, {"name": "Eight Schools", "desc": "Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation", "group": "", "star": false}, {"name": "Five Phases (Wu Xing)", "desc": "Wood, Fire, Earth, Metal, Water, each generating and overcoming another", "group": "", "star": false}, {"name": "Aspects / Concepts", "desc": "Domains are ideas: Time, Death, Fortune, Iron, Hunger", "group": "", "star": false}, {"name": "Colours", "desc": "Each colour of power has its own temperament and effects", "group": "", "star": false}, {"name": "Spirits by Kind", "desc": "One Domain per kind of spirit, reached by its contract", "group": "", "star": false}, {"name": "Sigil Families", "desc": "Each family of runes covers one class of effect", "group": "", "star": false}, {"name": "Single Domain", "desc": "One narrow power, done deeply", "group": "", "star": false}, {"name": "Freeform", "desc": "No partition; anything in reach, priced by Tier alone", "group": "", "star": false}]}]}, {"id": "m5", "num": 5, "name": "Where Power Comes From", "intro": "The Locus of the Source. An agentive Locus makes the patron an Operator Character with a Stake Card and Terms (§25.9).", "sets": "Part C Source (Locus); Discretion Points for any patron", "group": "Power", "subs": [{"name": "", "mode": "one", "options": [{"name": "Within the Caster", "desc": "Each person's own reserve, drawn from inside", "group": "", "star": true}, {"name": "The Surroundings", "desc": "Drawn from the air, the land or the ley lines nearby", "group": "", "star": false}, {"name": "Within and Around", "desc": "An inner reserve, topped up from the world", "group": "", "star": false}, {"name": "A Patron", "desc": "Lent by a god, demon, fae or spirit, under Terms", "group": "", "star": false}, {"name": "A Bonded Partner", "desc": "Shared with a familiar, spirit or person", "group": "", "star": false}, {"name": "Objects", "desc": "Stored in stones, relics or devices", "group": "", "star": false}, {"name": "Sacrifice", "desc": "Taken from what is given up: blood, life, possessions, memories", "group": "", "star": false}]}]}, {"id": "m6", "num": 6, "name": "The Power Ladder", "intro": "The primary Power Axis and the names of its Tiers.", "sets": "Part D Power Axes and Envelopes", "group": "Power", "subs": [{"name": "", "mode": "one", "options": [{"name": "Seven Named Ranks", "desc": "Beginner, Intermediate, Advanced, Saint, King, Emperor, Divine", "group": "", "star": true}, {"name": "Circles 1 to 9", "desc": "Numbered tiers of spells, as in tabletop play", "group": "", "star": false}, {"name": "Letter Ranks F to S", "desc": "F, E, D, C, B, A, S, and legends beyond", "group": "", "star": false}, {"name": "Stars", "desc": "One star to seven or nine", "group": "", "star": false}, {"name": "Realms", "desc": "Cultivation-style realms with named stages inside each", "group": "", "star": false}, {"name": "Two Axes", "desc": "Power (how much) and Complexity (how intricate) ranked separately", "group": "", "star": false}, {"name": "Unranked", "desc": "No public ladder; strength is shown, never measured", "group": "", "star": false}]}]}, {"id": "m7", "num": 7, "name": "Who Can Use It", "intro": "The Access Rule's first gate.", "sets": "Part D Access Rule; Part C Transference", "group": "Power", "subs": [{"name": "", "mode": "one", "options": [{"name": "Most People, Few Trained", "desc": "Nearly everyone has some mana; real mages are those who trained", "group": "", "star": true}, {"name": "Everyone Equally", "desc": "Any person can learn it to any height", "group": "", "star": false}, {"name": "The Born Gifted", "desc": "A minority born with it; the rest never", "group": "", "star": false}, {"name": "Noble Blood", "desc": "Strong in old families, weak or absent in commoners", "group": "", "star": false}, {"name": "The Chosen", "desc": "A handful picked by fate, a god or an artifact", "group": "", "star": false}, {"name": "Contract-Holders", "desc": "Only those who made a pact", "group": "", "star": false}, {"name": "Only Outsiders", "desc": "Locals cannot; summoned or reincarnated people can", "group": "", "star": false}]}]}, {"id": "m8", "num": 8, "name": "Affinity", "intro": "How each caster's reach across Domains is limited. This is enumerated under Consistency.", "sets": "Part D Access Rule; Part C Consistency", "group": "Power", "subs": [{"name": "", "mode": "one", "options": [{"name": "Born Affinities", "desc": "Zero to four Domains at birth; off-affinity casting is weak and expensive", "group": "", "star": true}, {"name": "One Affinity Each", "desc": "Every caster has exactly one Domain", "group": "", "star": false}, {"name": "Learned, Not Born", "desc": "Any Domain can be studied; aptitude only speeds it", "group": "", "star": false}, {"name": "Personality-Linked", "desc": "A caster's temperament decides their Domains", "group": "", "star": false}, {"name": "Single Shared Art", "desc": "No affinities; everyone works the same magic", "group": "", "star": false}]}]}, {"id": "m9", "num": 9, "name": "How Mages Grow", "intro": "The Progression Rule: what raises a caster's Rank and Reserve.", "sets": "Part D Progression Rule", "group": "Power", "subs": [{"name": "", "mode": "several", "options": [{"name": "Drain-and-Recover", "desc": "Emptying the reserve and recovering enlarges it, most in childhood", "group": "", "star": true}, {"name": "Mastery by Use", "desc": "Successful castings at one's own Rank unlock the next", "group": "", "star": true}, {"name": "Study", "desc": "Learning spells from teachers, grimoires and academies", "group": "", "star": false}, {"name": "Levels and Experience", "desc": "Defeating foes and finishing tasks raises a level", "group": "", "star": false}, {"name": "Breakthroughs", "desc": "Long plateaus broken by a risky trial", "group": "", "star": false}, {"name": "Deepening Pact", "desc": "The patron grants more as the bond strengthens", "group": "", "star": false}, {"name": "Fixed at Birth", "desc": "No growth; what one is born with is what one has", "group": "", "star": false}, {"name": "Consuming Power", "desc": "Absorbing monster cores, relics or rivals", "group": "", "star": false}]}]}, {"id": "m10", "num": 10, "name": "Renewal", "intro": "The Renewal Rule: what refills the Reserve.", "sets": "Part C Renewal Rule", "group": "Limits", "subs": [{"name": "", "mode": "several", "options": [{"name": "Rest and Sleep", "desc": "A full night restores it; rest restores it by the hour", "group": "", "star": true}, {"name": "Potions and Mana Stones", "desc": "Drunk or absorbed, at a loss", "group": "", "star": true}, {"name": "Meditation", "desc": "Focused stillness restores faster than sleep", "group": "", "star": false}, {"name": "Ley Lines and Places", "desc": "Some places refill quickly, others barely at all", "group": "", "star": false}, {"name": "Time of Day, Moon or Season", "desc": "Renewal waxes and wanes on a cycle", "group": "", "star": false}, {"name": "Prayer or Worship", "desc": "Devotion refills it", "group": "", "star": false}, {"name": "Eating and Drinking", "desc": "Food is fuel", "group": "", "star": false}, {"name": "Never", "desc": "What is spent is gone for good", "group": "", "star": false}]}]}, {"id": "m11", "num": 11, "name": "Running Dry", "intro": "The Depletion Effect: what happens at zero.", "sets": "Part C Depletion Effect", "group": "Limits", "subs": [{"name": "", "mode": "one", "options": [{"name": "Mana Exhaustion", "desc": "Weakness as it runs low; the caster faints at zero", "group": "", "star": true}, {"name": "Cannot Cast, Nothing Else", "desc": "The well is dry until it refills", "group": "", "star": false}, {"name": "Burns Life Instead", "desc": "Casting continues, paid for in health", "group": "", "star": false}, {"name": "Madness", "desc": "The mind frays as the reserve empties", "group": "", "star": false}, {"name": "Permanent Loss", "desc": "Draining fully shrinks the reserve for good", "group": "", "star": false}, {"name": "Death", "desc": "Zero is fatal", "group": "", "star": false}]}]}, {"id": "m12", "num": 12, "name": "The Price Beyond Fuel", "intro": "Costs and Consequences that are not the Reserve itself.", "sets": "Part E Costs and Consequences", "group": "Limits", "subs": [{"name": "", "mode": "several", "options": [{"name": "None Beyond Fuel", "desc": "Fuel is the whole price for ordinary casting", "group": "", "star": true}, {"name": "Overreach Backlash", "desc": "Casting above one's Rank, or failing badly, rebounds on the caster", "group": "", "star": true}, {"name": "Physical Strain", "desc": "Nosebleeds, headaches, shaking hands", "group": "", "star": false}, {"name": "Ageing", "desc": "Great workings take years", "group": "", "star": false}, {"name": "Corruption", "desc": "Repeated use changes body or mind", "group": "", "star": false}, {"name": "Attention", "desc": "Casting is noticed by something that should not notice", "group": "", "star": false}, {"name": "Environmental Drain", "desc": "The land around is weakened by each working", "group": "", "star": false}, {"name": "A Debt", "desc": "Each casting adds to what is owed a patron", "group": "", "star": false}]}]}, {"id": "m13", "num": 13, "name": "Reliability", "intro": "How sure a casting is. Below Certain, the failure chance and its table are declared, and outcomes are drawn (§20.14).", "sets": "Part C Reliability; failure and variance tables", "group": "Limits", "subs": [{"name": "", "mode": "one", "options": [{"name": "Certain", "desc": "A known spell within one's Rank never fails", "group": "", "star": false}, {"name": "Mostly Dependable", "desc": "Sure below one's Rank; a real chance of failure at it and above", "group": "", "star": true}, {"name": "Risky", "desc": "Every casting can fail or misfire", "group": "", "star": false}, {"name": "Wild", "desc": "Every casting is a gamble on what happens at all", "group": "", "star": false}]}]}, {"id": "m14", "num": 14, "name": "Countermeasures", "intro": "What stops or cancels magic.", "sets": "Part E Countermeasures", "group": "Limits", "subs": [{"name": "", "mode": "several", "options": [{"name": "Anti-Magic Material", "desc": "An ore that blocks mana; shackles, walls and blades of it", "group": "", "star": true}, {"name": "Dispelling and Countering", "desc": "Spells that unmake or answer spells", "group": "", "star": true}, {"name": "Barriers", "desc": "Wards that stop effects at a boundary", "group": "", "star": true}, {"name": "Interrupting the Caster", "desc": "Break the chant, the gesture or the focus", "group": "", "star": true}, {"name": "Opposed Elements", "desc": "Water against fire, earth against wind, light against dark", "group": "", "star": true}, {"name": "Iron or Salt", "desc": "Mundane materials that magic cannot cross", "group": "", "star": false}, {"name": "Faith", "desc": "Belief itself resists", "group": "", "star": false}, {"name": "Distance", "desc": "Magic weakens sharply with range", "group": "", "star": false}]}]}, {"id": "m15", "num": 15, "name": "How Common It Is", "intro": "Prevalence. The same scale as the Play Menu's How common magic is (§10); a pick there answers this set.", "sets": "Part C Prevalence", "group": "The World", "subs": [{"name": "", "mode": "one", "options": [{"name": "None", "desc": "No magic; only rumour and belief", "group": "", "star": false}, {"name": "Rare", "desc": "A handful of practitioners, feared or hunted", "group": "", "star": false}, {"name": "Guarded", "desc": "Common but controlled by an order, a church or a crown", "group": "", "star": false}, {"name": "Widespread", "desc": "Everyday magic in trades and homes", "group": "", "star": true}, {"name": "Saturated", "desc": "Magic in the air, the water and the laws of nature", "group": "", "star": false}]}]}, {"id": "m16", "num": 16, "name": "Standing of Mages", "intro": "How the population regards casters. This sets Perception in the common Lens, not a fact of the Specification.", "sets": "Lens Perception (§25.10)", "group": "The World", "subs": [{"name": "", "mode": "one", "options": [{"name": "Respected Professionals", "desc": "Valued for skill; strong mages are courted by crowns and guilds", "group": "", "star": true}, {"name": "Ruling Class", "desc": "Mages are the aristocracy", "group": "", "star": false}, {"name": "Feared and Hunted", "desc": "Magic is suspected, outlawed or burned", "group": "", "star": false}, {"name": "Holy Servants", "desc": "Casters are priests, and magic is worship", "group": "", "star": false}, {"name": "State Assets", "desc": "Registered, conscripted, owned", "group": "", "star": false}, {"name": "Ordinary Tradesfolk", "desc": "A mage is like a smith or a baker", "group": "", "star": false}]}]}, {"id": "m17", "num": 17, "name": "Institutions", "intro": "Who teaches, licenses and controls magic. These are Institutional gates: breakable in the fiction, with institutional consequences.", "sets": "Institutional gates; faction Lenses", "group": "The World", "subs": [{"name": "", "mode": "several", "options": [{"name": "Magic Academy", "desc": "A school for the gifted, often the noble", "group": "", "star": true}, {"name": "Adventurers' Guild", "desc": "Ranks, quests and monster bounties; mages hired as party members", "group": "", "star": true}, {"name": "Church", "desc": "Healing and holy magic under a faith", "group": "", "star": true}, {"name": "Mages' Guild or Tower", "desc": "A professional body that licenses practice", "group": "", "star": false}, {"name": "Royal Court Mages", "desc": "The crown's own casters", "group": "", "star": false}, {"name": "Secret Orders", "desc": "Hidden societies that hoard knowledge", "group": "", "star": false}, {"name": "Sects", "desc": "Rival schools with lineages and grudges", "group": "", "star": false}, {"name": "None", "desc": "Magic is learned master to apprentice, or alone", "group": "", "star": false}]}]}, {"id": "m18", "num": 18, "name": "The Interface", "intro": "A Diegetic Interface: anything in the world that reports magical facts. Its Authority is declared (§25.8.2).", "sets": "Part D Diegetic Interface", "group": "The World", "subs": [{"name": "", "mode": "one", "options": [{"name": "Appraisal Crystal and Appraisal Spell", "desc": "Measures affinity and rough capacity; exact numbers are not shown", "group": "", "star": true}, {"name": "Status Window", "desc": "A personal screen of stats, skills and levels", "group": "", "star": false}, {"name": "Guild Card", "desc": "A card that records rank and deeds", "group": "", "star": false}, {"name": "Familiar's Sense", "desc": "A bonded creature tells the caster what it feels", "group": "", "star": false}, {"name": "None", "desc": "Nothing in the world reports on magic", "group": "", "star": false}]}]}, {"id": "m19", "num": 19, "name": "How High It Reaches", "intro": "The Apex Rule: what the top Tier can do.", "sets": "Part D Apex Rule", "group": "Shape", "subs": [{"name": "", "mode": "one", "options": [{"name": "A Room", "desc": "Even the greatest magic is personal in scale", "group": "", "star": false}, {"name": "A Battlefield", "desc": "The strongest can decide a battle", "group": "", "star": false}, {"name": "A City", "desc": "The strongest can destroy or save a city", "group": "", "star": true}, {"name": "A Nation", "desc": "The strongest can reshape a country", "group": "", "star": false}, {"name": "A World", "desc": "The strongest rival gods", "group": "", "star": false}]}]}, {"id": "m20", "num": 20, "name": "What Magic Can Never Do", "intro": "Prohibitions. Several are expected; each is absolute under Amendment.", "sets": "Part B Prohibitions", "group": "Shape", "subs": [{"name": "", "mode": "several", "options": [{"name": "Raise the Truly Dead", "desc": "Nothing returns a person once dead", "group": "", "star": true}, {"name": "Travel in Time", "desc": "No going back, no seeing ahead", "group": "", "star": true}, {"name": "Read Memories", "desc": "Surface thought at most; never the mind's store", "group": "", "star": true}, {"name": "Make Gold", "desc": "No transmuting or conjuring precious metals or gems", "group": "", "star": true}, {"name": "Copy Magic or Life", "desc": "Nothing duplicates a living thing or an enchanted object", "group": "", "star": true}, {"name": "Bind a Will Forever", "desc": "Domination always ends", "group": "", "star": true}, {"name": "Reach Inside the Living", "desc": "Outside mana cannot act inside another living body, except to heal or curse", "group": "", "star": true}, {"name": "Create Life", "desc": "No new living things", "group": "", "star": false}, {"name": "Prophecy", "desc": "The future cannot be read", "group": "", "star": false}, {"name": "Grant Wishes", "desc": "No effect that simply makes a desire true", "group": "", "star": false}]}]}, {"id": "m21", "num": 21, "name": "How It Looks", "intro": "The Signature: how magic shows itself to the senses.", "sets": "Signature line of each Effect Card", "group": "Shape", "subs": [{"name": "", "mode": "one", "options": [{"name": "Glowing Circles and Coloured Light", "desc": "Circles flare under the caster, each element in its own colour", "group": "", "star": true}, {"name": "Invisible", "desc": "Effects appear with no visible working", "group": "", "star": false}, {"name": "Runes in the Air", "desc": "Script blazes and fades around the caster", "group": "", "star": false}, {"name": "The Caster Changes", "desc": "Eyes glow, veins light, hair lifts", "group": "", "star": false}, {"name": "Sound and Scent", "desc": "A hum, a chime, ozone, smoke, flowers", "group": "", "star": false}, {"name": "Distortion", "desc": "Air ripples, shadows bend wrong", "group": "", "star": false}]}]}, {"id": "m22", "num": 22, "name": "Crafting", "intro": "The Production Rule (§25.8.5). A Mode with no pick here has no magical crafting.", "sets": "Part D3 Production Rule; Products", "group": "Extras", "subs": [{"name": "", "mode": "several", "options": [{"name": "Potions (Alchemy)", "desc": "Healing and mana potions, poisons and remedies", "group": "", "star": true}, {"name": "Spell Scrolls", "desc": "A spell written down, cast once by anyone with a little mana", "group": "", "star": true}, {"name": "Magic Tools", "desc": "Lamps, stoves and locks powered by mana stones", "group": "", "star": true}, {"name": "Enchanted Arms and Armour", "desc": "Blades that burn, armour that turns spells", "group": "", "star": true}, {"name": "Golems and Constructs", "desc": "Made servants that obey", "group": "", "star": false}, {"name": "Wards and Talismans", "desc": "Protective charms worn or posted", "group": "", "star": false}, {"name": "None", "desc": "No magical crafting", "group": "", "star": false}]}]}, {"id": "m23", "num": 23, "name": "The Outsider's Edge", "intro": "For isekai and reincarnation Modes: the advantages a newcomer from another world holds. Each pick is a Signature Effect, entered in the Balance Record as a Retained Disparity. The Standard System allows up to two by default.", "sets": "Signature Effects; Balance Record (Retained Disparities)", "group": "Extras", "subs": [{"name": "", "mode": "several", "options": [{"name": "All Affinities", "desc": "Access to every elemental Domain", "group": "", "star": false}, {"name": "Vast Reserve", "desc": "A Reserve many times the local norm", "group": "", "star": false}, {"name": "Chantless from the Start", "desc": "Wordless casting without the years of training", "group": "", "star": false}, {"name": "Appraisal", "desc": "Reads the name, affinities and capacity band of what one touches", "group": "", "star": false}, {"name": "Item Box", "desc": "A personal storage space, out of time", "group": "", "star": false}, {"name": "Rapid Growth", "desc": "Progression at twice the usual rate", "group": "", "star": false}, {"name": "Modern Knowledge", "desc": "Science and mathematics count as comprehension for spells", "group": "", "star": false}, {"name": "A Unique Domain", "desc": "A Domain no one else in the world holds", "group": "", "star": false}, {"name": "None", "desc": "The newcomer is as ordinary as anyone", "group": "", "star": false}]}]}, {"id": "m24", "num": 24, "name": "How Much the Player Is Shown", "intro": "The Disclosure Profile (§25.11). The Specification is complete in every case; this sets only what the Player sees.", "sets": "Disclosure Profile (§25.11)", "group": "Extras", "subs": [{"name": "", "mode": "one", "options": [{"name": "Hard: Shown Early", "desc": "The rules, costs and numbers are disclosed at the start", "group": "", "star": false}, {"name": "Hard: Learned in Play", "desc": "Common knowledge at the start; the rest learned by the Character", "group": "", "star": true}, {"name": "Soft: Mysterious", "desc": "Little is ever explained; effects are shown, not their workings", "group": "", "star": false}, {"name": "Visible Numbers", "desc": "Odds and Costs are shown before every casting", "group": "", "star": false}, {"name": "Hidden Numbers", "desc": "Odds and Costs are drawn and recorded, not shown", "group": "", "star": false}]}]}];
+const KEY = "operative-mode:" + CONFIG.kind + "-menu";
+let state = {picks:{}, oc:{}, rolled:{}, approach:null};
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.picks) state = Object.assign(state, s); } catch(e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+
+function el(tag, attrs, ...kids){ const n = document.createElement(tag);
+  for (const k in (attrs||{})) { if (k === "class") n.className = attrs[k]; else if (k === "text") n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); }
+  for (const k of kids) if (k != null) n.append(k); return n; }
+function rnd(n){ const a = new Uint32Array(1); const lim = Math.floor(0xFFFFFFFF / n) * n; let x; do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim); return x % n; }
+function key(cat, sub){ return cat.id + "|" + sub; }
+function picksOf(cat, si){ return state.picks[key(cat, si)] || []; }
+function catHas(cat){ return cat.subs.some((s, i) => picksOf(cat, i).length); }
+
+document.getElementById("title").textContent = CONFIG.title;
+document.getElementById("ver").textContent = CONFIG.version + " · Operative Mode Framework, Draft 0.4";
+document.getElementById("lede").textContent = CONFIG.lede;
+document.title = CONFIG.title;
+document.getElementById("rollCore").textContent = CONFIG.core.label;
+
+/* ---------- approach (Magic Menu) ---------- */
+function renderApproach(){
+  const box = document.getElementById("approachBox"); box.innerHTML = "";
+  if (!CONFIG.approach) return;
+  const wrap = el("div", {class:"approach"}, el("h2", {text:"Approach"}));
+  const sub = el("div", {class:"sub", "data-mode":"one"});
+  const grid = el("div", {class:"opts"});
+  CONFIG.approach.forEach(a => {
+    const b = el("button", {class:"opt", type:"button", "aria-pressed": String(state.approach === a.name)},
+      el("span", {class:"seal"}), el("span", {}, el("span", {class:"nm", text:a.name}), el("span", {class:"ds", text:a.desc})));
+    b.onclick = () => { setApproach(state.approach === a.name ? null : a.name); };
+    grid.append(b);
+  });
+  sub.append(grid); wrap.append(sub); box.append(wrap);
+  if (state.approach === "The Standard System")
+    box.append(el("p", {class:"std-note", text:"The Standard System is adopted as written, so nothing else on this Menu is asked. Pick “The Standard System, tuned” instead if you want to change parts of it."}));
+  if (state.approach === "Leave it to the Operator")
+    box.append(el("p", {class:"std-note", text:"The Operator elects the whole system toward the Mode's Intent and declares the election. You can still pin any set below, and your pin wins."}));
+}
+function setApproach(name){
+  state.approach = name;
+  if (name === "The Standard System, tuned") {
+    // preload the Standard values wherever the Player has not picked
+    CATS.forEach(c => c.subs.forEach((s, i) => { const k = key(c, i);
+      if (!(state.picks[k] || []).length && !state.oc[c.id]) state.picks[k] = s.options.filter(o => o.star).map(o => o.name); }));
+  }
+  save(); renderAll();
+}
+
+/* ---------- categories ---------- */
+function optionButton(cat, si, sub, o){
+  const on = picksOf(cat, si).includes(o.name);
+  const nm = el("span", {class:"nm", text:o.name});
+  const body = el("span", {}, nm);
+  if (o.star) body.append(el("span", {class:"star", title:"The Standard System's value", text:"★"}));
+  if (state.rolled[key(cat, si) + "|" + o.name] && on) body.append(el("span", {class:"rolled", text:"rolled"}));
+  if (o.desc) body.append(el("span", {class:"ds", text:o.desc}));
+  const b = el("button", {class:"opt", type:"button", "aria-pressed": String(on), "data-q": (o.name + " " + o.desc + " " + (o.group||"")).toLowerCase()}, el("span", {class:"seal"}), body);
+  b.onclick = () => toggle(cat, si, sub, o.name, false);
+  return b;
+}
+function toggle(cat, si, sub, name, rolled){
+  const k = key(cat, si); let list = (state.picks[k] || []).slice();
+  if (list.includes(name) && !rolled) list = list.filter(x => x !== name);
+  else if (sub.mode === "one") list = [name];
+  else if (!list.includes(name)) list.push(name);
+  state.picks[k] = list;
+  if (rolled) state.rolled[k + "|" + name] = true; else delete state.rolled[k + "|" + name];
+  if (list.length) delete state.oc[cat.id];
+  save(); renderCat(cat); renderSlip(); renderRail();
+}
+function roll(cat){
+  // one draw per sub-list, among options not already picked
+  cat.subs.forEach((s, i) => {
+    const pool = s.mode === "one" ? s.options : s.options.filter(o => !picksOf(cat, i).includes(o.name));
+    if (!pool.length) return;
+    toggle(cat, i, s, pool[rnd(pool.length)].name, true);
+  });
+}
+function renderCat(cat){
+  const old = document.getElementById(cat.id);
+  const sec = el("section", {class:"cat" + (state.oc[cat.id] ? " is-oc" : ""), id:cat.id});
+  const modes = [...new Set(cat.subs.map(s => s.mode))];
+  const h = el("div", {class:"cat-head"},
+    el("h2", {}, el("span", {class:"num", text: cat.num + "."}), cat.name),
+    el("span", {class:"badge", text: modes.length === 1 && modes[0] === "one" ? "Pick one" : "Pick any"}));
+  sec.append(h);
+  if (cat.sets) sec.append(el("p", {class:"cat-sets", text:"Sets: " + cat.sets}));
+  if (cat.intro) { const d = el("details", {class:"about"}, el("summary", {text:"About this category"}), el("p", {text:cat.intro})); sec.append(d); }
+  const oc = el("button", {class:"btn oc-btn", type:"button", "aria-pressed": String(!!state.oc[cat.id]), text:"Operator's Choice"});
+  oc.onclick = () => { if (state.oc[cat.id]) delete state.oc[cat.id]; else { state.oc[cat.id] = true; cat.subs.forEach((s, i) => delete state.picks[key(cat, i)]); } save(); renderCat(cat); renderSlip(); renderRail(); };
+  const rb = el("button", {class:"btn", type:"button", text:"Roll"}); rb.onclick = () => roll(cat);
+  const cb = el("button", {class:"btn", type:"button", text:"Clear"});
+  cb.onclick = () => { cat.subs.forEach((s, i) => delete state.picks[key(cat, i)]); delete state.oc[cat.id]; save(); renderCat(cat); renderSlip(); renderRail(); };
+  sec.append(el("div", {class:"cat-tools"}, oc, rb, cb));
+  cat.subs.forEach((s, i) => {
+    const sub = el("div", {class:"sub", "data-mode":s.mode});
+    if (s.name) sub.append(el("h3", {text: s.name + (s.mode === "one" && modes.length > 1 ? " (pick one)" : "")}));
+    let grid = el("div", {class:"opts"}); let lastGroup = null;
+    s.options.forEach(o => {
+      if (o.group && o.group !== lastGroup) { if (grid.childNodes.length) sub.append(grid); sub.append(el("p", {class:"grp", text:o.group})); grid = el("div", {class:"opts"}); lastGroup = o.group; }
+      grid.append(optionButton(cat, i, s, o));
+    });
+    sub.append(grid); sec.append(sub);
+  });
+  if (old) old.replaceWith(sec); else document.getElementById("main").append(sec);
+  applySearch();
+}
+function renderRail(){
+  const rail = document.getElementById("rail"); rail.innerHTML = "";
+  let g = null;
+  CATS.forEach(c => {
+    if (c.group && c.group !== g) { rail.append(el("h2", {text:c.group})); g = c.group; }
+    const n = c.subs.reduce((t, s, i) => t + picksOf(c, i).length, 0);
+    const a = el("a", {href:"#" + c.id, class: state.oc[c.id] ? "oc" : (n ? "has" : "")}, el("span", {text:c.name}), el("span", {class:"n", text: state.oc[c.id] ? "OC" : (n || "")}));
+    rail.append(a);
+  });
+}
+
+/* ---------- slip ---------- */
+function slipLines(){
+  const lines = [], untouched = [], tunings = [];
+  const tuned = state.approach === "The Standard System, tuned";
+  CATS.forEach(c => {
+    if (state.oc[c.id]) { lines.push({b:c.name, t:"Operator's Choice", oc:true}); if (tuned) tunings.push(c.name + ": Operator's Choice"); return; }
+    let any = false;
+    c.subs.forEach((s, i) => {
+      const p = picksOf(c, i); if (!p.length) return; any = true;
+      const shown = p.map(n => state.rolled[key(c, i) + "|" + n] ? n + " (rolled)" : n).join("; ");
+      const std = s.options.filter(o => o.star).map(o => o.name).sort().join("; ");
+      const isTune = tuned && p.slice().sort().join("; ") !== std;
+      if (tuned && !isTune) return;  // unchanged from the Standard System: not worth listing
+      lines.push({b: c.name + (s.name ? " / " + s.name : ""), t: shown, tune: isTune});
+      if (isTune) tunings.push(c.name + ": " + p.join("; ") + (std ? "  (Standard: " + std + ")" : ""));
+    });
+    if (!any && !tuned) untouched.push(c.name);
+  });
+  return {lines, untouched, tunings};
+}
+function renderSlip(){
+  const body = document.getElementById("slipBody"); body.innerHTML = "";
+  const {lines, untouched} = slipLines();
+  if (state.approach) body.append(el("ul", {}, el("li", {}, el("b", {text:"Approach"}), el("span", {text:state.approach}))));
+  if (state.approach === "The Standard System") { body.append(el("p", {class:"left", text:"Nothing else is needed."})); updateOut(); return; }
+  if (!lines.length && !state.approach) body.append(el("p", {class:"empty", text:"Nothing picked yet. Choose options, mark a category Operator's Choice, or roll."}));
+  const ul = el("ul");
+  lines.forEach(l => ul.append(el("li", {class: (l.oc ? "oc" : "") + (l.tune ? " tune" : "")}, el("b", {text:l.b}), el("span", {text:l.t}))));
+  body.append(ul);
+  if (untouched.length) body.append(el("p", {class:"left", text: untouched.length + " left untouched, so the Operator elects them: " + untouched.join(", ") + "."}));
+  if (state.approach === "The Standard System, tuned") body.append(el("p", {class:"left", text: lines.length ? "Every other set stays as the Standard System has it (★)." : "No changes yet: every set is at its Standard value (★). Pick a different option anywhere to tune it."}));
+  updateOut();
+}
+function asText(){
+  const {lines, untouched, tunings} = slipLines();
+  const out = [CONFIG.title.toUpperCase() + " PICKS (" + CONFIG.version + ")"];
+  if (state.approach) out.push("Approach: " + state.approach);
+  if (state.approach === "The Standard System") return out.join("\n");
+  if (state.approach !== "The Standard System, tuned") lines.filter(l => !l.oc).forEach(l => out.push(l.b + ": " + l.t));
+  else if (!tunings.length) out.push("No Tunings: every set at its Standard value.");
+  const oc = lines.filter(l => l.oc).map(l => l.b);
+  if (oc.length) out.push("Operator's Choice: " + oc.join(", "));
+  if (tunings.length) { out.push("Tunings against the Standard System:"); tunings.forEach(t => out.push("- " + t)); }
+  if (untouched.length) out.push("Untouched (Operator elects): " + untouched.join(", "));
+  if (Object.keys(state.rolled).length) out.push("(rolled = Tool Draw from the browser's cryptographic random source)");
+  return out.join("\n");
+}
+function updateOut(){ document.getElementById("out").value = asText(); }
+function toast(t){ const n = document.getElementById("toast"); n.textContent = t; setTimeout(() => { if (n.textContent === t) n.textContent = ""; }, 2500); }
+document.getElementById("copy").onclick = async () => {
+  const text = asText();
+  try { await navigator.clipboard.writeText(text); toast("Copied. Paste it into the conversation."); return; } catch(e) {}
+  const ta = document.getElementById("out"); ta.hidden = false; ta.value = text; ta.select();
+  try { document.execCommand("copy"); toast("Copied. Paste it into the conversation."); } catch(e) { toast("Select the text below and copy it."); }
+};
+document.getElementById("show").onclick = () => { const ta = document.getElementById("out"); ta.hidden = !ta.hidden; updateOut(); };
+document.getElementById("mobSlip").onclick = () => document.getElementById("slip").classList.toggle("open");
+
+/* ---------- search, core roll, reset ---------- */
+function applySearch(){
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  document.querySelectorAll("section.cat").forEach(sec => {
+    let shown = 0;
+    sec.querySelectorAll(".opt").forEach(b => { const hit = !q || b.dataset.q.includes(q) || sec.querySelector("h2").textContent.toLowerCase().includes(q); b.hidden = !hit; if (hit) shown++; });
+    sec.querySelectorAll(".grp").forEach(g => { const grid = g.nextElementSibling; g.hidden = grid && ![...grid.children].some(b => !b.hidden); });
+    sec.hidden = q && !shown;
+  });
+}
+document.getElementById("q").oninput = applySearch;
+document.getElementById("rollCore").onclick = () => {
+  CONFIG.core.cats.forEach(name => {
+    if (name === "<setting>") name = CONFIG.core.settings[rnd(CONFIG.core.settings.length)];
+    const c = CATS.find(x => x.name === name);
+    if (c) { c.subs.forEach((s, i) => { if (s.mode === "several") delete state.picks[key(c, i)]; }); roll(c); }
+  });
+  toast("Rolled. Each draw is marked in the picks.");
+};
+document.getElementById("reset").onclick = () => { if (!confirm("Clear every pick on this Menu?")) return; state = {picks:{}, oc:{}, rolled:{}, approach:null}; save(); renderAll(); };
+
+function renderAll(){
+  document.getElementById("main").innerHTML = "";
+  renderApproach();
+  const hideCats = state.approach === "The Standard System";
+  CATS.forEach(renderCat);
+  document.querySelectorAll("section.cat").forEach(s => s.style.display = hideCats ? "none" : "");
+  renderRail(); renderSlip();
+}
+renderAll();
+</script>
+</body>
+</html>

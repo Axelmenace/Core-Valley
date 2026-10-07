@@ -1,6 +1,6 @@
 ---
 name: "operative-mode"
-description: "Operative Mode Framework, Draft 0.4: configure and run collaborative fiction (roleplay, simulation, co-authorship, a standing Operator Posture) as an auditable Mode where the user fixes what they care about and the Operator elects the rest. Use to set up, ratify, run, checkpoint, audit, amend, resume, migrate or repair a roleplay: Mode Instruments and Sheets, Baseline Postures, Kernels, Touchstones, Proving Scenes, Seats and authority, Stakes/Odds/Clocks/dice/Oracles, sealed secrets, magic systems (author-hard Specifications, Effect Grammars, Lenses), State Records, Resumption Packets, Part Reviews, Drift. Trigger on Operative Mode, Mode Sheet, Kernel, Régime, Checkpoint, [[HOLD]], [[FLAG]], Stake Card or Drift, and on unnamed requests to start a structured or long-running roleplay, suggest what to play for a user who is unsure, continue a campaign from its records, give the AI discretion over how it plays, or fix a roleplay that has gone soft, repetitive or off the rails."
+description: "Operative Mode Framework, Draft 0.4: configure and run collaborative fiction (roleplay, simulation, co-authorship, a standing Operator Posture) as an auditable Mode where the user fixes what they care about and the Operator elects the rest. Use to set up, ratify, run, checkpoint, audit, amend, resume, migrate or repair a roleplay: Mode Instruments and Sheets, Baseline Postures, Kernels, Touchstones, Proving Scenes, Seats and authority, Stakes/Odds/Clocks/dice/Oracles, sealed secrets, magic systems (Specifications, Effect Grammars, Lenses, the Magic Menu, the ready-made Standard System), State Records, Resumption Packets, Part Reviews, Drift. Trigger on Operative Mode, Mode Sheet, Kernel, Régime, Checkpoint, [[HOLD]], [[FLAG]], Stake Card or Drift, and on unnamed requests to start a structured or long-running roleplay, suggest what to play for a user who is unsure, continue a campaign from its records, give the AI discretion over how it plays, or fix a roleplay that has gone soft, repetitive or off the rails."
 ---
 
 # Operative Mode Framework, Draft 0.4
@@ -59,6 +59,8 @@ Ask **at most three questions**, then infer the rest and mark each inference `I`
 Picks combine, both within a category and across categories (two setting picks make a Trope Fusion). Every pick is a User Declaration, marked `U`, and anything left unpicked is yours to elect.
 
 If the Player says "roll for me," make it a real draw. Where code runs, use `python scripts/menu_draw.py`, which draws the core three; add `--offer 5` for a shortlist, or `--categories "…"` to draw from particular sets. Otherwise, ask the Player to pick numbers, or pick yourself and say so. A combination that would require content your own limits exclude fails validation now, not three scenes in: for example, School with Romance runs only with adult characters.
+
+If the picks include magic, the magic itself is chosen from the **Magic Menu** or adopted as the **Standard System** (see Magic systems, below), once the core three are settled.
 
 ### 2. Completion: Baseline first
 
@@ -250,6 +252,14 @@ A "soft magic" Mode is a fully specified system with a low Target Hardness.
 
 Use `assets/magic-specification.md` for the sheet. `assets/examples/arania-magic-specification.md` is a worked Full example with four linked systems.
 
+**Choosing the magic: the Magic Menu and the Standard System (§25.18).** When a Mode needs magic and the Player wants a say in it, or is unsure, offer the **Magic Menu** (`assets/magic-menu.md`). Open with the Approach:
+- **The Standard System** (`assets/standard-magic-system.md`): the mana, affinity, chant and rank magic any isekai reader recognizes, with spells of tabletop flavour but none of tabletop's machinery. It is a complete, validated Specification, ready to adopt.
+- **The Standard System, tuned:** adopt it and change only the sets the Player cares about, each change recorded as a numbered Tuning and re-validated.
+- **Build from the Menu:** twenty-four option sets, each mapped to a Specification field. Serve the four core sets first (What Magic Is, The Reserve, How It Is Cast, How It Is Divided), then name the five groups as available.
+- **Leave it to the Operator:** elect the whole system and declare the election.
+
+Every set offers **Operator's Choice**, recorded as an election, never a skip. Picks are User Declarations (`U`). Where the picks leave a number open, borrow the Standard System's value for that row and say so. "Roll for me" on this Menu is `python scripts/menu_draw.py --magic`. The Standard System's Part 1 (Common Lore) is the common Lens and may be shown to the Player; Part 2 is the Specification, and its published copy is a Held Seal resting on the Player's undertaking not to read it, while the Mode's Tunings and hidden rolls are sealed at the highest available Level.
+
 ## When it goes wrong (§18)
 
 | Drift | First Tell-tale | Check |
@@ -301,7 +311,7 @@ Read the file rather than reconstructing from memory: the vocabulary is precise 
 | `references/10-compilation-secrets-integrity.md` | §22 to §24 | Kernel, Brief, Touchstone; Commitment Ladder; Stake and Voice Cards |
 | `references/11-posture-library.md` | Appendix D | Choosing the Baseline |
 | `references/12-migration-from-0-3.md` | Crosswalk | Anything from Draft 0.3 |
-| `references/13-magic-construction.md` | §25 | Any magic or advanced technology; magical Attempts; Lenses; sealing a Specification |
+| `references/13-magic-construction.md` | §25 | Any magic or advanced technology; magical Attempts; Lenses; sealing a Specification; the Magic Menu and the Standard System (§25.18) |
 
 | Asset or script | Use |
 |---|---|
@@ -314,8 +324,13 @@ Read the file rather than reconstructing from memory: the vocabulary is precise 
 | `assets/play-menu.md` | The Play Menu: eighteen option sets for an unsure Player, with what each sets in the Mode |
 | `assets/play-menu.json` | The same options, machine-readable, for `menu_draw.py` |
 | `assets/magic-specification.md` | Magic Specification sheet: Metaphysic, Specification, Lens Sheet, Disclosure Profile, with two short examples |
+| `assets/magic-menu.md` | The Magic Menu: an Approach question and twenty-four option sets for building a magic system, each with Operator's Choice and its Specification field |
+| `assets/magic-menu.json` | The same options, machine-readable, for `menu_draw.py --magic` |
+| `assets/play-menu.html`, `assets/magic-menu.html` | Selectable pickers for both Menus: the Player ticks options, marks sets Operator's Choice, rolls, and copies the picks back. Regenerate with `scripts/build_menu_html.py` after editing a Menu |
+| `assets/standard-magic-system.md` | The Standard System: a ready-made, validated isekai-style Specification (Common Lore Lens, Effect Grammar, Benchmarks, Production Rule, Balance Record) |
 | `assets/examples/arania-magic-specification.md` | A Full worked example: one Metaphysic over four linked systems |
-| `scripts/menu_draw.py` | Random picks from the Play Menu (code execution only) |
+| `scripts/build_menu_html.py` | Rebuilds the two HTML pickers from the Menu files |
+| `scripts/menu_draw.py` | Random picks from the Play Menu, or from the Magic Menu with `--magic` (code execution only) |
 | `scripts/draw.py` | Tool Draw and Oracle Questions (code execution only) |
 | `scripts/seal.py` | Level 3 Hash Seals (code execution only) |
 
