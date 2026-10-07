@@ -1,6 +1,8 @@
 {
   "name": "core-valley",
-  "description": "Operative Mode Framework (Draft 0.4): configure and run collaborative fiction as an auditable, ratified Mode.",
+  "description": "Operative Mode Framework (Draft 0.4), the Scriptorium novel-writing suite, and Worldbuilding Analysis: skills for auditable collaborative fiction, novel drafting and setting analysis.",
   "version": "0.4.0",
-  "author": { "name": "axelmenace" }
+  "author": {
+    "name": "axelmenace"
+  }
 }

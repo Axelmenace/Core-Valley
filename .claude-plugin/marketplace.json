@@ -1,11 +1,13 @@
 {
   "name": "core-valley",
-  "owner": { "name": "axelmenace" },
+  "owner": {
+    "name": "axelmenace"
+  },
   "plugins": [
     {
       "name": "core-valley",
       "source": "./",
-      "description": "Operative Mode Framework (Draft 0.4) as an installable skill."
+      "description": "Operative Mode Framework (Draft 0.4), the Scriptorium suite and Worldbuilding Analysis as installable skills."
     }
   ]
 }
