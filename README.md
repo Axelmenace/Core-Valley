@@ -15,6 +15,7 @@ skills/
     scripts/                 draw.py (Tool Draw / Oracle), menu_draw.py (Play Menu rolls), seal.py (Hash Seals)
 archive/
   operative-mode-framework-draft-0.3.md   Deployable Working Draft 0.3, kept for reference and migration
+ficcraft/                    Ficcraft: a local-first web notebook for developing worldbuilding ideas over long threads
 .claude-plugin/              Plugin + marketplace manifests, so the repo installs as a Claude Code plugin
 tools/package-skills.sh      Builds dist/<skill>.zip for upload to claude.ai
 ```
@@ -45,6 +46,10 @@ The scripts need only Python 3 and the standard library. They are optional: with
 |---|---|---|
 | 0.3 | `archive/` | Mode Sheet A.1–A.21, eleven proposition statuses, the "Open Encounter" worked example |
 | 0.4 | `skills/operative-mode/` | Baseline + Deltas, Kernel and Touchstone, Pre-Mortem, Proving Scenes, Regression family of drift, Stake/Voice Cards, Commitment Ladder, Play Menu, magic system construction (§25). See `references/12-migration-from-0-3.md` |
+
+## Ficcraft
+
+`ficcraft/` is a static web app for aspiring fantasy novelists. It logs ideas and develops them over very long threads, with waypoints, ribbons, branches, a distillation per thread, a codex with `[[links]]` and backlinks, a riddles list and an oracle deck. Serve the folder from any static host, or run `python3 ficcraft/tools/bundle.py` to get a single HTML file. See [`ficcraft/README.md`](ficcraft/README.md).
 
 ## Related
 
