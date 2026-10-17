@@ -1,6 +1,6 @@
 {
   "name": "core-valley",
-  "description": "Operative Mode Framework (Draft 0.4): configure and run collaborative fiction as an auditable, ratified Mode.",
-  "version": "0.4.0",
+  "description": "Operative Mode Framework (Draft 0.4) for auditable collaborative fiction, and Axel's Worldbuilding Framework (Revision 05, Structuralist Edition) for analyzing, verifying and developing settings.",
+  "version": "0.5.0",
   "author": { "name": "axelmenace" }
 }

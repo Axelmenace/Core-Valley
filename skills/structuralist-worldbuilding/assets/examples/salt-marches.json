@@ -1,0 +1,160 @@
+{
+  "setting": "The Salt Marches (toy example, built to trip most checks)",
+  "revision": "R05",
+  "recorded": "2026-10-17",
+  "medium": "codex",
+  "seed": ["S4"],
+  "fields": [],
+  "domains": [
+    {"id": "D-oath", "name": "Slack-water binding", "field": "Metaphysics", "parent": null},
+    {"id": "D-tide", "name": "Tidal regime", "field": "Physics", "parent": null},
+    {"id": "D-deep", "name": "Deep Channel fauna", "field": "Ecology", "parent": null},
+    {"id": "D-cult", "name": "Tide Cult", "field": "Culture", "parent": null},
+    {"id": "D-guild", "name": "Oath-fellowships", "field": "Culture", "parent": null},
+    {"id": "D-pans", "name": "Salt panning", "field": "Economy", "parent": null},
+    {"id": "D-lords", "name": "Salt lordship", "field": "Polity", "parent": null}
+  ],
+  "channels": [
+    {"from": "D-tide", "to": "D-pans", "capacity": "high", "persistent": true},
+    {"from": "D-oath", "to": "D-pans", "capacity": "high", "persistent": true},
+    {"from": "D-pans", "to": "D-lords", "capacity": "high", "persistent": true},
+    {"from": "D-lords", "to": "D-pans", "capacity": "medium", "persistent": true},
+    {"from": "D-pans", "to": "D-guild", "capacity": "medium", "persistent": true},
+    {"from": "D-guild", "to": "D-lords", "capacity": "medium", "persistent": true},
+    {"from": "D-lords", "to": "D-guild", "capacity": "low", "persistent": true},
+    {"from": "D-tide", "to": "D-cult", "capacity": "low", "persistent": true}
+  ],
+  "conceits": [
+    {"id": "S1", "tier": "SYS", "domain": "D-tide", "role": "axiom", "force": "strict", "kind": "law",
+     "text": "Spring tides flood all ground below the high-tide line once a fortnight; nothing unmaintained there survives a season.",
+     "terms": ["spring tide", "high-tide line"]},
+    {"id": "S2", "tier": "SYS", "domain": "D-pans", "role": "axiom", "force": "default", "kind": "law",
+     "text": "A pan yields in proportion to crew labour and evaporation days; a pan below the high-tide line is rebuilt after each spring tide.",
+     "terms": ["pan", "spring tide", "high-tide line"]},
+    {"id": "S3", "tier": "SYS", "domain": "D-lords", "role": "axiom", "force": "default", "kind": "policy",
+     "text": "Salt-lords levy each crystallization, not each pan or acre.",
+     "table": "One measure in five; lowered one step after any season in which output falls by a fifth; restored after two full seasons."},
+    {"id": "S4", "tier": "SYS", "domain": "D-oath", "role": "axiom", "force": "strict", "kind": "law",
+     "text": "An oath sworn at slack water binds: salt worked by its breaker will not crystallize.",
+     "terms": ["oath", "slack water", "crystallization"]},
+    {"id": "S5", "tier": "SYS", "domain": "D-guild", "role": "axiom", "force": "tendency", "kind": "tendency",
+     "text": "Oath-fellowships keep their collective oaths.",
+     "norm": "Kept.", "deviation": "About one fellowship in twenty breaks within a decade.", "movers": "Famine doubles the rate."},
+    {"id": "S6", "tier": "SYS", "domain": "D-guild", "role": "axiom", "force": "default", "kind": "law",
+     "text": "Crews bound to one lord by slack-water contracts, in standing contact, form oath-fellowships.",
+     "terms": ["oath-fellowship", "crew"]},
+    {"id": "S7", "tier": "SYS", "domain": "D-deep", "role": "axiom", "force": "default", "kind": "law",
+     "text": "Eels of the Deep Channel live three centuries."},
+    {"id": "S8", "tier": "SYS", "domain": "D-oath", "role": "axiom", "force": "strict", "kind": "prohibition",
+     "text": "A coerced oath does not bind. (Minted by Ledger entry C1.)", "terms": ["oath"]},
+    {"id": "S9", "tier": "SYS", "domain": "D-pans", "role": "axiom", "force": "default", "kind": "law",
+     "text": "Pans below the high-tide line are rebuilt twenty-six times a year."},
+
+    {"id": "B1", "tier": "LORE", "domain": "D-pans", "role": "substrate",
+     "text": "The Marches hold 400 pans across three estates."},
+    {"id": "B2", "tier": "LORE", "domain": "D-pans", "role": "substrate",
+     "text": "The Marches number about 1,500 souls."},
+    {"id": "L14", "tier": "LORE", "domain": "D-tide", "role": "substrate",
+     "text": "The Marsh Tide: two spring tides a month over a three-yard range."},
+
+    {"id": "L1", "tier": "LORE", "domain": "D-pans", "text": "The working year is a fortnightly round of rebuild and boil."},
+    {"id": "L2", "tier": "LORE", "domain": "D-pans", "text": "Lords bind crews by slack-water delivery oaths; the contracts enforce themselves."},
+    {"id": "L3", "tier": "LORE", "domain": "D-guild", "text": "The Pan Guild: oath-fellowships of crews that bargain with the lords as bodies."},
+    {"id": "L4", "tier": "LORE", "domain": "D-pans", "text": "Each pan is worked by a crew of about six."},
+    {"id": "L5", "tier": "LORE", "domain": "D-lords", "text": "House Venn has held the eastern estate for two centuries."},
+    {"id": "L6", "tier": "LORE", "domain": "D-cult", "text": "The Marches hold a midsummer regatta."},
+    {"id": "L7", "tier": "LORE", "domain": "D-cult", "stance": "lens:Tide Cult", "text": "The tide is the breath of a sleeping god."},
+    {"id": "L8", "tier": "LORE", "domain": "D-cult", "text": "The Tide Cult teaches that the tide is a god's breath."},
+    {"id": "L9", "tier": "LORE", "domain": "D-lords", "text": "The salt levy has held near one measure in five for two centuries."},
+    {"id": "L10", "tier": "LORE", "domain": "D-lords", "text": "Lords keep Witnesses of Free Swearing at every slack-water stone."},
+    {"id": "L11", "tier": "LORE", "domain": "D-pans", "status": "witness",
+     "text": "Optimizer witness W2: a lord makes his crews swear perpetual service at slack water."},
+    {"id": "L12", "tier": "LORE", "domain": "D-cult", "text": "The Fen-folk keep their own calendar."},
+    {"id": "L17", "tier": "LORE", "domain": "D-guild", "text": "Fellowship breaches cluster in famine years."},
+
+    {"id": "N1", "tier": "NAR", "domain": "D-guild", "status": "illustration",
+     "text": "At the equinox slack water the crew of Pan 212 swore the guild oath."},
+    {"id": "N2", "tier": "NAR", "domain": "D-pans", "text": "The spring tide of the ninth took Pan 40."},
+    {"id": "N3", "tier": "NAR", "domain": "D-cult", "text": "Old Ama reckons the year by the fen calendar."}
+  ],
+  "licenses": [
+    {"from": ["S1", "S2"], "to": "S9", "mode": "determined"},
+    {"from": ["S1", "S2"], "to": "L1", "substrate": ["B1"], "mode": "determined"},
+    {"from": ["S3", "S4"], "to": "L2", "mode": "determined"},
+    {"from": ["S2"], "to": "L4", "substrate": ["B1"], "mode": "determined"},
+    {"from": ["S3"], "to": "L5", "substrate": ["B1"], "mode": "elected"},
+    {"from": ["S1"], "to": "L8", "mode": "elected"},
+    {"from": ["L8"], "to": "L7", "mode": "determined"},
+    {"from": ["S3"], "to": "L9", "substrate": ["B1"], "mode": "determined"},
+    {"from": ["S8", "S3"], "to": "L10", "mode": "determined"},
+    {"from": ["S3", "S4"], "to": "L11", "mode": "elected"},
+    {"from": ["S5"], "to": "L17", "substrate": ["L3"], "mode": "determined"},
+    {"from": ["L3"], "to": "N1", "mode": "elected"},
+    {"from": ["S1"], "to": "N2", "mode": "elected"},
+    {"from": ["L12"], "to": "N3", "mode": "elected"}
+  ],
+  "generations": [
+    {"id": "G1", "senders": ["L2", "L4"], "receiver": "L3", "covered_by": "S6", "relation": "R1"}
+  ],
+  "relations": [
+    {"id": "R1", "participants": ["L2", "L4"], "standing": "persistent", "emergence": "G1"},
+    {"id": "R2", "participants": ["L9", "L1"], "standing": "persistent",
+     "justification": "Levy and output regulate each other (loop F1); the regulation is the relation's whole product."},
+    {"id": "R3", "participants": ["L3", "L5"], "standing": "persistent"},
+    {"id": "R4", "participants": ["L14", "L1"], "standing": "persistent",
+     "justification": "The tide presses on the pans by destruction alone; nothing new issues."}
+  ],
+  "loops": [
+    {"id": "F1", "domains": ["D-pans", "D-lords"], "polarity": "balancing", "delay": "one season",
+     "text": "Output raises levy receipts; S3's table lowers the levy after a bad season; output recovers."},
+    {"id": "F2", "domains": ["D-guild", "D-lords"], "polarity": "reinforcing", "limiter": null,
+     "text": "Each concession the Guild wins raises its bargaining power."}
+  ],
+  "dynamics": [
+    {"conceit": "L1", "type": "recurrence", "forced_by": "S1"},
+    {"conceit": "L9", "type": "stability", "supported_by": "F1"},
+    {"conceit": "L5", "type": "stability", "supported_by": null}
+  ],
+  "questions": [
+    {"id": "Q1", "kind": "modal", "text": "Can an oath be sworn by proxy?", "verdict": null, "by": []},
+    {"id": "Q2", "kind": "modal", "text": "Can a pan below the high-tide line survive a season?", "verdict": "admitted", "by": ["S1", "S2"]},
+    {"id": "Q3", "kind": "modal", "text": "Can a coerced oath bind?", "verdict": "prohibited", "by": ["S8"]},
+    {"id": "Q4", "kind": "actual", "text": "Is there a guild hall in the western estate?", "verdict": "open", "by": [], "modal": "Q6"},
+    {"id": "Q5", "kind": "modal", "text": "How many fellowships break in a famine decade?", "verdict": "distributed", "by": ["S5"]},
+    {"id": "Q6", "kind": "modal", "text": "Can an oath-fellowship hold a hall in an estate?", "verdict": "admitted", "by": ["S6", "S3"]}
+  ],
+  "taxonomies": [
+    {"id": "T1", "parent": "Oath", "exhaustive": true, "exclusive": true,
+     "axes": [["slack-water", "other-hour"], ["individual", "collective"]],
+     "cells": {"slack-water|individual": "admitted", "slack-water|collective": "admitted", "other-hour|individual": "admitted"}}
+  ],
+  "terms": [
+    {"term": "high-tide line", "defined_in": "S1", "uses": []},
+    {"term": "spring tide", "defined_in": "S1", "uses": ["high-tide line"]},
+    {"term": "pan", "defined_in": "S2", "uses": ["crew", "spring tide"]},
+    {"term": "crew", "defined_in": "L4", "uses": ["pan"]},
+    {"term": "oath", "defined_in": "S4", "uses": ["slack water"]},
+    {"term": "oath-fellowship", "defined_in": "S6", "uses": ["oath", "crew"]}
+  ],
+  "primitives": ["slack water", "crystallization"],
+  "codex_order": ["S4", "S6", "S1", "S2", "L4"],
+  "witnesses": [
+    {"id": "W1", "class": "standard", "exercises": ["S1", "S2", "S9"], "outcome": "clean"},
+    {"id": "W2", "class": "optimizer", "exercises": ["S3", "S4"], "outcome": "conflict", "ledger": "C1"},
+    {"id": "W3", "class": "magnitude", "exercises": ["S2"], "outcome": "conflict", "ledger": "C2"},
+    {"id": "W4", "class": "standard", "exercises": ["S4", "S6", "S5"], "edges": ["G1"], "outcome": "conflict", "ledger": "C3"},
+    {"id": "W5", "class": "long-run", "exercises": ["S3"], "outcome": "clean"}
+  ],
+  "ledger": [
+    {"id": "C1", "type": "P", "severity": "P2", "status": "closed", "outcome": "fecund reconciliation",
+     "text": "If any slack-water oath binds, why do lords not bind crews to perpetual service?",
+     "context_minted": "S8", "yield": ["L10"]},
+    {"id": "C2", "type": "Q", "status": "open",
+     "text": "400 pans with crews of six need about 2,400 workers; the Marches number about 1,500."},
+    {"id": "C3", "type": "S", "status": "closed", "outcome": "explication",
+     "text": "If oaths bind (S4), how do fellowships break them (S5)? S4 punishes breach; it does not prevent it."},
+    {"id": "C4", "type": "S", "status": "debt",
+     "text": "No lord is recorded for the western estate; ad hoc patch: the estate is held in common."}
+  ],
+  "sweep": {"last_new_conflicts": 1, "fixed_point_sweeps": 0}
+}

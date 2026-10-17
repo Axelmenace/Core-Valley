@@ -1,0 +1,57 @@
+{
+  "setting": "Setting name",
+  "revision": "R05",
+  "recorded": "YYYY-MM-DD",
+  "medium": "codex",
+  "seed": ["S1"],
+  "fields": [],
+  "domains": [
+    {"id": "D-a", "name": "First Domain", "field": "Physics", "parent": null},
+    {"id": "D-b", "name": "Second Domain", "field": "Economy", "parent": null}
+  ],
+  "channels": [
+    {"from": "D-a", "to": "D-b", "capacity": "high", "persistent": true}
+  ],
+  "conceits": [
+    {"id": "S1", "tier": "SYS", "domain": "D-a", "role": "axiom", "force": "strict", "kind": "law",
+     "text": "A nomic statement, substrate-general within its scope.", "terms": ["term-a"]},
+    {"id": "S2", "tier": "SYS", "domain": "D-b", "role": "axiom", "force": "tendency", "kind": "tendency",
+     "text": "A distributional System.", "norm": "The ordinary outcome.",
+     "deviation": "Who exceeds or falls short, and by how much.", "movers": "What shifts those shares."},
+    {"id": "B0", "tier": "LORE", "domain": "D-a", "role": "substrate",
+     "text": "A unit of D-a, declared in the Initial State."},
+    {"id": "B1", "tier": "LORE", "domain": "D-b", "role": "substrate",
+     "text": "An Initial State declaration."},
+    {"id": "L1", "tier": "LORE", "domain": "D-b",
+     "text": "A pattern of the realized run."},
+    {"id": "L2", "tier": "LORE", "domain": "D-b", "stance": "lens:Holder",
+     "text": "Content a population believes; the setting does not assert it."},
+    {"id": "L3", "tier": "LORE", "domain": "D-b",
+     "text": "The Holder believes L2: the Authorial record of the holding."}
+  ],
+  "licenses": [
+    {"from": ["S1", "S2"], "to": "L1", "substrate": ["B0", "B1"], "mode": "determined"},
+    {"from": ["S2"], "to": "L3", "substrate": ["B1"], "mode": "elected"},
+    {"from": ["L3"], "to": "L2", "mode": "determined"}
+  ],
+  "generations": [],
+  "relations": [
+    {"id": "R1", "participants": ["B0", "L1"], "standing": "persistent",
+     "justification": "Why no Generation Edge issues; or give \"emergence\": \"G1\" instead."}
+  ],
+  "loops": [],
+  "dynamics": [],
+  "questions": [
+    {"id": "Q1", "kind": "modal", "text": "Can X exist in D-b?", "verdict": "admitted", "by": ["S1"]},
+    {"id": "Q2", "kind": "actual", "text": "Does an X exist in D-b?", "verdict": "open", "by": [], "modal": "Q1"}
+  ],
+  "taxonomies": [],
+  "terms": [
+    {"term": "term-a", "defined_in": "S1", "uses": []}
+  ],
+  "primitives": [],
+  "codex_order": [],
+  "witnesses": [],
+  "ledger": [],
+  "sweep": {"last_new_conflicts": null, "fixed_point_sweeps": 0}
+}
