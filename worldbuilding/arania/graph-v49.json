@@ -1,0 +1,2396 @@
+{
+ "setting": "Arania (v49, with v50 magic systems from the repo Specification)",
+ "revision": "R05",
+ "recorded": "2026-10-17",
+ "medium": "codex",
+ "seed": [
+  "S19",
+  "S17"
+ ],
+ "fields": [],
+ "domains": [
+  {
+   "id": "D-allhigh",
+   "name": "The Allhigh and the Maxims",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-planes",
+   "name": "Planes, exits, cosmic cycles",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-soul",
+   "name": "Soul anatomy, Soul Depth, reincarnation",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-palimpsest",
+   "name": "Phenomenal Domains, Paroxysm, Fate",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-wyra",
+   "name": "Wyra, Fae, the Law of Wyric Oaths",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-teria",
+   "name": "Teria and the Law of Reciprocity",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-shades",
+   "name": "Shades, Phantoms, Haunts, Apparitions",
+   "field": "Metaphysics",
+   "parent": null
+  },
+  {
+   "id": "D-cultivation",
+   "name": "Prana and cultivation (v50)",
+   "field": "Physics",
+   "parent": null
+  },
+  {
+   "id": "D-demography",
+   "name": "Bodies, ethnicity, the Unborn",
+   "field": "Biology",
+   "parent": null
+  },
+  {
+   "id": "D-lychia",
+   "name": "Lychionia and Soul Phase",
+   "field": "Mind",
+   "parent": null
+  },
+  {
+   "id": "D-sye",
+   "name": "Sye, Strings, Sye Control",
+   "field": "Mind",
+   "parent": null
+  },
+  {
+   "id": "D-realdom",
+   "name": "Real Domains, Dominators, Canons, songs",
+   "field": "Culture",
+   "parent": null
+  },
+  {
+   "id": "D-faith",
+   "name": "The One Faith",
+   "field": "Culture",
+   "parent": null
+  },
+  {
+   "id": "D-caste",
+   "name": "Caste by Soul Depth",
+   "field": "Culture",
+   "parent": null
+  },
+  {
+   "id": "D-mediums",
+   "name": "Mediums and the Gift",
+   "field": "Economy",
+   "parent": null
+  },
+  {
+   "id": "D-feudal",
+   "name": "Feudal hierarchy, Charter, Empire, war",
+   "field": "Polity",
+   "parent": null
+  },
+  {
+   "id": "D-history",
+   "name": "Recorded history (substrate)",
+   "field": "Polity",
+   "parent": null
+  }
+ ],
+ "channels": [
+  {
+   "from": "D-allhigh",
+   "to": "D-soul",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-planes",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-teria",
+   "to": "D-planes",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-lychia",
+   "to": "D-planes",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-cultivation",
+   "to": "D-planes",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-sye",
+   "to": "D-realdom",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-realdom",
+   "to": "D-feudal",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-feudal",
+   "to": "D-realdom",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-realdom",
+   "to": "D-shades",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-shades",
+   "to": "D-realdom",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-demography",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-demography",
+   "to": "D-caste",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-caste",
+   "to": "D-feudal",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-cultivation",
+   "to": "D-wyra",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-wyra",
+   "to": "D-feudal",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-faith",
+   "to": "D-feudal",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-realdom",
+   "to": "D-faith",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-faith",
+   "to": "D-realdom",
+   "capacity": "medium",
+   "persistent": true
+  },
+  {
+   "from": "D-palimpsest",
+   "to": "D-realdom",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-realdom",
+   "to": "D-palimpsest",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-sye",
+   "to": "D-shades",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-mediums",
+   "to": "D-feudal",
+   "capacity": "medium",
+   "persistent": true
+  },
+  {
+   "from": "D-wyra",
+   "to": "D-mediums",
+   "capacity": "medium",
+   "persistent": true
+  },
+  {
+   "from": "D-teria",
+   "to": "D-mediums",
+   "capacity": "medium",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-cultivation",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-cultivation",
+   "to": "D-feudal",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-feudal",
+   "to": "D-teria",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-demography",
+   "to": "D-sye",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-lychia",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-teria",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-wyra",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-soul",
+   "to": "D-shades",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-caste",
+   "to": "D-mediums",
+   "capacity": "medium",
+   "persistent": true
+  },
+  {
+   "from": "D-history",
+   "to": "D-feudal",
+   "capacity": "low",
+   "persistent": true
+  },
+  {
+   "from": "D-faith",
+   "to": "D-shades",
+   "capacity": "high",
+   "persistent": true
+  },
+  {
+   "from": "D-shades",
+   "to": "D-faith",
+   "capacity": "high",
+   "persistent": true
+  }
+ ],
+ "conceits": [
+  {
+   "id": "S01",
+   "tier": "SYS",
+   "domain": "D-allhigh",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The Allhigh knows itself through play, casting off Illuminative Fragments (Souls) and releasing them constantly.",
+   "terms": [
+    "Allhigh",
+    "Illuminative Fragment"
+   ]
+  },
+  {
+   "id": "S02",
+   "tier": "SYS",
+   "domain": "D-allhigh",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The One Maxim emanates into Supreme Maxims (Gea, Samea, Nea and others), Great Maxims, Maxims and Intents; it is met only in fragments.",
+   "terms": [
+    "One Maxim",
+    "Great Maxim"
+   ]
+  },
+  {
+   "id": "S03",
+   "tier": "SYS",
+   "domain": "D-soul",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The Soul bifurcates: the Elevated Soul (Soul Core, Soul Ego, Third Eye and Sacral Apertures) leaves; the Residual Soul (Inner and Outer Soul, Sea of Consciousness, Solar and Root Apertures) stays as a Shade.",
+   "terms": [
+    "Soul",
+    "Elevated Soul",
+    "Residual Soul"
+   ]
+  },
+  {
+   "id": "S04",
+   "tier": "SYS",
+   "domain": "D-soul",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Soul Depth is fixed for the whole existence of a Soul by its Fragment's proximity to the Allhigh: Upper (Highborn), Lower (Lowborn), none (Unborn).",
+   "terms": [
+    "Soul Depth"
+   ]
+  },
+  {
+   "id": "S05",
+   "tier": "SYS",
+   "domain": "D-soul",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Soul Sex is biological sex, constant across incarnations; a Female Soul cannot activate a Spiritual Root.",
+   "terms": [
+    "Soul Sex",
+    "Spiritual Root"
+   ]
+  },
+  {
+   "id": "S06",
+   "tier": "SYS",
+   "domain": "D-soul",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Every Soul holds Lina and Sul; the dominant nature is its Soul Nature, and either can ensoul either sex."
+  },
+  {
+   "id": "S07",
+   "tier": "SYS",
+   "domain": "D-soul",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "A Soul reincarnates only into one ethnicity and, if Highborn, one subcaste.",
+   "terms": [
+    "ethnicity",
+    "subcaste"
+   ]
+  },
+  {
+   "id": "S08",
+   "tier": "SYS",
+   "domain": "D-demography",
+   "role": "axiom",
+   "force": "tendency",
+   "kind": "tendency",
+   "text": "Souls enter only fit fetuses, competing by Soul Depth; a fetus no Soul takes is Unborn.",
+   "norm": "Fit fetuses are ensouled; deeper Souls take fitter bodies.",
+   "deviation": "Soulless fetuses become Unborn, most often among Lowborn and Unborn parents.",
+   "movers": "Genetic load; Soul Depth of the competing Souls."
+  },
+  {
+   "id": "S09",
+   "tier": "SYS",
+   "domain": "D-demography",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The Unborn have no Soul: no Sapience, Agency or Intellect, no Prana, no Fae, no Shade."
+  },
+  {
+   "id": "S10",
+   "tier": "SYS",
+   "domain": "D-planes",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Three Planes; only five one-way paths lead from the Middle Plane, each sorted Upper or Lower by Teric Merit or Debt; no return.",
+   "terms": [
+    "Middle Plane"
+   ]
+  },
+  {
+   "id": "S11",
+   "tier": "SYS",
+   "domain": "D-lychia",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "Experiences of innate value become Lychions (Pro or Anti) in the Third Eye, erode the Divine Veil and carry across lives; a Grandsoul undergoes Renascension.",
+   "terms": [
+    "Lychion",
+    "Soul Ego"
+   ]
+  },
+  {
+   "id": "S12",
+   "tier": "SYS",
+   "domain": "D-lychia",
+   "role": "axiom",
+   "force": "tendency",
+   "kind": "tendency",
+   "text": "Soul Phases follow typical soul-age schedules, about ten times faster for the Highborn.",
+   "norm": "Highborn reach Grandsoul near 350 soul-years, Lowborn near 3,500.",
+   "deviation": "Not causative: Lychion quantity and quality decide.",
+   "movers": "Lychionic opportunity, Sye Force, social station."
+  },
+  {
+   "id": "S13",
+   "tier": "SYS",
+   "domain": "D-wyra",
+   "role": "axiom",
+   "force": "tendency",
+   "kind": "tendency",
+   "text": "Oathfulfillment and Oathbreach attract Wyra Crystallites; the Wyric Superbase sets a Fae's odds of Fortune; Wyra follows the Shade.",
+   "terms": [
+    "Wyra",
+    "Fae"
+   ],
+   "norm": "Primefae: between 25% chance of Fortune and 25% of Misfortune.",
+   "deviation": "Sizable, Great and Extreme Merit or Debt shift it by 25, 50 and 75%.",
+   "movers": "Oathfulfillment and Oathbreach."
+  },
+  {
+   "id": "S14",
+   "tier": "SYS",
+   "domain": "D-wyra",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The Law of Wyric Oaths: cultivators swear and witness; weight from scale, cost and duration; the subject's survival binds; consequences are impartial and shared by Prana Base.",
+   "terms": [
+    "Wyric Oath"
+   ]
+  },
+  {
+   "id": "S15",
+   "tier": "SYS",
+   "domain": "D-teria",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Acts attract Teric Crystallites under the Law of Reciprocity, credited also to those who influenced them in proportion to their influence.",
+   "terms": [
+    "Teria",
+    "Reciprocity"
+   ]
+  },
+  {
+   "id": "S16",
+   "tier": "SYS",
+   "domain": "D-teria",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Paragons ascend to the Upper Plane and Nadirs descend to the Lower Plane at death; Saints and Fiends go to Higher and Lower Worlds; Benefactors and Malefactors are reborn to good or ill station.",
+   "terms": [
+    "Higher Worlds"
+   ]
+  },
+  {
+   "id": "S17",
+   "tier": "SYS",
+   "domain": "D-sye",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Every emotional connection makes a one-way Sye String from sender to object; brightness is intensity, solidity is the sender's Sye Control; intense experience makes Radiant Strings.",
+   "terms": [
+    "Sye",
+    "Sye String",
+    "Radiant String"
+   ]
+  },
+  {
+   "id": "S18",
+   "tier": "SYS",
+   "domain": "D-sye",
+   "role": "axiom",
+   "force": "tendency",
+   "kind": "tendency",
+   "text": "Sye Control passes through bloodlines as the parents' average.",
+   "norm": "The average of both parents.",
+   "deviation": "Slight variation; concentrated bloodlines transmit more consistently.",
+   "movers": "Selection over generations compounds."
+  },
+  {
+   "id": "S19",
+   "tier": "SYS",
+   "domain": "D-realdom",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "A Domain whose Sye passes a threshold becomes a Real Domain; its Sye falls to its Dominators, whose power is that Sye plus their share of it.",
+   "terms": [
+    "Real Domain",
+    "Dominator",
+    "Sye"
+   ]
+  },
+  {
+   "id": "S20",
+   "tier": "SYS",
+   "domain": "D-shades",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Apparitions (Radiant Strings plus a Personal Real Domain) are indestructible while fed Sye and die only of Sye deprivation.",
+   "terms": [
+    "Apparition",
+    "Radiant String",
+    "Real Domain"
+   ]
+  },
+  {
+   "id": "S21",
+   "tier": "SYS",
+   "domain": "D-shades",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "Every ensouled death leaves a Shade bound to tomb and Shadeshrine, fed by kin, able to possess those of lower Sye Control.",
+   "terms": [
+    "Shade",
+    "Residual Soul"
+   ]
+  },
+  {
+   "id": "S22",
+   "tier": "SYS",
+   "domain": "D-shades",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "A Shade keeps the Prana Core as a Shade Core and its techniques, and can no longer cultivate (SHADES, first statement)."
+  },
+  {
+   "id": "S23",
+   "tier": "SYS",
+   "domain": "D-palimpsest",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "A Fallacious Phenomenal Domain that passes the threshold becomes real: a Paroxysm re-derives history forward and back under the Law of Phenomenal Causality, making a new Planar State.",
+   "terms": [
+    "Paroxysm",
+    "Planar State"
+   ]
+  },
+  {
+   "id": "S24",
+   "tier": "SYS",
+   "domain": "D-palimpsest",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Once formed, a Phenomenal Real Domain remains through all later Planar States; each stream holds all the previous stream's Real Domains."
+  },
+  {
+   "id": "S25",
+   "tier": "SYS",
+   "domain": "D-palimpsest",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Phenomenal Collapse: of two contradicting Phenomenal Real Domains, the one with more causal relations erases the other from all causality, memory and evidence."
+  },
+  {
+   "id": "S26",
+   "tier": "SYS",
+   "domain": "D-palimpsest",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Fate and Destiny are fixed, invariant across Planar States, avertable but unalterable."
+  },
+  {
+   "id": "S27",
+   "tier": "SYS",
+   "domain": "D-palimpsest",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Extraterrestrial memory, Lychions and Fate survive Collapse: erasure is an operation of Sye, and Divinity outranks Sye."
+  },
+  {
+   "id": "S28",
+   "tier": "SYS",
+   "domain": "D-realdom",
+   "role": "axiom",
+   "force": "tendency",
+   "kind": "tendency",
+   "text": "Narrative convergence: small challengers feed incumbents; Collapses grow rarer and larger; every Narrative Space ends under one Song and one apex Dominator.",
+   "norm": "Long plateaus of a Great-Song oligopoly.",
+   "deviation": "Great Collapses consolidate the oligopoly by one.",
+   "movers": "Fame, causal density, contradiction along abutting cones."
+  },
+  {
+   "id": "S29",
+   "tier": "SYS",
+   "domain": "D-feudal",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "Belief Follows Power: a state is a Sye catchment; arms impose Canon, Canon redirects Sye, Sye strengthens Real Domains, Real Domains yield Arcana, Arcana strengthens arms."
+  },
+  {
+   "id": "S30",
+   "tier": "SYS",
+   "domain": "D-realdom",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "Conversion runs on generational time, and cultural barriers between Narrative Spaces resist it."
+  },
+  {
+   "id": "S31",
+   "tier": "SYS",
+   "domain": "D-mediums",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "The Gift is inherited and infallible: it perceives Wyra, Fae, Teria, Lychionic Type and Soul Phase, never Fate, Destiny or another's Sye Force.",
+   "terms": [
+    "medium",
+    "Gift"
+   ]
+  },
+  {
+   "id": "S32",
+   "tier": "SYS",
+   "domain": "D-mediums",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Highborn mediums are infertile, the Gift being incongruous with high Sye Force; the Lowborn bear the Gift without penalty."
+  },
+  {
+   "id": "S33",
+   "tier": "SYS",
+   "domain": "D-cultivation",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Cultivation needs Upper Soul Depth and an active Spiritual Root; Prana Realms climb a seven-rung scale; reaching the Empyrean forces transmigration (v50).",
+   "terms": [
+    "cultivator",
+    "Prana"
+   ]
+  },
+  {
+   "id": "S34",
+   "tier": "SYS",
+   "domain": "D-faith",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "Every seignory's enclave serves a Luminary; feudatories need the seignory priest's coronation; all clergy are celibate Highborn male cultivators.",
+   "terms": [
+    "Luminary",
+    "enclave"
+   ]
+  },
+  {
+   "id": "S35",
+   "tier": "SYS",
+   "domain": "D-feudal",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "An Emperor needs an Ascendant Prana Base, every piece of the Imperial Regalia, Verne, and coronation there by its Archbishop."
+  },
+  {
+   "id": "S36",
+   "tier": "SYS",
+   "domain": "D-feudal",
+   "role": "axiom",
+   "force": "default",
+   "kind": "law",
+   "text": "The Peerage is bound by Tenurial Oaths (vassal to overlord) and Patrimonial Oaths (juzerain to suzerain)."
+  },
+  {
+   "id": "S37",
+   "tier": "SYS",
+   "domain": "D-realdom",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Relics are Material Real Domains, held by possession and Soul Imprint, destroyed only by narrative erasure."
+  },
+  {
+   "id": "S38",
+   "tier": "SYS",
+   "domain": "D-teria",
+   "role": null,
+   "force": "strict",
+   "kind": "law",
+   "text": "It is impossible for women to enter the Upper or Lower Plane through Teria alone."
+  },
+  {
+   "id": "S39",
+   "tier": "SYS",
+   "domain": "D-sye",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Base Sye Capacity is alike in everyone but the Intented; Seas of Consciousness run Mortal to Immortal.",
+   "terms": [
+    "Intented"
+   ]
+  },
+  {
+   "id": "S40",
+   "tier": "SYS",
+   "domain": "D-planes",
+   "role": "axiom",
+   "force": "strict",
+   "kind": "law",
+   "text": "Each star system stands on a continuum of moral authority, more Proteric or more Antiteric."
+  },
+  {
+   "id": "B01",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": "substrate",
+   "text": "The Blue Star; the Seven Realms, one supercontinent of about 90 million km2 and 1.92 billion people; 490 states; 1712 AC."
+  },
+  {
+   "id": "B02",
+   "tier": "LORE",
+   "domain": "D-planes",
+   "role": "substrate",
+   "text": "The 42nd Epoch; the Cycle of Man, third of three Cycles; the Modern Age, Sixth Era."
+  },
+  {
+   "id": "B03",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": "substrate",
+   "text": "History, draft A: the Deluge left only the Seven Realms standing; the First Era lay wholly in Eastern Arania; Arians formed from Almans, Tharions and Aldeans."
+  },
+  {
+   "id": "B04",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": "substrate",
+   "text": "History, draft B: the Deluge left only Asteria and Sylycia standing; the First Era lay wholly in Asteria; Arians formed from Almans and Aldeans."
+  },
+  {
+   "id": "L01",
+   "tier": "LORE",
+   "domain": "D-demography",
+   "role": null,
+   "text": "Highborn often give birth to Lowborn."
+  },
+  {
+   "id": "L02",
+   "tier": "LORE",
+   "domain": "D-demography",
+   "role": null,
+   "text": "The Unborn are property: the produce of their parents, bought and sold, without legal protection."
+  },
+  {
+   "id": "L03",
+   "tier": "LORE",
+   "domain": "D-teria",
+   "role": null,
+   "text": "Highborn Teria swings widely; Highborn reincarnate about a dozen times before ascending or descending."
+  },
+  {
+   "id": "L04",
+   "tier": "LORE",
+   "domain": "D-lychia",
+   "role": null,
+   "text": "Highborn reach Grandsoul, and so Renascension, near 350 soul-years."
+  },
+  {
+   "id": "L05",
+   "tier": "LORE",
+   "domain": "D-planes",
+   "role": null,
+   "text": "Most Extraterrestrials are Highborn men."
+  },
+  {
+   "id": "L06",
+   "tier": "LORE",
+   "domain": "D-faith",
+   "role": null,
+   "text": "The enclave network: sanctuaries, temples, havens and shrines, one patron Luminary per seignory."
+  },
+  {
+   "id": "L07",
+   "tier": "LORE",
+   "domain": "D-faith",
+   "role": null,
+   "text": "Templars subjugate Devourers and re-sing their Real Domains to their patron Luminary."
+  },
+  {
+   "id": "L08",
+   "tier": "LORE",
+   "domain": "D-shades",
+   "role": null,
+   "text": "Great Clans feed their Guardians on the high Sye Control of Highborn clansmen."
+  },
+  {
+   "id": "L09",
+   "tier": "LORE",
+   "domain": "D-feudal",
+   "role": null,
+   "text": "The Magnificent Charter (1366 AC), a Level V Sacred Oath, binds all present title holders; no sovereign dares go against it."
+  },
+  {
+   "id": "L10",
+   "tier": "LORE",
+   "domain": "D-realdom",
+   "role": null,
+   "text": "The Arian Narrative Space: one civilizational Canon, a collection of Great Songs, very hard to dismantle."
+  },
+  {
+   "id": "L11",
+   "tier": "LORE",
+   "domain": "D-realdom",
+   "role": null,
+   "text": "Sung land is hard and unsung land soft; the westward advance of civilization has hardened the world."
+  },
+  {
+   "id": "L12",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": null,
+   "text": "The Eras alternate between warring states and empire."
+  },
+  {
+   "id": "L13",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": null,
+   "text": "Ages end in civilizational collapse, dealt by invading barbarians."
+  },
+  {
+   "id": "L14",
+   "tier": "LORE",
+   "domain": "D-mediums",
+   "role": null,
+   "text": "Mediums form an endogamous Lowborn caste under cultivator patrons who swear for their testimony."
+  },
+  {
+   "id": "L15",
+   "tier": "LORE",
+   "domain": "D-shades",
+   "role": null,
+   "text": "Nearly every Arian home keeps a Shadeshrine; the Festival of the Dead sits outside the One Faith."
+  },
+  {
+   "id": "L16",
+   "tier": "LORE",
+   "domain": "D-faith",
+   "role": null,
+   "text": "The Residual Soul is merely an earthly mirage; the Elevated Soul is the true seat of the being.",
+   "stance": "lens:One Faith"
+  },
+  {
+   "id": "L17",
+   "tier": "LORE",
+   "domain": "D-faith",
+   "role": null,
+   "text": "The One Faith zealously holds the Doctrine of the Supremacy of the Elevated Soul; holyknights hold it, darknights do not."
+  },
+  {
+   "id": "L18",
+   "tier": "LORE",
+   "domain": "D-allhigh",
+   "role": null,
+   "text": "The Allhigh is an evil entity trapping souls in an evil reality.",
+   "stance": "lens:Eastern Heresy"
+  },
+  {
+   "id": "L19",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": null,
+   "text": "The Eastern Heresy took hold in Asteria under Markule and was put down by Holy War."
+  },
+  {
+   "id": "L20",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": null,
+   "text": "Arcane power brought down the Aldean Empire.",
+   "stance": "lens:Arian learned opinion"
+  },
+  {
+   "id": "L21",
+   "tier": "LORE",
+   "domain": "D-history",
+   "role": null,
+   "text": "It is believed, without evidence, that Arcane power caused the Aldean fall."
+  },
+  {
+   "id": "L22",
+   "tier": "LORE",
+   "domain": "D-realdom",
+   "role": null,
+   "text": "Subrace Narrative Spaces, each with its own Canon of songs."
+  },
+  {
+   "id": "L23",
+   "tier": "LORE",
+   "domain": "D-feudal",
+   "role": null,
+   "text": "Imperial conquest across the Realms (Valyrean, Kalean)."
+  },
+  {
+   "id": "L24",
+   "tier": "LORE",
+   "domain": "D-feudal",
+   "role": null,
+   "text": "States as Sye catchments: borders drift toward the divides of Sye drainage."
+  },
+  {
+   "id": "L25",
+   "tier": "LORE",
+   "domain": "D-sye",
+   "role": null,
+   "text": "Witness: a Lowborn-souled child of Highborn parents inherits high Sye Control.",
+   "status": "witness"
+  },
+  {
+   "id": "L26",
+   "tier": "LORE",
+   "domain": "D-wyra",
+   "role": null,
+   "text": "Witness: no non-cultivator ever holds Wyra; every Lowborn's and every woman's Fae is Primefae.",
+   "status": "witness"
+  },
+  {
+   "id": "L27",
+   "tier": "LORE",
+   "domain": "D-caste",
+   "role": null,
+   "text": "Three castes: Peers (Highborn), Commoners (Lowborn), Lessers (Unborn)."
+  },
+  {
+   "id": "L28",
+   "tier": "LORE",
+   "domain": "D-realdom",
+   "role": null,
+   "text": "Apotheists are typically Highborn; a Lowborn reaches Apotheosis only through fame beyond the Honor Group."
+  },
+  {
+   "id": "L29",
+   "tier": "LORE",
+   "domain": "D-planes",
+   "role": null,
+   "text": "Extraterrestrials of different departures remember mutually inconsistent histories: the Upper and Lower Planes archive superseded Planar States."
+  },
+  {
+   "id": "L30",
+   "tier": "LORE",
+   "domain": "D-planes",
+   "role": null,
+   "text": "Ten classes of Extraterrestrial: Celestial and Sidereal Caeliors, Halcyrs, Aurions, Beatrions and Veridals."
+  },
+  {
+   "id": "L31",
+   "tier": "LORE",
+   "domain": "D-palimpsest",
+   "role": null,
+   "text": "Streams lengthen, and each Planar State holds more Phenomenal Real Domains than the last."
+  },
+  {
+   "id": "L32",
+   "tier": "LORE",
+   "domain": "D-palimpsest",
+   "role": null,
+   "text": "The Primordial Jeten knows every Destiny and the whole of Fate."
+  },
+  {
+   "id": "L33",
+   "tier": "LORE",
+   "domain": "D-realdom",
+   "role": null,
+   "text": "Seven sets of Real Armaments, the Imperial Regalia among them."
+  }
+ ],
+ "licenses": [
+  {
+   "from": [
+    "S15"
+   ],
+   "to": "S38",
+   "substrate": [
+    "L05"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S07",
+    "S08",
+    "S04"
+   ],
+   "to": "L01",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S09",
+    "S15"
+   ],
+   "to": "L02",
+   "substrate": [],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S15",
+    "S16"
+   ],
+   "to": "L03",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S11",
+    "S12"
+   ],
+   "to": "L04",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S33",
+    "S16",
+    "S20"
+   ],
+   "to": "L05",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S20",
+    "S34"
+   ],
+   "to": "L06",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S20",
+    "S19",
+    "S17"
+   ],
+   "to": "L07",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S20",
+    "S18",
+    "S17"
+   ],
+   "to": "L08",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S14",
+    "S36"
+   ],
+   "to": "L09",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S28",
+    "S30",
+    "S29"
+   ],
+   "to": "L10",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S23",
+    "S25"
+   ],
+   "to": "L11",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S29"
+   ],
+   "to": "L12",
+   "substrate": [
+    "B03"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S31",
+    "S14",
+    "S32"
+   ],
+   "to": "L14",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S21"
+   ],
+   "to": "L15",
+   "substrate": [],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S03",
+    "S29"
+   ],
+   "to": "L17",
+   "substrate": [],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "L17"
+   ],
+   "to": "L16",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S01"
+   ],
+   "to": "L19",
+   "substrate": [
+    "B03"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "L19"
+   ],
+   "to": "L18",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S33"
+   ],
+   "to": "L21",
+   "substrate": [
+    "B03"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "L21"
+   ],
+   "to": "L20",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S19",
+    "S30",
+    "S17"
+   ],
+   "to": "L22",
+   "substrate": [
+    "B01"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S29",
+    "S35"
+   ],
+   "to": "L23",
+   "substrate": [
+    "B03"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S18",
+    "S07",
+    "S08"
+   ],
+   "to": "L25",
+   "substrate": [],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S14",
+    "S13",
+    "S33",
+    "S05"
+   ],
+   "to": "L26",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S04",
+    "S09"
+   ],
+   "to": "L27",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S17",
+    "S19"
+   ],
+   "to": "L28",
+   "substrate": [
+    "L27"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S27",
+    "S23",
+    "S10"
+   ],
+   "to": "L29",
+   "substrate": [
+    "B02"
+   ],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S10",
+    "S02",
+    "S16"
+   ],
+   "to": "L30",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S24",
+    "S23"
+   ],
+   "to": "L31",
+   "substrate": [],
+   "mode": "determined"
+  },
+  {
+   "from": [
+    "S26"
+   ],
+   "to": "L32",
+   "substrate": [
+    "B02"
+   ],
+   "mode": "elected"
+  },
+  {
+   "from": [
+    "S37"
+   ],
+   "to": "L33",
+   "substrate": [],
+   "mode": "elected"
+  }
+ ],
+ "generations": [
+  {
+   "id": "G1",
+   "senders": [
+    "L22",
+    "L23"
+   ],
+   "receiver": "L10",
+   "covered_by": "S29",
+   "relation": "R1"
+  },
+  {
+   "id": "G2",
+   "senders": [
+    "L06",
+    "L23"
+   ],
+   "receiver": "L24",
+   "covered_by": "S29",
+   "relation": "R2"
+  }
+ ],
+ "relations": [
+  {
+   "id": "R1",
+   "participants": [
+    "L22",
+    "L23"
+   ],
+   "standing": "persistent",
+   "emergence": "G1"
+  },
+  {
+   "id": "R2",
+   "participants": [
+    "L06",
+    "L23"
+   ],
+   "standing": "persistent",
+   "emergence": "G2"
+  },
+  {
+   "id": "R3",
+   "participants": [
+    "L08",
+    "L07"
+   ],
+   "standing": "persistent",
+   "justification": "Great Clans and Templar Orders contest which class of the dead harvests the living; the contest's product is the Sye drainage map recorded at G2."
+  },
+  {
+   "id": "R4",
+   "participants": [
+    "L06",
+    "L09"
+   ],
+   "standing": "persistent"
+  },
+  {
+   "id": "R5",
+   "participants": [
+    "L14",
+    "L09"
+   ],
+   "standing": "persistent",
+   "justification": "Mediums serve oath adjudication; the relation regulates testimony and mints nothing."
+  },
+  {
+   "id": "R6",
+   "participants": [
+    "L15",
+    "L08"
+   ],
+   "standing": "persistent",
+   "justification": "Household and clan feeding of Shades share one Sye pool; regulation only."
+  },
+  {
+   "id": "R7",
+   "participants": [
+    "L03",
+    "L05"
+   ],
+   "standing": "persistent",
+   "justification": "Teric swing and exit share the same souls; the exit is a fate, not a new unit."
+  },
+  {
+   "id": "R9",
+   "participants": [
+    "L06",
+    "L07"
+   ],
+   "standing": "persistent",
+   "justification": "Templars re-sing Devourers' Real Domains to the Luminaries the enclaves house; regulation of Sye shares."
+  },
+  {
+   "id": "R10",
+   "participants": [
+    "L09",
+    "L23"
+   ],
+   "standing": "persistent",
+   "justification": "The Charter settled a revolt against the Kalean Empire; recorded as the Election L09."
+  },
+  {
+   "id": "R8",
+   "participants": [
+    "L01",
+    "L02"
+   ],
+   "standing": "persistent",
+   "justification": "Births sort into castes and the Unborn; the sorting is the whole relation."
+  }
+ ],
+ "loops": [
+  {
+   "id": "F1",
+   "domains": [
+    "D-feudal",
+    "D-realdom"
+   ],
+   "polarity": "reinforcing",
+   "limiter": "S30",
+   "delay": "generations",
+   "text": "Belief Follows Power: arms impose Canon; Canon redirects Sye; Sye yields Arcana; Arcana strengthens arms."
+  },
+  {
+   "id": "F2",
+   "domains": [
+    "D-realdom",
+    "D-shades"
+   ],
+   "polarity": "reinforcing",
+   "limiter": "S28",
+   "text": "Dominators gather Sye through songs; Sye strengthens Dominators, who sponsor more songs."
+  },
+  {
+   "id": "F3",
+   "domains": [
+    "D-realdom",
+    "D-palimpsest"
+   ],
+   "polarity": "reinforcing",
+   "limiter": "S28",
+   "text": "Fame attracts contradiction; annexation raises causal density; density raises fame."
+  },
+  {
+   "id": "F4",
+   "domains": [
+    "D-palimpsest",
+    "D-realdom"
+   ],
+   "polarity": "balancing",
+   "delay": "narrative time",
+   "text": "Challengers to an incumbent Song cross the threshold and lose, feeding it: perturbations return opposed."
+  },
+  {
+   "id": "F5",
+   "domains": [
+    "D-realdom",
+    "D-faith"
+   ],
+   "polarity": "reinforcing",
+   "limiter": "S30",
+   "text": "Luminaries' Real Domains fund the Faith; the Faith's templars re-sing Devourers' Domains to Luminaries."
+  }
+ ],
+ "dynamics": [
+  {
+   "conceit": "L10",
+   "type": "stability",
+   "supported_by": "F4"
+  },
+  {
+   "conceit": "L12",
+   "type": "recurrence",
+   "supported_by": null
+  },
+  {
+   "conceit": "L13",
+   "type": "recurrence",
+   "supported_by": null
+  },
+  {
+   "conceit": "L09",
+   "type": "stability",
+   "supported_by": null
+  }
+ ],
+ "questions": [
+  {
+   "id": "Q01",
+   "kind": "modal",
+   "text": "When an ethnicity merges into another or ends, where can its Souls reincarnate?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q02",
+   "kind": "modal",
+   "text": "Can a Fallacious Phenomenal Real Domain contradict a Soul's Fate, and which yields?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q03",
+   "kind": "modal",
+   "text": "Do Teric and Wyric balances, Shade memories and Honor survive when the Acts behind them are re-derived away by a Paroxysm?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q04",
+   "kind": "modal",
+   "text": "Is Teria attributed to an influencer conserved (split with the actor) or multiplied (both credited in full)?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q05",
+   "kind": "modal",
+   "text": "Can Extraterrestrials or Primordials act on, or communicate with, the Middle Plane after its creation?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q06",
+   "kind": "modal",
+   "text": "By what test is the Soul Depth, and so the caste, of a woman or a non-cultivating man established?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q07",
+   "kind": "modal",
+   "text": "Can a Lowborn-souled child of a Peer inherit a title?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q08",
+   "kind": "modal",
+   "text": "From what baseline do the Fae's 25, 50 and 75% shifts of Fortune run?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q09",
+   "kind": "modal",
+   "text": "Is the content of a widely witnessed Descriptive Wyric Oath a Phenomenal Domain for Realization?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q10",
+   "kind": "modal",
+   "text": "What can an Unborn body do (labor, training, response to command)?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q11",
+   "kind": "modal",
+   "text": "How is a Hybrid formed, and can the human refuse it?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q12",
+   "kind": "modal",
+   "text": "Is 'combined Prana Base' for witness thresholds summed in Prana or read by rank?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q13",
+   "kind": "modal",
+   "text": "Who represents civilization, and so can trigger the Charter's Wyra, when there is no Emperor?",
+   "verdict": null,
+   "by": []
+  },
+  {
+   "id": "Q20",
+   "kind": "modal",
+   "text": "Can a non-cultivator acquire Wyra?",
+   "verdict": "prohibited",
+   "by": [
+    "S14",
+    "S13"
+   ]
+  },
+  {
+   "id": "Q21",
+   "kind": "modal",
+   "text": "Can a being of the Upper or Lower Plane enter the Middle Plane?",
+   "verdict": "prohibited",
+   "by": [
+    "S10"
+   ]
+  },
+  {
+   "id": "Q22",
+   "kind": "modal",
+   "text": "Can a Residual Soul leave the Middle Plane?",
+   "verdict": "prohibited",
+   "by": [
+    "S03"
+   ]
+  },
+  {
+   "id": "Q23",
+   "kind": "modal",
+   "text": "Can an Apparition be destroyed by force?",
+   "verdict": "prohibited",
+   "by": [
+    "S20"
+   ]
+  },
+  {
+   "id": "Q24",
+   "kind": "modal",
+   "text": "Can a Lowborn Soul become Highborn?",
+   "verdict": "prohibited",
+   "by": [
+    "S04"
+   ]
+  },
+  {
+   "id": "Q25",
+   "kind": "modal",
+   "text": "Can a coerced Wyric Oath bind?",
+   "verdict": "admitted",
+   "by": [
+    "S14"
+   ]
+  },
+  {
+   "id": "Q26",
+   "kind": "modal",
+   "text": "Can a Narrative Space hold an oligopoly of Great Songs?",
+   "verdict": "admitted",
+   "by": [
+    "S28"
+   ]
+  },
+  {
+   "id": "Q27",
+   "kind": "modal",
+   "text": "Can star systems differ in moral authority?",
+   "verdict": "admitted",
+   "by": [
+    "S40"
+   ]
+  },
+  {
+   "id": "Q28",
+   "kind": "modal",
+   "text": "Can a Lowborn become an Apotheist?",
+   "verdict": "admitted",
+   "by": [
+    "S19",
+    "S17"
+   ]
+  },
+  {
+   "id": "Q30",
+   "kind": "actual",
+   "text": "Which Great Songs make up the Arian oligopoly today?",
+   "verdict": "open",
+   "by": [],
+   "modal": "Q26"
+  },
+  {
+   "id": "Q31",
+   "kind": "actual",
+   "text": "Which star systems are the most Proteric?",
+   "verdict": "open",
+   "by": [],
+   "modal": "Q27"
+  },
+  {
+   "id": "Q32",
+   "kind": "actual",
+   "text": "Which Lowborn Apotheists exist in 1712 AC?",
+   "verdict": "open",
+   "by": [],
+   "modal": "Q28"
+  }
+ ],
+ "taxonomies": [
+  {
+   "id": "T1",
+   "parent": "Shade",
+   "exhaustive": true,
+   "exclusive": true,
+   "axes": [
+    [
+     "no-apotheosis",
+     "antemortem-apotheosis",
+     "postmortem-apotheosis"
+    ],
+    [
+     "no-deviation",
+     "antemortem-deviation",
+     "postmortem-deviation"
+    ]
+   ],
+   "cells": {
+    "no-apotheosis|no-deviation": "admitted",
+    "antemortem-apotheosis|no-deviation": "admitted",
+    "postmortem-apotheosis|no-deviation": "admitted",
+    "no-apotheosis|antemortem-deviation": "admitted",
+    "no-apotheosis|postmortem-deviation": "admitted",
+    "antemortem-apotheosis|antemortem-deviation": "admitted",
+    "antemortem-apotheosis|postmortem-deviation": "admitted",
+    "postmortem-apotheosis|antemortem-deviation": "admitted"
+   }
+  },
+  {
+   "id": "T2",
+   "parent": "Exit route",
+   "exhaustive": true,
+   "exclusive": true,
+   "axes": [
+    [
+     "Lychia",
+     "Teria",
+     "Sye",
+     "Prana",
+     "Maxim",
+     "Wyra"
+    ],
+    [
+     "Upper",
+     "Lower"
+    ]
+   ],
+   "cells": {
+    "Lychia|Upper": "admitted",
+    "Lychia|Lower": "admitted",
+    "Teria|Upper": "admitted",
+    "Teria|Lower": "admitted",
+    "Sye|Upper": "admitted",
+    "Sye|Lower": "admitted",
+    "Prana|Upper": "admitted",
+    "Prana|Lower": "admitted",
+    "Maxim|Upper": "admitted",
+    "Maxim|Lower": "admitted",
+    "Wyra|Upper": "prohibited",
+    "Wyra|Lower": "prohibited"
+   }
+  },
+  {
+   "id": "T3",
+   "parent": "Minor Tongue",
+   "exhaustive": false,
+   "exclusive": true,
+   "axes": [
+    [
+     "seven realm tongues",
+     "Nacenish"
+    ],
+    [
+     "Arian realm",
+     "Tharion polity"
+    ]
+   ],
+   "cells": {
+    "seven realm tongues|Arian realm": "admitted",
+    "seven realm tongues|Tharion polity": "prohibited",
+    "Nacenish|Arian realm": "prohibited",
+    "Nacenish|Tharion polity": "admitted"
+   }
+  }
+ ],
+ "terms": [
+  {
+   "term": "Allhigh",
+   "defined_in": "S01",
+   "uses": []
+  },
+  {
+   "term": "Illuminative Fragment",
+   "defined_in": "S01",
+   "uses": [
+    "Allhigh"
+   ]
+  },
+  {
+   "term": "Soul",
+   "defined_in": "S03",
+   "uses": [
+    "Illuminative Fragment",
+    "Sye",
+    "Wyra",
+    "Teria",
+    "Lychion",
+    "Prana"
+   ]
+  },
+  {
+   "term": "Soul Ego",
+   "defined_in": "S11",
+   "uses": [
+    "Lychion"
+   ]
+  },
+  {
+   "term": "Lychion",
+   "defined_in": "S11",
+   "uses": [
+    "Soul Ego"
+   ]
+  },
+  {
+   "term": "Wyra",
+   "defined_in": "S13",
+   "uses": [
+    "Wyric Oath",
+    "Fae"
+   ]
+  },
+  {
+   "term": "Fae",
+   "defined_in": "S13",
+   "uses": [
+    "Wyra"
+   ]
+  },
+  {
+   "term": "Teria",
+   "defined_in": "S15",
+   "uses": [
+    "Act",
+    "Reciprocity"
+   ]
+  },
+  {
+   "term": "Sye",
+   "defined_in": "S17",
+   "uses": [
+    "Soul",
+    "Real Domain"
+   ]
+  },
+  {
+   "term": "Real Domain",
+   "defined_in": "S19",
+   "uses": [
+    "Sye",
+    "Domain"
+   ]
+  },
+  {
+   "term": "Dominator",
+   "defined_in": "S19",
+   "uses": [
+    "Real Domain",
+    "Ancestor",
+    "Apparition",
+    "Relic"
+   ]
+  },
+  {
+   "term": "Apparition",
+   "defined_in": "S20",
+   "uses": [
+    "Shade",
+    "Radiant String",
+    "Real Domain"
+   ]
+  },
+  {
+   "term": "Relic",
+   "defined_in": "S37",
+   "uses": [
+    "Real Domain",
+    "Soul Imprint"
+   ]
+  },
+  {
+   "term": "Paroxysm",
+   "defined_in": "S23",
+   "uses": [
+    "Planar State",
+    "Real Domain"
+   ]
+  },
+  {
+   "term": "Planar State",
+   "defined_in": "S23",
+   "uses": [
+    "Paroxysm"
+   ]
+  },
+  {
+   "term": "Shade",
+   "defined_in": "S21",
+   "uses": [
+    "Soul"
+   ]
+  },
+  {
+   "term": "Wyric Oath",
+   "defined_in": "S14",
+   "uses": [
+    "Wyra",
+    "cultivator",
+    "Prana"
+   ]
+  },
+  {
+   "term": "Soul Depth",
+   "defined_in": "S04",
+   "uses": [
+    "Soul",
+    "subcaste"
+   ]
+  },
+  {
+   "term": "medium",
+   "defined_in": "S31",
+   "uses": [
+    "Soul",
+    "Wyra",
+    "Teria",
+    "Lychion"
+   ]
+  },
+  {
+   "term": "Higher Worlds",
+   "defined_in": "S16",
+   "uses": [
+    "Teria",
+    "Higher World"
+   ]
+  },
+  {
+   "term": "Seas of Consciousness",
+   "defined_in": "S39",
+   "uses": [
+    "Sye",
+    "Intented"
+   ]
+  },
+  {
+   "term": "Honor",
+   "defined_in": "S19",
+   "uses": [
+    "Honor Group",
+    "Sye"
+   ]
+  }
+ ],
+ "primitives": [
+  "Domain",
+  "Act",
+  "Reciprocity",
+  "Radiant String",
+  "Soul Imprint"
+ ],
+ "codex_order": [
+  "S01",
+  "S03",
+  "S11",
+  "S13",
+  "S15",
+  "S16",
+  "S17",
+  "S39",
+  "S19",
+  "S20",
+  "S37",
+  "S23",
+  "S21",
+  "S14",
+  "S04",
+  "S31"
+ ],
+ "witnesses": [
+  {
+   "id": "W01",
+   "class": "optimizer",
+   "exercises": [
+    "S14",
+    "S15"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "A lord forces a rival to swear a ruinous oath: it binds (1.4), but the coercion is an Antiact; Teria prices Wyra abuse."
+  },
+  {
+   "id": "W02",
+   "class": "optimizer",
+   "exercises": [
+    "S14",
+    "S36"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A present lord breaches the Charter: he is neither its oathswearer nor its witness, so no Wyra falls on him.",
+   "ledger": "C07"
+  },
+  {
+   "id": "W03",
+   "class": "boundary",
+   "exercises": [
+    "S32",
+    "S18",
+    "S07",
+    "S08"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A Lowborn-souled child of Peers bears the Gift and the bloodline's high Sye Force.",
+   "ledger": "C03"
+  },
+  {
+   "id": "W04",
+   "class": "magnitude",
+   "exercises": [
+    "S12",
+    "S11",
+    "S16"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A dozen Highborn lives against Grandsoul at about 350 soul-years.",
+   "ledger": "C13"
+  },
+  {
+   "id": "W05",
+   "class": "magnitude",
+   "exercises": [
+    "S08"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "1.92 billion over about 90 million km2 is about 21 per km2: between medieval Europe overall (under 10) and its densest kingdoms (30 to 40)."
+  },
+  {
+   "id": "W06",
+   "class": "long-run",
+   "exercises": [
+    "S29",
+    "S30"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "Run F1 forward: conquest without conversion loses; only imperial duration converts. Coherent, but nothing records why most polities die young."
+  },
+  {
+   "id": "W07",
+   "class": "boundary",
+   "exercises": [
+    "S23",
+    "S24",
+    "S25"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A previous stream's Real Domain loses a Collapse.",
+   "ledger": "C01"
+  },
+  {
+   "id": "W08",
+   "class": "boundary",
+   "exercises": [
+    "S22",
+    "S21"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A cultivator dies with no Radiant String: Shade Core or not?",
+   "ledger": "C02"
+  },
+  {
+   "id": "W09",
+   "class": "extremal",
+   "exercises": [
+    "S16",
+    "S20",
+    "S10"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "An Apotheist Paragon dies: Caelior or Beatrion?",
+   "ledger": "C05"
+  },
+  {
+   "id": "W10",
+   "class": "boundary",
+   "exercises": [
+    "S16",
+    "S07"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A Saint dies into a Higher World outside its ethnicity.",
+   "ledger": "C04"
+  },
+  {
+   "id": "W11",
+   "class": "boundary",
+   "exercises": [
+    "S38",
+    "S15"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A Lady who persuades her lord to war is credited Teria by influence.",
+   "ledger": "C06"
+  },
+  {
+   "id": "W12",
+   "class": "standard",
+   "exercises": [
+    "S20",
+    "S17"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "Phantoms self-sustain on a Personal Real Domain; Apparitions with one must hunt Sye.",
+   "ledger": "C09"
+  },
+  {
+   "id": "W13",
+   "class": "standard",
+   "exercises": [
+    "S31",
+    "S04"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "Nobody perceives Soul Depth: not mediums, not the self. Closure question Q06, not a conflict."
+  },
+  {
+   "id": "W14",
+   "class": "optimizer",
+   "exercises": [
+    "S34",
+    "S03"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "A Luminary-serving Faith teaches that the Residual Soul, the Luminaries' own kind, is a mirage.",
+   "ledger": "C15"
+  },
+  {
+   "id": "W15",
+   "class": "standard",
+   "exercises": [
+    "S13",
+    "S14",
+    "S33",
+    "S05"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "Derived: every non-cultivator's Fae is Primefae for life (L26)."
+  },
+  {
+   "id": "W16",
+   "class": "standard",
+   "exercises": [
+    "S15",
+    "S09"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "The Unborn have no Demonstrated Interests, so harm to one is Irreciprocity only against its owner: Teria and the property rule cohere."
+  },
+  {
+   "id": "W17",
+   "class": "standard",
+   "exercises": [
+    "S01",
+    "S02",
+    "S26",
+    "S27"
+   ],
+   "edges": [],
+   "outcome": "clean",
+   "note": "Jeten's foreknowledge of the whole Palimpsest needs Fate's invariance (S26); stated stochastic Realization is epistemic for in-world agents."
+  },
+  {
+   "id": "W18",
+   "class": "standard",
+   "exercises": [
+    "S19",
+    "S28",
+    "S29",
+    "S30",
+    "S35",
+    "S37"
+   ],
+   "edges": [
+    "G1",
+    "G2"
+   ],
+   "outcome": "clean",
+   "note": "Imperial consolidation of subrace Canons into one Canon, and borders following Sye drainage, both follow from S29 over S28 and S30."
+  },
+  {
+   "id": "W19",
+   "class": "standard",
+   "exercises": [
+    "S39",
+    "S33"
+   ],
+   "edges": [],
+   "outcome": "conflict",
+   "note": "'Base Sye Capacity is alike' against seven Seas: reconciled if the Seas grade only the Intented (v50).",
+   "ledger": "C11"
+  }
+ ],
+ "ledger": [
+  {
+   "id": "C01",
+   "type": "L",
+   "status": "open",
+   "text": "S24 (Real Domains persist through all later Planar States) against S25 (Collapse erases the loser). Both Strict. Reclassifies to S under the scope patch: permanence holds against re-derivation, not against contradiction."
+  },
+  {
+   "id": "C02",
+   "type": "S",
+   "status": "open",
+   "text": "SHADES: every Shade carries the Prana Core (first statement) against only cultivators with Radiant Strings keep it (later statement)."
+  },
+  {
+   "id": "C03",
+   "type": "S",
+   "status": "open",
+   "text": "Medium infertility keyed on caste (Highborn) against its stated mechanism keyed on Sye Force, which follows bloodline; the two part where Highborn bear Lowborn."
+  },
+  {
+   "id": "C04",
+   "type": "S",
+   "status": "open",
+   "text": "Saints and Fiends go to Higher and Lower Worlds at death, against the ethnicity lock and the closure of the five paths; 'Higher Worlds' undefined."
+  },
+  {
+   "id": "C05",
+   "type": "S",
+   "status": "open",
+   "text": "Exit priority undecided where triggers coincide: an Apotheist who is also a Paragon, Saint, Fiend or Nadir; an Empyrean breakthrough and a Great Maxim at once."
+  },
+  {
+   "id": "C06",
+   "type": "S",
+   "status": "open",
+   "text": "'Impossible for women ... through Teria alone' is Strict, but rests on a Tendency ('approaching zero'); persuasion credits Teria to influential women."
+  },
+  {
+   "id": "C07",
+   "type": "P",
+   "severity": "P3",
+   "status": "open",
+   "text": "The Charter binds present title holders and no sovereign dares breach it, but the Law binds only consenting witnesses and the oathswearer, both of 1366."
+  },
+  {
+   "id": "C08",
+   "type": "S",
+   "status": "open",
+   "text": "Revenant = postmortem Apotheosis with Sye Deviation, against 'all Revenants originate as Spirits': the postmortem/postmortem cell is undecided."
+  },
+  {
+   "id": "C09",
+   "type": "P",
+   "severity": "P1",
+   "status": "closed",
+   "outcome": "explication",
+   "text": "Phantoms self-sustain, Apparitions must secure Sye: Radiant Strings are outflow (Strings are one-way from sender)."
+  },
+  {
+   "id": "C10",
+   "type": "L",
+   "status": "open",
+   "text": "History drafts A and B (B03, B04): what the Deluge spared, where the First Era lay, who formed the Arians, how long Eras run."
+  },
+  {
+   "id": "C11",
+   "type": "S",
+   "status": "closed",
+   "outcome": "explication (v50 Intented ladder)",
+   "text": "Alike base Sye Capacity against seven Seas of Consciousness."
+  },
+  {
+   "id": "C12",
+   "type": "S",
+   "status": "open",
+   "text": "'Honor' names both Sye in the Personal Domain (metaphysics) and membership of the Honor Group (institution); 'Highborn men' against 'the Highborn'."
+  },
+  {
+   "id": "C13",
+   "type": "Q",
+   "status": "open",
+   "text": "Highborn reincarnate about a dozen times before exit, yet reach Grandsoul (immediate Renascension) near 350 soul-years: consistent only if a Highborn life averages about 30 years."
+  },
+  {
+   "id": "C14",
+   "type": "S",
+   "status": "open",
+   "text": "Dominators named as Ancestors, Revenants and Relics; the mechanism (a Personal or Material Real Domain) also admits Guardians, Phantoms and living Apotheists; 'Ancestor' undefined."
+  },
+  {
+   "id": "C15",
+   "type": "P",
+   "severity": "P1",
+   "status": "accepted",
+   "text": "The Faith serves Luminaries (Residual Souls) while teaching the Residual Soul is a mirage.",
+   "rationale": "Resolved by the setting's own Sye economy: the Doctrine devalues household and clan Shades, drawing Sye from Shadeshrines and Guardians toward Luminaries (S29). Accepted pending the author's word."
+  }
+ ],
+ "sweep": {
+  "last_new_conflicts": 13,
+  "fixed_point_sweeps": 0
+ }
+}
