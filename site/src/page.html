@@ -1,0 +1,97 @@
+<title>Operative Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/*__STYLE__*/
+</style>
+<!--HEAD-END-->
+<header class="masthead">
+  <div class="masthead-in">
+    <a class="brand" href="#threshold" aria-label="Operative Mode, home">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <circle cx="20" cy="20" r="15.4" fill="none" stroke="currentColor" stroke-width="0.6"/>
+        <path d="M20 6 L26.075 32.614 L9.055 11.271 L33.649 23.115 L6.351 23.115 L30.945 11.271 L13.925 32.614 Z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+      </svg>
+      <span><span class="brand-name">Operative Mode</span><span class="brand-sub">Draft 0.4 · Core Valley</span></span>
+    </a>
+    <div class="mode-chip" id="modeChip" aria-live="polite"></div>
+    <nav class="chambers" aria-label="Chambers">
+      <a href="#threshold" data-view="threshold"><span class="num">i</span>Threshold</a>
+      <a href="#play-menu" data-view="play-menu"><span class="num">ii</span>Play Menu</a>
+      <a href="#magic-menu" data-view="magic-menu"><span class="num">iii</span>Magic Menu</a>
+      <a href="#deploy" data-view="deploy"><span class="num">iv</span>Deployment</a>
+      <a href="#table" data-view="table"><span class="num">v</span>The Table</a>
+      <a href="#codex" data-view="codex"><span class="num">vi</span>Codex</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="threshold" data-view="threshold">
+    <div class="thesis">
+      <p class="eyebrow"><span class="sec">§0</span>Operative Mode Framework · Draft 0.4</p>
+      <h1>The User fixes what they care about. The Operator <i>elects the rest.</i></h1>
+      <p class="lede">A coordination protocol for collaborative fiction. It supplies no story, setting, genre or system. It settles who may do what to which parts of the fiction, how unsettled things become settled, how the Mode stays itself over a long Play, and what happens when something goes wrong.</p>
+    </div>
+
+    <div class="doors">
+      <a class="door" href="#play-menu">
+        <span class="numeral">ii · Declaration</span>
+        <h3>Play Menu</h3>
+        <p>Unsure what to play? Eighteen option sets, served three at a time. Every pick is a Declaration marked U; whatever you leave unpicked is the Operator's to elect.</p>
+        <span class="go">Open the Menu →</span>
+      </a>
+      <a class="door" href="#magic-menu">
+        <span class="numeral">iii · §25</span>
+        <h3>Magic Menu</h3>
+        <p>Build a magic system that is hard to its author: Source, Variables, an Effect Grammar that prices any spell, a Disclosure Profile, and a hash seal.</p>
+        <span class="go">Open the Menu →</span>
+      </a>
+      <a class="door" href="#deploy">
+        <span class="numeral">iv · §12</span>
+        <h3>Deploy a Mode</h3>
+        <p>Nine steps from Declaration to Activation: Baseline and Deltas, conjunctive Validation, Election, the Kernel and Touchstone, a Proving Scene, explicit Assent.</p>
+        <span class="go">Begin the sequence →</span>
+      </a>
+      <a class="door" href="#table">
+        <span class="numeral">v · §13–§15</span>
+        <h3>The Table</h3>
+        <p>Play under the ratified Mode: Stakes before Odds before the draw, Clocks that tick only on their conditions, sealed secrets, Checkpoints, and a live Operator where Claude is available.</p>
+        <span class="go">Sit down →</span>
+      </a>
+    </div>
+
+    <div class="panel" id="thresholdStatus"></div>
+
+    <div class="families">
+      <div class="panel stack tight">
+        <p class="eyebrow"><span class="sec">§0.6</span>First family</p>
+        <h2>Usurpation</h2>
+        <p class="prose">Exercising what you do not hold: deciding the User's Character's actions, treating an inference as fact, softening a boundary. Allocation, procedure and challenge address it.</p>
+      </div>
+      <div class="panel stack tight">
+        <p class="eyebrow"><span class="sec">§0.6</span>Second family</p>
+        <h2>Regression</h2>
+        <p class="prose">The Operator's own generation sliding back toward its defaults. None of these breaks a rule; each is simply the most probable continuation.</p>
+        <ul class="regress" id="regressList"></ul>
+      </div>
+    </div>
+
+    <div class="stack" id="ceremonyPick"></div>
+  </section>
+
+  <section class="view" id="play-menu" data-view="play-menu" hidden></section>
+  <section class="view" id="magic-menu" data-view="magic-menu" hidden></section>
+  <section class="view" id="deploy" data-view="deploy" hidden></section>
+  <section class="view" id="table" data-view="table" hidden></section>
+  <section class="view" id="codex" data-view="codex" hidden></section>
+</main>
+
+<footer class="colophon">
+  <span>Operative Mode Framework, Draft 0.4 · built from <span class="mono">skills/operative-mode</span> in Core Valley.</span>
+  <span>Your Mode is kept in this browser. Export it from Deployment to keep it anywhere.</span>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<!--__SCRIPTS__-->
