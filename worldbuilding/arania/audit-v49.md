@@ -1,8 +1,8 @@
 # Audit: Arania (Worldbuilding Project 49)
 
-An Audit under Axel's Worldbuilding Framework, Revision 05 (`skills/structuralist-worldbuilding`), with a first Verification round. The Structuralist Position governs throughout: Narrative is never the resident register, absence over decided space is the project as designed, and every recommendation is a rule, never content.
+An Audit under Axel's Worldbuilding Framework, Revision 05 (`skills/worldbuilding-analysis`), with a first Verification round. The Structuralist Position governs throughout: Narrative is never the resident register, absence over decided space is the project as designed, and every recommendation is a rule, never content.
 
-**Record.** `graph-v49.json` in this folder, seal `sha256:e43e74c8a0e24f9e06ba7a56a60aab464c07e4cdd7d7d76e9fa40567365d6b28`. Re-run with `python skills/structuralist-worldbuilding/scripts/conceit_graph.py check worldbuilding/arania/graph-v49.json`.
+**Record.** `graph-v49.json` in this folder, seal `sha256:e43e74c8a0e24f9e06ba7a56a60aab464c07e4cdd7d7d76e9fa40567365d6b28`. Re-run with `python skills/worldbuilding-analysis/scripts/conceit_graph.py check worldbuilding/arania/graph-v49.json`.
 
 ---
 

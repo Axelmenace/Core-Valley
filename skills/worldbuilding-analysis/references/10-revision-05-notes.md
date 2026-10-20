@@ -8,7 +8,7 @@
 
 ## Method
 
-Revision 04 (the `worldbuilding-analysis` skill) was audited the way it audits settings. A framework that certifies coherence should survive its own Verification Protocol, so each internal conflict was typed (L, S or P), reconciled by the cheapest patch, and the patch held to the Retraction Test (Gate 1: the original consequences survive) and the Fecundity Criterion (Gate 2: the patch licenses something new). Things the framework needs and lacks are not conflicts; they are closure failures of the framework, and are listed separately in Part B, as a Structuralist separates undecided structure from inconsistent structure. Part C covers the skill's engineering, which is a different kind of defect again.
+Revision 04 of this skill (archived in the Core-Valley repository as `archive/worldbuilding-framework-revision-04.md`) was audited the way it audits settings. A framework that certifies coherence should survive its own Verification Protocol, so each internal conflict was typed (L, S or P), reconciled by the cheapest patch, and the patch held to the Retraction Test (Gate 1: the original consequences survive) and the Fecundity Criterion (Gate 2: the patch licenses something new). Things the framework needs and lacks are not conflicts; they are closure failures of the framework, and are listed separately in Part B, as a Structuralist separates undecided structure from inconsistent structure. Part C covers the skill's engineering, which is a different kind of defect again.
 
 No Revision 04 conflict proved to be Type L. That is itself a finding about Revision 04's quality: every collision was a scope written too broadly or a priority left implicit, which is the cheap kind.
 

@@ -16,7 +16,7 @@ skills/
                              Activation Instruction, Standing Preferences, Play Menu (.md + .json),
                              Magic Specification sheet, examples/ (Arania: four linked magic systems)
     scripts/                 draw.py (Tool Draw / Oracle), menu_draw.py (Play Menu rolls), seal.py (Hash Seals)
-  structuralist-worldbuilding/  Worldbuilding Framework Revision 05, successor to worldbuilding-analysis (Revision 04)
+  worldbuilding-analysis/    Worldbuilding Framework Revision 05 (Structuralist Edition), replacing Revision 04
     SKILL.md                 Entry point: the Structuralist standpoint, levels, the framework in brief, protocols, outputs
     references/01–10         Ontology, pipeline, Conceit Graph, Structural Profile, Analysis and Verification Protocols,
                              Generative Mode, transmission, glossary, and the audit of Revision 04 with its migration map
@@ -25,6 +25,9 @@ skills/
     scripts/                 conceit_graph.py (check, strike, order, seal, dot)
 archive/
   operative-mode-framework-draft-0.3.md   Deployable Working Draft 0.3, kept for reference and migration
+  worldbuilding-framework-revision-04.md  Worldbuilding Framework Revision 04, the skill Revision 05 replaces
+worldbuilding/
+  arania/                    Revision 05 Audit of Arania (Project 49) and its Conceit Graph
 .claude-plugin/              Plugin + marketplace manifests, so the repo installs as a Claude Code plugin
 tools/package-skills.sh      Builds dist/<skill>.zip for upload to claude.ai
 ```
@@ -42,11 +45,11 @@ tools/package-skills.sh      Builds dist/<skill>.zip for upload to claude.ai
 
 ```
 cp -r skills/operative-mode ~/.claude/skills/                 # all projects
-cp -r skills/structuralist-worldbuilding ~/.claude/skills/
+cp -r skills/worldbuilding-analysis ~/.claude/skills/
 cp -r skills/operative-mode .claude/skills/                   # this project only
 ```
 
-**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` and `dist/structuralist-worldbuilding.zip` under Settings → Capabilities → Skills. Once `structuralist-worldbuilding` is installed, disable `worldbuilding-analysis` (Revision 04): both trigger on worldbuilding requests, and Revision 05 supersedes it.
+**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` and `dist/worldbuilding-analysis.zip` under Settings → Capabilities → Skills. `worldbuilding-analysis.zip` carries the same skill name as the Revision 04 upload, so it replaces it; if claude.ai refuses the duplicate name, delete the old skill there first.
 
 The scripts need only Python 3 and the standard library. They are optional: without code execution Operative Mode falls back to User Rolls and lower Commitment Levels, and the Worldbuilding Framework runs its graph checks by hand.
 
@@ -63,8 +66,8 @@ The scripts need only Python 3 and the standard library. They are optional: with
 
 | Revision | Where | Notes |
 |---|---|---|
-| 04 | claude.ai skill `worldbuilding-analysis` | Two-phase pipeline, Conceit Graph, Verification Protocol, Structuralist Position; one file |
-| 05 | `skills/structuralist-worldbuilding/` | Modal Test, Licensure (Determined/Elected), Stance, Closure Test and Sparsity Register, Structural Profile, Type Q, Certification Ladder, medium-indexed transmission, the checker. See `references/10-revision-05-notes.md` |
+| 04 | `archive/` (formerly the claude.ai upload) | Two-phase pipeline, Conceit Graph, Verification Protocol, Structuralist Position; one file |
+| 05 | `skills/worldbuilding-analysis/` | Modal Test, Licensure (Determined/Elected), Stance, Closure Test and Sparsity Register, Structural Profile, Type Q, Certification Ladder, medium-indexed transmission, the checker. See `references/10-revision-05-notes.md` |
 
 ## Related
 
