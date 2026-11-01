@@ -1,0 +1,109 @@
+<title>Astrolabe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Astrolabe: a drafting and planning instrument for short stories, novellas, novels and serials.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Saira:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:ital,wght@0,400;1,400&display=swap">
+<style>
+/*__STYLE__*/
+</style>
+<!--HEAD-END-->
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<div id="boot" class="boot" role="status">
+  <div class="boot-astro" data-astro="boot"></div>
+  <p class="boot-msg hud" id="bootMsg">Aligning the rete…</p>
+</div>
+
+<div id="app" hidden>
+  <!-- ═════════ Library ═════════ -->
+  <section id="library" class="library" hidden>
+    <div class="lib-in">
+      <header class="lib-head">
+        <div class="lib-mark" data-astro="hero"></div>
+        <div class="lib-title">
+          <p class="hud lib-eyebrow">Drafting instrument · Long-form fiction</p>
+          <h1 class="wordmark">Astrolabe</h1>
+          <p class="lib-lede">Plot your course through a story the length of a voyage. Short stories, novellas, novels and serials, each with its binder, board, codex and charted progress.</p>
+          <div class="lib-actions">
+            <button class="btn gild" id="libNew" type="button"><span aria-hidden="true">✦</span> New project</button>
+            <button class="btn" id="libImport" type="button">Import</button>
+            <button class="btn ghost" id="libSettings" type="button">Settings</button>
+            <input type="file" id="importFile" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown" hidden>
+          </div>
+        </div>
+      </header>
+      <div class="lib-storage" id="libStorage"></div>
+      <h2 class="section-label hud"><span>Your tomes</span><span class="rule"></span><span id="libCount"></span></h2>
+      <div class="tomes" id="tomes"></div>
+    </div>
+  </section>
+
+  <!-- ═════════ Desk ═════════ -->
+  <div id="desk" class="desk" hidden>
+    <header class="topbar">
+      <button class="iconbtn home" id="btnLibrary" type="button" title="Back to the library" aria-label="Back to the library"><span data-astro="mini"></span></button>
+      <button class="iconbtn narrow-only" id="btnBinder" type="button" title="Binder" aria-label="Toggle binder">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      </button>
+      <div class="proj-id">
+        <span class="proj-title" id="projTitle"></span>
+        <span class="form-badge hud" id="projForm"></span>
+      </div>
+      <nav class="modes" id="modes" role="tablist" aria-label="Views">
+        <button role="tab" data-mode="write" type="button"><span class="k">1</span>Write</button>
+        <button role="tab" data-mode="board" type="button"><span class="k">2</span>Board</button>
+        <button role="tab" data-mode="outline" type="button"><span class="k">3</span>Outline</button>
+        <button role="tab" data-mode="threads" type="button"><span class="k">4</span>Threads</button>
+        <button role="tab" data-mode="codex" type="button"><span class="k">5</span>Codex</button>
+        <button role="tab" data-mode="progress" type="button"><span class="k">6</span>Progress</button>
+      </nav>
+      <div class="top-tools">
+        <span class="save-state hud" id="saveState" aria-live="polite"></span>
+        <button class="iconbtn" id="btnPalette" type="button" title="Command palette (Ctrl+K)" aria-label="Command palette">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+        </button>
+        <button class="iconbtn" id="btnExport" type="button" title="Export" aria-label="Export">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+        </button>
+        <button class="iconbtn" id="btnSettings" type="button" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+        </button>
+        <button class="iconbtn" id="btnInspector" type="button" title="Inspector" aria-label="Toggle inspector">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M14.5 4.5v15"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside class="binder" id="binder" aria-label="Binder">
+      <div class="binder-head">
+        <span class="hud">Binder</span>
+        <div class="binder-add">
+          <button class="chip" type="button" data-add="scene" title="New scene (Ctrl+Alt+N)">+ Scene</button>
+          <button class="chip" type="button" data-add="chapter" id="addChapterBtn">+ Chapter</button>
+          <button class="chip" type="button" data-add="part" id="addPartBtn">+ Part</button>
+        </div>
+      </div>
+      <div class="binder-scroll">
+        <button class="proj-row" id="projRow" type="button"></button>
+        <ul class="tree" id="tree" role="tree"></ul>
+        <div class="trash" id="trash"></div>
+      </div>
+    </aside>
+
+    <main class="stage" id="stage"></main>
+
+    <aside class="inspector" id="inspector" aria-label="Inspector"></aside>
+
+    <footer class="statusbar" id="statusbar"></footer>
+    <div class="scrim" id="scrim"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="ctxmenu" id="ctx" hidden role="menu"></div>
+
+<script>
+/*__SCRIPT__*/
+</script>
