@@ -8,7 +8,7 @@ A drafting and planning instrument for long-form fiction: short stories, novella
 
 | View | For |
 |---|---|
-| **Write** | A distraction-free manuscript page. Select a scene to write it alone, or a chapter or part to write all its scenes as one continuous page; each scene still saves separately. Smart punctuation (curly quotes, `--` to em dash, `...` to ellipsis), bold and italic, scene breaks, typewriter scrolling and a focus mode that dims everything but the current paragraph. |
+| **Write** | A distraction-free manuscript page. Select a scene to write it alone, or a chapter or part to write all its scenes as one continuous page; each scene still saves separately. Smart punctuation (curly quotes, `--` to em dash, `...` to ellipsis), bold and italic, scene breaks, typewriter scrolling and a focus mode that dims everything but the current paragraph. The binder and inspector each retract with a slide (topbar buttons, `Ctrl \` and `Ctrl Shift \`) and stay put between visits; a retracted binder peeks out when the pointer rests on the left edge. |
 | **Board** | Index cards for every scene, grouped by chapter or episode. Edit titles and synopses on the card, drag to reorder or move between chapters, double-click to write. |
 | **Outline** | Every scene in one table: point of view, location, status, words against target and synopsis, all editable in place. |
 | **Threads** | Plotlines, subplots, arcs and mysteries as a scene-by-thread matrix. Flags a thread that goes quiet for four scenes or more. |
@@ -38,6 +38,8 @@ A drafting and planning instrument for long-form fiction: short stories, novella
 | `Ctrl K` | Command palette: jump to any scene, codex entry or command |
 | `Ctrl S` | Save now |
 | `Ctrl Shift S` | Snapshot the current scene |
+| `Ctrl \` | Retract or bring back the binder. While it's away, rest the pointer on the left edge to peek at it |
+| `Ctrl Shift \` | Retract or bring back the inspector |
 | `Ctrl Shift F` | Focus mode (`Esc` leaves) |
 | `Ctrl Alt N` | New scene after this one |
 | `Ctrl Shift Enter` | Scene break |

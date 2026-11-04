@@ -87,10 +87,12 @@ const UI = (() => {
     renderLibrary(); document.title = "Astrolabe";
   }
   function showDesk() {
-    $("#library").hidden = true; $("#desk").hidden = false;
     const d = $("#desk");
     d.classList.toggle("no-binder", !!lsGet("hideBinder", false));
     d.classList.toggle("no-insp", !!lsGet("hideInsp", false));
+    d.classList.remove("peek-binder");
+    $("#library").hidden = true; d.hidden = false;
+    syncPanelButtons();
     renderBinder(); setMode(S.mode, true); renderInspector(); renderStatus();
     document.title = P().title + " · Astrolabe";
   }
@@ -119,7 +121,7 @@ const UI = (() => {
     renderBinder();
     if (opts.mode && opts.mode !== S.mode) setMode(opts.mode); else if (S.mode === "write" || S.mode === "board") renderStage();
     renderInspector(); renderStatus();
-    $("#desk").classList.remove("show-binder");
+    if ($("#desk").classList.contains("show-binder")) { $("#desk").classList.remove("show-binder"); syncPanelButtons(); }
   }
   const openScene = id => select(id, { mode: "write" });
 
@@ -604,6 +606,8 @@ const UI = (() => {
           <kbd>Ctrl K</kbd><span>Command palette: jump to any scene, entry or action</span>
           <kbd>Ctrl S</kbd><span>Save now (saving is also automatic)</span>
           <kbd>Ctrl Shift S</kbd><span>Snapshot the current scene</span>
+          <kbd>Ctrl \\</kbd><span>Retract or bring back the binder (rest the pointer on the left edge to peek)</span>
+          <kbd>Ctrl Shift \\</kbd><span>Retract or bring back the inspector</span>
           <kbd>Ctrl Shift F</kbd><span>Focus mode</span>
           <kbd>Ctrl Alt N</kbd><span>New scene after this one</span>
           <kbd>Ctrl Shift Enter</kbd><span>Scene break</span>
@@ -824,6 +828,7 @@ ${body}<p class="end">END</p></body></html>`;
       ["New " + labelOf("chapter").toLowerCase(), "+", () => { const n = addNode("chapter"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New " + labelOf("part").toLowerCase(), "+", () => { const n = addNode("part"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New codex entry", "✶", () => Views.act("codex-new")],
+      ["Show or hide the binder", "◧", () => toggleBinder(), "Ctrl+\\"], ["Show or hide the inspector", "◨", () => toggleInspector(), "Ctrl+Shift+\\"],
       ["Focus mode", "◎", () => toggleFocus(), "Ctrl+Shift+F"], ["Typewriter scrolling", "≡", () => toggleTypewriter()],
       ["Take snapshot", "◫", () => snapshotActive(), "Ctrl+Shift+S"], ["Start a 25-minute sprint", "◷", () => startSprint(25)],
       ["Export…", "↧", () => exportDialog()], ["Download backup", "↧", () => backupAll()], ["Settings", "⚙", () => settingsDialog()], ["Back to the library", "⌂", () => showLibrary()],
@@ -874,19 +879,71 @@ ${body}<p class="end">END</p></body></html>`;
     if (j !== i || i < 0) openScene(order[j < 0 ? 0 : j]);
   }
 
+  /* ═════ Retractable side panels ═════ */
+  const narrow = () => matchMedia("(max-width: 900px)").matches;
+  function syncPanelButtons() {
+    const d = $("#desk"), wide = !narrow();
+    const b = wide ? !d.classList.contains("no-binder") : d.classList.contains("show-binder");
+    const i = wide ? !d.classList.contains("no-insp") : d.classList.contains("show-insp");
+    $("#btnBinder").classList.toggle("on", b); $("#btnBinder").setAttribute("aria-pressed", String(b));
+    $("#btnInspector").classList.toggle("on", i); $("#btnInspector").setAttribute("aria-pressed", String(i));
+  }
+  function returnFocus(panel) {
+    if (!panel.contains(document.activeElement)) return;
+    const pr = S.active && $(`.prose[data-id="${CSS.escape(S.active)}"]`);
+    if (pr) Editor.placeCaret(pr, true); else document.activeElement.blur();
+  }
+  function toggleBinder(hide) {
+    const d = $("#desk");
+    if (narrow()) { d.classList.toggle("show-binder", hide === undefined ? undefined : !hide); d.classList.remove("show-insp"); syncPanelButtons(); return; }
+    if (S.focus && hide === undefined) { toggleFocus(false); d.classList.remove("no-binder"); lsSet("hideBinder", false); syncPanelButtons(); return; }
+    const h = hide === undefined ? !d.classList.contains("no-binder") : hide;
+    d.classList.toggle("no-binder", h); d.classList.remove("peek-binder"); lsSet("hideBinder", h);
+    if (h) returnFocus($("#binder"));
+    syncPanelButtons();
+  }
+  function toggleInspector(hide) {
+    const d = $("#desk");
+    if (narrow()) { d.classList.toggle("show-insp", hide === undefined ? undefined : !hide); d.classList.remove("show-binder"); renderInspector(); syncPanelButtons(); return; }
+    if (S.focus && hide === undefined) { toggleFocus(false); d.classList.remove("no-insp"); lsSet("hideInsp", false); syncPanelButtons(); return; }
+    const h = hide === undefined ? !d.classList.contains("no-insp") : hide;
+    d.classList.toggle("no-insp", h); lsSet("hideInsp", h);
+    if (h) returnFocus($("#inspector")); else renderInspector();
+    syncPanelButtons();
+  }
+  /* While the binder is retracted, resting the pointer on the left edge slides it out over the page. */
+  function bindPeek() {
+    const d = $("#desk"), edge = $("#binderEdge"), b = $("#binder");
+    let enterT = 0, leaveT = 0;
+    const retracted = () => d.classList.contains("no-binder") || d.classList.contains("focus-mode");
+    const close = () => { clearTimeout(leaveT); clearTimeout(enterT); d.classList.remove("peek-binder"); };
+    edge.addEventListener("mouseenter", () => { clearTimeout(enterT); enterT = setTimeout(() => { if (retracted()) d.classList.add("peek-binder"); }, 220); });
+    edge.addEventListener("mouseleave", () => clearTimeout(enterT));
+    edge.addEventListener("click", () => { if (retracted()) d.classList.add("peek-binder"); });
+    b.addEventListener("mouseenter", () => clearTimeout(leaveT));
+    b.addEventListener("mouseleave", () => {
+      if (!d.classList.contains("peek-binder")) return;
+      leaveT = setTimeout(() => {
+        if (!$("#ctx").hidden || (b.contains(document.activeElement) && document.activeElement.matches("input"))) return;
+        close();
+      }, 350);
+    });
+    document.addEventListener("mousedown", e => { if (d.classList.contains("peek-binder") && !b.contains(e.target) && !e.target.closest("#ctx")) close(); });
+    S.closePeek = () => { if (!d.classList.contains("peek-binder")) return false; close(); return true; };
+  }
+
   /* ═════ Topbar & status bar wiring ═════ */
   function bindChrome() {
     $("#btnLibrary").onclick = () => showLibrary();
     $("#btnPalette").onclick = () => palette();
     $("#btnExport").onclick = () => exportDialog();
     $("#btnSettings").onclick = () => settingsDialog();
-    $("#btnInspector").onclick = () => {
-      const d = $("#desk");
-      if (matchMedia("(max-width: 900px)").matches) { d.classList.toggle("show-insp"); d.classList.remove("show-binder"); renderInspector(); return; }
-      d.classList.toggle("no-insp"); lsSet("hideInsp", d.classList.contains("no-insp"));
-    };
-    $("#btnBinder").onclick = () => { const d = $("#desk"); d.classList.toggle("show-binder"); d.classList.remove("show-insp"); };
-    $("#scrim").onclick = () => $("#desk").classList.remove("show-binder", "show-insp");
+    $("#btnInspector").onclick = () => toggleInspector();
+    $("#btnBinder").onclick = () => toggleBinder();
+    $("#binderClose").onclick = () => toggleBinder(true);
+    bindPeek();
+    matchMedia("(max-width: 900px)").addEventListener("change", () => { $("#desk").classList.remove("show-binder", "show-insp", "peek-binder"); syncPanelButtons(); });
+    $("#scrim").onclick = () => { $("#desk").classList.remove("show-binder", "show-insp"); syncPanelButtons(); };
     $("#modes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) setMode(b.dataset.mode); });
     $("#modes").addEventListener("keydown", e => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -927,7 +984,7 @@ ${body}<p class="end">END</p></body></html>`;
     toast, modal, ask, ctxMenu, closeCtx, closeTopModal, saveFile,
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
-    renderStatus, toggleFocus, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
+    renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
     renderLibrary, newProjectDialog,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };

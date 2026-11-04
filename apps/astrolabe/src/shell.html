@@ -43,8 +43,8 @@
   <div id="desk" class="desk" hidden>
     <header class="topbar">
       <button class="iconbtn home" id="btnLibrary" type="button" title="Back to the library" aria-label="Back to the library"><span data-astro="mini"></span></button>
-      <button class="iconbtn narrow-only" id="btnBinder" type="button" title="Binder" aria-label="Toggle binder">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      <button class="iconbtn" id="btnBinder" type="button" title="Binder (Ctrl+\)" aria-label="Show or hide the binder" aria-controls="binder">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/></svg>
       </button>
       <div class="proj-id">
         <span class="proj-title" id="projTitle"></span>
@@ -69,7 +69,7 @@
         <button class="iconbtn" id="btnSettings" type="button" title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
         </button>
-        <button class="iconbtn" id="btnInspector" type="button" title="Inspector" aria-label="Toggle inspector">
+        <button class="iconbtn" id="btnInspector" type="button" title="Inspector (Ctrl+Shift+\)" aria-label="Show or hide the inspector" aria-controls="inspector">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M14.5 4.5v15"/></svg>
         </button>
       </div>
@@ -77,7 +77,8 @@
 
     <aside class="binder" id="binder" aria-label="Binder">
       <div class="binder-head">
-        <span class="hud">Binder</span>
+        <span class="binder-title"><button class="iconbtn binder-close" id="binderClose" type="button" title="Retract the binder (Ctrl+\)" aria-label="Retract the binder">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6l-6 6 6 6M19 6l-6 6 6 6"/></svg></button><span class="hud">Binder</span></span>
         <div class="binder-add">
           <button class="chip" type="button" data-add="scene" title="New scene (Ctrl+Alt+N)">+ Scene</button>
           <button class="chip" type="button" data-add="chapter" id="addChapterBtn">+ Chapter</button>
@@ -91,6 +92,7 @@
       </div>
     </aside>
 
+    <div class="binder-edge" id="binderEdge" aria-hidden="true"></div>
     <main class="stage" id="stage"></main>
 
     <aside class="inspector" id="inspector" aria-label="Inspector"></aside>

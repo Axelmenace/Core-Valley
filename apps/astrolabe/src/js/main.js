@@ -19,6 +19,7 @@ function bindKeys() {
     if (e.key === "Escape") {
       if (UI.closeCtx()) return;
       if (UI.closeTopModal()) return;
+      if (S.closePeek && S.closePeek()) return;
       if (S.focus) { UI.toggleFocus(false); return; }
       const d = $("#desk"); if (d.classList.contains("show-binder") || d.classList.contains("show-insp")) { d.classList.remove("show-binder", "show-insp"); return; }
       return;
@@ -26,6 +27,7 @@ function bindKeys() {
     if ($("#desk").hidden || !P()) { if (mod && k === "s") e.preventDefault(); return; }
     if ($("#modalRoot").childElementCount) return;
     if (mod && k === "k") { e.preventDefault(); UI.palette(); return; }
+    if (mod && e.code === "Backslash") { e.preventDefault(); if (e.shiftKey) UI.toggleInspector(); else UI.toggleBinder(); return; }
     if (mod && !e.shiftKey && k === "s") { e.preventDefault(); flushAll(); Store.drain(4000).then(ok => UI.toast(ok ? "Saved." : "Still saving. Your work is queued and will retry.", { err: !ok })); return; }
     if (mod && e.shiftKey && k === "s") { e.preventDefault(); UI.snapshotActive(); return; }
     if (mod && e.shiftKey && k === "f") { e.preventDefault(); UI.toggleFocus(); return; }

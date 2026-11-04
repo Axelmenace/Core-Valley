@@ -239,7 +239,7 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 
 /* ── Desk grid ──────────────────────────────────────── */
 .desk {
-  height: 100%; display: grid;
+  height: 100%; display: grid; position: relative; transition: grid-template-columns .26s cubic-bezier(.3, .7, .2, 1);
   grid-template-columns: var(--binder-w) minmax(0, 1fr) var(--insp-w);
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas: "top top top" "binder stage insp" "status status status";
@@ -247,7 +247,13 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 .desk.no-binder { grid-template-columns: 0 minmax(0, 1fr) var(--insp-w); }
 .desk.no-insp { grid-template-columns: var(--binder-w) minmax(0, 1fr) 0; }
 .desk.no-binder.no-insp { grid-template-columns: 0 minmax(0, 1fr) 0; }
-.desk.no-binder .binder, .desk.no-insp .inspector { visibility: hidden; }
+.binder, .inspector { transition: opacity .2s ease; }
+.desk.no-binder .binder, .desk.no-insp .inspector { visibility: hidden; opacity: 0; transition: opacity .16s ease, visibility 0s linear .26s; }
+@media (min-width: 901px) {
+  /* keep the panels' contents at full width while the column slides, so nothing squashes mid-motion */
+  .binder-head, .binder-scroll { min-width: calc(var(--binder-w) - 1px); }
+  .inspector > * { min-width: calc(var(--insp-w) - 33px); }
+}
 
 .topbar {
   grid-area: top; display: flex; align-items: center; gap: 8px; min-width: 0;
@@ -281,6 +287,10 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 .binder { grid-area: binder; display: flex; flex-direction: column; min-height: 0; min-width: 0; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 92%, transparent); overflow: hidden; }
 .binder-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 10px 12px 8px; border-bottom: 1px solid var(--line2); flex-wrap: wrap; }
 .binder-add { display: flex; gap: 4px; flex-wrap: wrap; }
+.binder-title { display: flex; align-items: center; gap: 4px; margin-left: -6px; }
+.binder-close { width: 26px; height: 26px; }
+.binder-close svg { width: 14px; height: 14px; }
+.binder-edge { display: none; }
 .binder-scroll { overflow-y: auto; flex: 1; padding: 6px 6px 40px; }
 .proj-row { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; text-align: left; padding: 8px 8px; border-radius: 5px; color: var(--ink); }
 .proj-row:hover { background: var(--gild-soft); }
@@ -642,6 +652,20 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 
 .scrim { display: none; }
 
+/* ── Retracted binder: peek from the left edge ──────── */
+@media (min-width: 901px) and (hover: hover) {
+  .desk.no-binder .binder-edge, .desk.focus-mode .binder-edge {
+    display: block; grid-area: binder; position: absolute; inset: 0 auto 0 0; width: 12px; z-index: 6; cursor: e-resize;
+  }
+  .binder-edge::after { content: ""; position: absolute; left: 0; top: 30%; bottom: 30%; width: 2px; border-radius: 2px; background: var(--gild); opacity: 0; box-shadow: 0 0 10px var(--gild); transition: opacity .2s; }
+  .binder-edge:hover::after { opacity: .7; }
+  .desk.peek-binder .binder {
+    visibility: visible; opacity: 1; position: absolute; inset: 0 auto 0 0; width: var(--binder-w); z-index: 7;
+    background: var(--panel); box-shadow: 8px 0 32px rgba(0, 0, 0, .28); transition: opacity .14s ease;
+  }
+  .desk.peek-binder .binder-edge { display: none; }
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 1180px) {
   :root { --insp-w: 290px; --binder-w: 256px; }
@@ -653,6 +677,8 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 @media (max-width: 900px) {
   .desk, .desk.no-binder, .desk.no-insp, .desk.no-binder.no-insp { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "stage" "status"; }
   .narrow-only { display: inline-grid; }
+  .binder-close { display: none; }
+  .binder-title { margin-left: 0; }
   .binder, .inspector {
     position: fixed; top: 0; bottom: 0; z-index: 30; width: min(320px, 88vw); visibility: visible !important;
     transition: transform .22s ease-out; box-shadow: var(--shadow); background: var(--panel);

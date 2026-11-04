@@ -251,7 +251,7 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 
 /* ── Desk grid ──────────────────────────────────────── */
 .desk {
-  height: 100%; display: grid;
+  height: 100%; display: grid; position: relative; transition: grid-template-columns .26s cubic-bezier(.3, .7, .2, 1);
   grid-template-columns: var(--binder-w) minmax(0, 1fr) var(--insp-w);
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas: "top top top" "binder stage insp" "status status status";
@@ -259,7 +259,13 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 .desk.no-binder { grid-template-columns: 0 minmax(0, 1fr) var(--insp-w); }
 .desk.no-insp { grid-template-columns: var(--binder-w) minmax(0, 1fr) 0; }
 .desk.no-binder.no-insp { grid-template-columns: 0 minmax(0, 1fr) 0; }
-.desk.no-binder .binder, .desk.no-insp .inspector { visibility: hidden; }
+.binder, .inspector { transition: opacity .2s ease; }
+.desk.no-binder .binder, .desk.no-insp .inspector { visibility: hidden; opacity: 0; transition: opacity .16s ease, visibility 0s linear .26s; }
+@media (min-width: 901px) {
+  /* keep the panels' contents at full width while the column slides, so nothing squashes mid-motion */
+  .binder-head, .binder-scroll { min-width: calc(var(--binder-w) - 1px); }
+  .inspector > * { min-width: calc(var(--insp-w) - 33px); }
+}
 
 .topbar {
   grid-area: top; display: flex; align-items: center; gap: 8px; min-width: 0;
@@ -293,6 +299,10 @@ input[type=range] { accent-color: var(--gild); width: 100%; }
 .binder { grid-area: binder; display: flex; flex-direction: column; min-height: 0; min-width: 0; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 92%, transparent); overflow: hidden; }
 .binder-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 10px 12px 8px; border-bottom: 1px solid var(--line2); flex-wrap: wrap; }
 .binder-add { display: flex; gap: 4px; flex-wrap: wrap; }
+.binder-title { display: flex; align-items: center; gap: 4px; margin-left: -6px; }
+.binder-close { width: 26px; height: 26px; }
+.binder-close svg { width: 14px; height: 14px; }
+.binder-edge { display: none; }
 .binder-scroll { overflow-y: auto; flex: 1; padding: 6px 6px 40px; }
 .proj-row { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; text-align: left; padding: 8px 8px; border-radius: 5px; color: var(--ink); }
 .proj-row:hover { background: var(--gild-soft); }
@@ -654,6 +664,20 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 
 .scrim { display: none; }
 
+/* ── Retracted binder: peek from the left edge ──────── */
+@media (min-width: 901px) and (hover: hover) {
+  .desk.no-binder .binder-edge, .desk.focus-mode .binder-edge {
+    display: block; grid-area: binder; position: absolute; inset: 0 auto 0 0; width: 12px; z-index: 6; cursor: e-resize;
+  }
+  .binder-edge::after { content: ""; position: absolute; left: 0; top: 30%; bottom: 30%; width: 2px; border-radius: 2px; background: var(--gild); opacity: 0; box-shadow: 0 0 10px var(--gild); transition: opacity .2s; }
+  .binder-edge:hover::after { opacity: .7; }
+  .desk.peek-binder .binder {
+    visibility: visible; opacity: 1; position: absolute; inset: 0 auto 0 0; width: var(--binder-w); z-index: 7;
+    background: var(--panel); box-shadow: 8px 0 32px rgba(0, 0, 0, .28); transition: opacity .14s ease;
+  }
+  .desk.peek-binder .binder-edge { display: none; }
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 1180px) {
   :root { --insp-w: 290px; --binder-w: 256px; }
@@ -665,6 +689,8 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 @media (max-width: 900px) {
   .desk, .desk.no-binder, .desk.no-insp, .desk.no-binder.no-insp { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "stage" "status"; }
   .narrow-only { display: inline-grid; }
+  .binder-close { display: none; }
+  .binder-title { margin-left: 0; }
   .binder, .inspector {
     position: fixed; top: 0; bottom: 0; z-index: 30; width: min(320px, 88vw); visibility: visible !important;
     transition: transform .22s ease-out; box-shadow: var(--shadow); background: var(--panel);
@@ -746,8 +772,8 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
   <div id="desk" class="desk" hidden>
     <header class="topbar">
       <button class="iconbtn home" id="btnLibrary" type="button" title="Back to the library" aria-label="Back to the library"><span data-astro="mini"></span></button>
-      <button class="iconbtn narrow-only" id="btnBinder" type="button" title="Binder" aria-label="Toggle binder">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      <button class="iconbtn" id="btnBinder" type="button" title="Binder (Ctrl+\)" aria-label="Show or hide the binder" aria-controls="binder">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/></svg>
       </button>
       <div class="proj-id">
         <span class="proj-title" id="projTitle"></span>
@@ -772,7 +798,7 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
         <button class="iconbtn" id="btnSettings" type="button" title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
         </button>
-        <button class="iconbtn" id="btnInspector" type="button" title="Inspector" aria-label="Toggle inspector">
+        <button class="iconbtn" id="btnInspector" type="button" title="Inspector (Ctrl+Shift+\)" aria-label="Show or hide the inspector" aria-controls="inspector">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M14.5 4.5v15"/></svg>
         </button>
       </div>
@@ -780,7 +806,8 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 
     <aside class="binder" id="binder" aria-label="Binder">
       <div class="binder-head">
-        <span class="hud">Binder</span>
+        <span class="binder-title"><button class="iconbtn binder-close" id="binderClose" type="button" title="Retract the binder (Ctrl+\)" aria-label="Retract the binder">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6l-6 6 6 6M19 6l-6 6 6 6"/></svg></button><span class="hud">Binder</span></span>
         <div class="binder-add">
           <button class="chip" type="button" data-add="scene" title="New scene (Ctrl+Alt+N)">+ Scene</button>
           <button class="chip" type="button" data-add="chapter" id="addChapterBtn">+ Chapter</button>
@@ -794,6 +821,7 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
       </div>
     </aside>
 
+    <div class="binder-edge" id="binderEdge" aria-hidden="true"></div>
     <main class="stage" id="stage"></main>
 
     <aside class="inspector" id="inspector" aria-label="Inspector"></aside>
@@ -2287,10 +2315,12 @@ const UI = (() => {
     renderLibrary(); document.title = "Astrolabe";
   }
   function showDesk() {
-    $("#library").hidden = true; $("#desk").hidden = false;
     const d = $("#desk");
     d.classList.toggle("no-binder", !!lsGet("hideBinder", false));
     d.classList.toggle("no-insp", !!lsGet("hideInsp", false));
+    d.classList.remove("peek-binder");
+    $("#library").hidden = true; d.hidden = false;
+    syncPanelButtons();
     renderBinder(); setMode(S.mode, true); renderInspector(); renderStatus();
     document.title = P().title + " · Astrolabe";
   }
@@ -2319,7 +2349,7 @@ const UI = (() => {
     renderBinder();
     if (opts.mode && opts.mode !== S.mode) setMode(opts.mode); else if (S.mode === "write" || S.mode === "board") renderStage();
     renderInspector(); renderStatus();
-    $("#desk").classList.remove("show-binder");
+    if ($("#desk").classList.contains("show-binder")) { $("#desk").classList.remove("show-binder"); syncPanelButtons(); }
   }
   const openScene = id => select(id, { mode: "write" });
 
@@ -2804,6 +2834,8 @@ const UI = (() => {
           <kbd>Ctrl K</kbd><span>Command palette: jump to any scene, entry or action</span>
           <kbd>Ctrl S</kbd><span>Save now (saving is also automatic)</span>
           <kbd>Ctrl Shift S</kbd><span>Snapshot the current scene</span>
+          <kbd>Ctrl \\</kbd><span>Retract or bring back the binder (rest the pointer on the left edge to peek)</span>
+          <kbd>Ctrl Shift \\</kbd><span>Retract or bring back the inspector</span>
           <kbd>Ctrl Shift F</kbd><span>Focus mode</span>
           <kbd>Ctrl Alt N</kbd><span>New scene after this one</span>
           <kbd>Ctrl Shift Enter</kbd><span>Scene break</span>
@@ -3024,6 +3056,7 @@ ${body}<p class="end">END</p></body></html>`;
       ["New " + labelOf("chapter").toLowerCase(), "+", () => { const n = addNode("chapter"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New " + labelOf("part").toLowerCase(), "+", () => { const n = addNode("part"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New codex entry", "✶", () => Views.act("codex-new")],
+      ["Show or hide the binder", "◧", () => toggleBinder(), "Ctrl+\\"], ["Show or hide the inspector", "◨", () => toggleInspector(), "Ctrl+Shift+\\"],
       ["Focus mode", "◎", () => toggleFocus(), "Ctrl+Shift+F"], ["Typewriter scrolling", "≡", () => toggleTypewriter()],
       ["Take snapshot", "◫", () => snapshotActive(), "Ctrl+Shift+S"], ["Start a 25-minute sprint", "◷", () => startSprint(25)],
       ["Export…", "↧", () => exportDialog()], ["Download backup", "↧", () => backupAll()], ["Settings", "⚙", () => settingsDialog()], ["Back to the library", "⌂", () => showLibrary()],
@@ -3074,19 +3107,71 @@ ${body}<p class="end">END</p></body></html>`;
     if (j !== i || i < 0) openScene(order[j < 0 ? 0 : j]);
   }
 
+  /* ═════ Retractable side panels ═════ */
+  const narrow = () => matchMedia("(max-width: 900px)").matches;
+  function syncPanelButtons() {
+    const d = $("#desk"), wide = !narrow();
+    const b = wide ? !d.classList.contains("no-binder") : d.classList.contains("show-binder");
+    const i = wide ? !d.classList.contains("no-insp") : d.classList.contains("show-insp");
+    $("#btnBinder").classList.toggle("on", b); $("#btnBinder").setAttribute("aria-pressed", String(b));
+    $("#btnInspector").classList.toggle("on", i); $("#btnInspector").setAttribute("aria-pressed", String(i));
+  }
+  function returnFocus(panel) {
+    if (!panel.contains(document.activeElement)) return;
+    const pr = S.active && $(`.prose[data-id="${CSS.escape(S.active)}"]`);
+    if (pr) Editor.placeCaret(pr, true); else document.activeElement.blur();
+  }
+  function toggleBinder(hide) {
+    const d = $("#desk");
+    if (narrow()) { d.classList.toggle("show-binder", hide === undefined ? undefined : !hide); d.classList.remove("show-insp"); syncPanelButtons(); return; }
+    if (S.focus && hide === undefined) { toggleFocus(false); d.classList.remove("no-binder"); lsSet("hideBinder", false); syncPanelButtons(); return; }
+    const h = hide === undefined ? !d.classList.contains("no-binder") : hide;
+    d.classList.toggle("no-binder", h); d.classList.remove("peek-binder"); lsSet("hideBinder", h);
+    if (h) returnFocus($("#binder"));
+    syncPanelButtons();
+  }
+  function toggleInspector(hide) {
+    const d = $("#desk");
+    if (narrow()) { d.classList.toggle("show-insp", hide === undefined ? undefined : !hide); d.classList.remove("show-binder"); renderInspector(); syncPanelButtons(); return; }
+    if (S.focus && hide === undefined) { toggleFocus(false); d.classList.remove("no-insp"); lsSet("hideInsp", false); syncPanelButtons(); return; }
+    const h = hide === undefined ? !d.classList.contains("no-insp") : hide;
+    d.classList.toggle("no-insp", h); lsSet("hideInsp", h);
+    if (h) returnFocus($("#inspector")); else renderInspector();
+    syncPanelButtons();
+  }
+  /* While the binder is retracted, resting the pointer on the left edge slides it out over the page. */
+  function bindPeek() {
+    const d = $("#desk"), edge = $("#binderEdge"), b = $("#binder");
+    let enterT = 0, leaveT = 0;
+    const retracted = () => d.classList.contains("no-binder") || d.classList.contains("focus-mode");
+    const close = () => { clearTimeout(leaveT); clearTimeout(enterT); d.classList.remove("peek-binder"); };
+    edge.addEventListener("mouseenter", () => { clearTimeout(enterT); enterT = setTimeout(() => { if (retracted()) d.classList.add("peek-binder"); }, 220); });
+    edge.addEventListener("mouseleave", () => clearTimeout(enterT));
+    edge.addEventListener("click", () => { if (retracted()) d.classList.add("peek-binder"); });
+    b.addEventListener("mouseenter", () => clearTimeout(leaveT));
+    b.addEventListener("mouseleave", () => {
+      if (!d.classList.contains("peek-binder")) return;
+      leaveT = setTimeout(() => {
+        if (!$("#ctx").hidden || (b.contains(document.activeElement) && document.activeElement.matches("input"))) return;
+        close();
+      }, 350);
+    });
+    document.addEventListener("mousedown", e => { if (d.classList.contains("peek-binder") && !b.contains(e.target) && !e.target.closest("#ctx")) close(); });
+    S.closePeek = () => { if (!d.classList.contains("peek-binder")) return false; close(); return true; };
+  }
+
   /* ═════ Topbar & status bar wiring ═════ */
   function bindChrome() {
     $("#btnLibrary").onclick = () => showLibrary();
     $("#btnPalette").onclick = () => palette();
     $("#btnExport").onclick = () => exportDialog();
     $("#btnSettings").onclick = () => settingsDialog();
-    $("#btnInspector").onclick = () => {
-      const d = $("#desk");
-      if (matchMedia("(max-width: 900px)").matches) { d.classList.toggle("show-insp"); d.classList.remove("show-binder"); renderInspector(); return; }
-      d.classList.toggle("no-insp"); lsSet("hideInsp", d.classList.contains("no-insp"));
-    };
-    $("#btnBinder").onclick = () => { const d = $("#desk"); d.classList.toggle("show-binder"); d.classList.remove("show-insp"); };
-    $("#scrim").onclick = () => $("#desk").classList.remove("show-binder", "show-insp");
+    $("#btnInspector").onclick = () => toggleInspector();
+    $("#btnBinder").onclick = () => toggleBinder();
+    $("#binderClose").onclick = () => toggleBinder(true);
+    bindPeek();
+    matchMedia("(max-width: 900px)").addEventListener("change", () => { $("#desk").classList.remove("show-binder", "show-insp", "peek-binder"); syncPanelButtons(); });
+    $("#scrim").onclick = () => { $("#desk").classList.remove("show-binder", "show-insp"); syncPanelButtons(); };
     $("#modes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) setMode(b.dataset.mode); });
     $("#modes").addEventListener("keydown", e => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -3127,7 +3212,7 @@ ${body}<p class="end">END</p></body></html>`;
     toast, modal, ask, ctxMenu, closeCtx, closeTopModal, saveFile,
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
-    renderStatus, toggleFocus, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
+    renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
     renderLibrary, newProjectDialog,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
@@ -3154,6 +3239,7 @@ function bindKeys() {
     if (e.key === "Escape") {
       if (UI.closeCtx()) return;
       if (UI.closeTopModal()) return;
+      if (S.closePeek && S.closePeek()) return;
       if (S.focus) { UI.toggleFocus(false); return; }
       const d = $("#desk"); if (d.classList.contains("show-binder") || d.classList.contains("show-insp")) { d.classList.remove("show-binder", "show-insp"); return; }
       return;
@@ -3161,6 +3247,7 @@ function bindKeys() {
     if ($("#desk").hidden || !P()) { if (mod && k === "s") e.preventDefault(); return; }
     if ($("#modalRoot").childElementCount) return;
     if (mod && k === "k") { e.preventDefault(); UI.palette(); return; }
+    if (mod && e.code === "Backslash") { e.preventDefault(); if (e.shiftKey) UI.toggleInspector(); else UI.toggleBinder(); return; }
     if (mod && !e.shiftKey && k === "s") { e.preventDefault(); flushAll(); Store.drain(4000).then(ok => UI.toast(ok ? "Saved." : "Still saving. Your work is queued and will retry.", { err: !ok })); return; }
     if (mod && e.shiftKey && k === "s") { e.preventDefault(); UI.snapshotActive(); return; }
     if (mod && e.shiftKey && k === "f") { e.preventDefault(); UI.toggleFocus(); return; }
