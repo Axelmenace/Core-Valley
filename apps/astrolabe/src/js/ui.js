@@ -147,9 +147,14 @@ const UI = (() => {
     $$("#modes [data-mode]").forEach(b => { b.setAttribute("aria-selected", b.dataset.mode === m ? "true" : "false"); b.tabIndex = b.dataset.mode === m ? 0 : -1; });
     renderStage(); renderStatus();
   }
+  let enterT = 0;
   function renderStage() {
     const st = $("#stage"); st.dataset.mode = S.mode;
     const scr = $(".scroller", st); const keep = scr && st.dataset.lastMode === S.mode && S.mode !== "write" ? scr.scrollTop : 0;
+    if (st.dataset.lastMode !== S.mode) { // a change of view eases in; redraws within a view do not
+      st.classList.remove("enter"); void st.offsetWidth; st.classList.add("enter");
+      clearTimeout(enterT); enterT = setTimeout(() => st.classList.remove("enter"), 450);
+    }
     st.dataset.lastMode = S.mode;
     const done = () => { const s2 = $(".scroller", st); if (s2 && keep) s2.scrollTop = keep; };
     const r = ({ write: () => Editor.render(st), board: () => Views.board(st), outline: () => Views.outline(st), threads: () => Views.threads(st), codex: () => Views.codex(st), progress: () => Views.progress(st) })[S.mode];

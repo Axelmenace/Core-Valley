@@ -162,7 +162,7 @@ const Views = (() => {
     const chStart = new Set(); let lastCh = null;
     const chSpans = [];
     cols.forEach(id => { const ch = chapterOf(id); if (ch !== lastCh) { chStart.add(id); chSpans.push([ch, 1]); lastCh = ch; } else chSpans[chSpans.length - 1][1]++; });
-    head1 = `<th class="tname"></th>` + chSpans.map(([ch, n]) => `<th class="ch" colspan="${n}">${ch ? esc(IX.coord[ch]) + " " + esc(node(ch).title.slice(0, Math.max(4, n * 3))) : "—"}</th>`).join("");
+    head1 = `<th class="tname"></th>` + chSpans.map(([ch, n]) => `<th class="ch" colspan="${n}" title="${ch ? esc(node(ch).title) : ""}">${ch ? esc(IX.coord[ch]) + " " + esc(node(ch).title) : "—"}</th>`).join("");
     head2 = `<th class="tname">Thread</th>` + cols.map(id => `<th class="sc" data-act="open" data-id="${id}" title="${esc(node(id).title)}">${esc(IX.coord[id])}</th>`).join("");
     for (const t of p.threads) {
       const st = threadStats(t);

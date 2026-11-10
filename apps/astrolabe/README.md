@@ -61,7 +61,7 @@ python tools/build-astrolabe.py --fragment page.html     # also writes a body-on
 
 ```
 src/shell.html     markup and the head (fonts, title)
-src/style.css      tokens for the five skins, then every component
+src/style.css      tokens for the five skins, then every component, then a finishing layer (depth, ornament, motion)
 src/js/core.js     helpers, story forms, the astrolabe ornament, the starfield
 src/js/store.js    one key–value store over the Artifact database, IndexedDB or memory, with a write queue
 src/js/model.js    projects, the binder tree, snapshots, structure templates, the sample, prose cleaning and import
