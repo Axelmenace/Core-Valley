@@ -62,9 +62,12 @@ async function boot() {
   UI.bind(); Editor.bind($("#stage")); Views.bind($("#stage")); bindKeys();
   $("#boot").hidden = true; $("#app").hidden = false;
   if (kind === "memory") UI.toast("This browser is refusing storage. Download a backup before closing the page.", { err: true, ms: 10000 });
+  if (Store.skippedCloud()) UI.toast("Working in this browser's storage for now. Projects in your private archive are not shown; reopen the page to try the archive again.", { err: true, ms: 12000 });
+  // Ask the browser not to clear this site's storage on its own when space runs short or after a spell away.
+  if (kind === "local" && S.meta.projects.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   const last = lsGet("last", null);
   if (last && S.meta.projects.some(p => p.id === last)) {
-    try { await openProject(last); UI.showDesk(); return; } catch (e) { console.warn(e); }
+    try { await openProject(last); UI.showDesk(); UI.backupNudge(); return; } catch (e) { console.warn(e); }
   }
   UI.showLibrary();
 }
@@ -84,5 +87,10 @@ boot().catch(e => {
   if (!$("#bootRetry")) {
     const b = document.createElement("button"); b.id = "bootRetry"; b.type = "button"; b.className = "btn"; b.textContent = "Try again";
     b.onclick = () => location.reload(); $("#boot").appendChild(b);
+    if (e && e.offerLocal) {
+      const l = document.createElement("button"); l.type = "button"; l.className = "btn ghost"; l.textContent = "Work in this browser for now";
+      l.onclick = () => { try { sessionStorage.setItem("astrolabe:skipCloud", "1"); } catch { /* storage blocked */ } location.reload(); };
+      $("#boot").appendChild(l);
+    }
   }
 });

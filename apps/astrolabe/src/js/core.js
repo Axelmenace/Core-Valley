@@ -71,7 +71,7 @@ const FORMS = {
   short:   { name: "Short story", part: "Movement", chapter: "Section", target: 6000,   daily: 500,  range: "1,000 – 7,500 words",  blurb: "One sitting, one turn. Scenes, with optional sections." },
   novella: { name: "Novella",     part: "Part",     chapter: "Chapter", target: 32000,  daily: 750,  range: "17,500 – 40,000 words", blurb: "A single thread pulled taut. Chapters and scenes." },
   novel:   { name: "Novel",       part: "Part",     chapter: "Chapter", target: 90000,  daily: 1000, range: "40,000 words and up",   blurb: "The full voyage. Parts, chapters, scenes and subplots." },
-  serial:  { name: "Serial",      part: "Arc",      chapter: "Episode", target: 120000, daily: 1000, range: "Installments, released over time", blurb: "Arcs and episodes with release dates and per-episode targets." },
+  serial:  { name: "Serial",      part: "Arc",      chapter: "Episode", target: 120000, daily: 1000, range: "Installments, released over time", blurb: "Arcs and episodes with release dates and per-episode targets.", episodeTarget: 3000 },
 };
 const STATUSES = [["seed", "Seed"], ["outline", "Outlined"], ["draft", "Drafting"], ["revised", "Revised"], ["final", "Final"]];
 const STATUS_IX = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));

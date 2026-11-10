@@ -2,7 +2,8 @@
    One contenteditable per scene. Selecting a chapter or part stacks its scenes
    into one continuous page; each scene still saves to its own record. */
 const Editor = (() => {
-  const dirty = new Set(), touched = new Set();
+  const dirty = new Set(), touched = new Map(); // touched: scene → the day it was last edited in this page
+  let renderSeq = 0, fixing = false;
   const saveSoon = debounce(saveDirty, 900);
   let curPara = null;
 
@@ -11,7 +12,9 @@ const Editor = (() => {
       const el = proseEl(id); if (!el || !node(id)) continue;
       putText(id, sanitizeProse(el.innerHTML));
     }
+    const any = dirty.size > 0;
     dirty.clear();
+    if (any) UI.refreshMentions(); // the codex names in the inspector follow the text as it is saved
   }
   const proseEl = id => $(`.prose[data-id="${CSS.escape(id)}"]`);
   const recount = throttle(el => {
@@ -79,10 +82,29 @@ const Editor = (() => {
   function onInput(e) {
     const el = e.target.closest(".prose"); if (!el) return;
     const id = el.dataset.id;
-    if (!touched.has(id)) { touched.add(id); dailySnapshot(id); }
+    const today = dayKey();
+    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id); } // per day, so a page left open overnight still gets one
     if (!el.firstElementChild) { el.innerHTML = "<p><br></p>"; placeCaret(el, false); }
     el.classList.toggle("blank", !el.textContent.trim() && !el.querySelector("hr"));
     dirty.add(id); saveSoon(); recount(el); keepCaret();
+    if (e.inputType === "insertCompositionText" && !e.isComposing) fixTyped();
+  }
+  /* Keyboards that compose text (most phones, dead keys, input methods) do not let a keystroke be
+     replaced before it lands, so their punctuation is corrected just after instead. */
+  function fixTyped() {
+    if (!S.meta.settings.smart || fixing) return;
+    const s = getSelection(), r = s.rangeCount && s.getRangeAt(0);
+    if (!r || !r.collapsed || r.startContainer.nodeType !== 3) return;
+    const tn = r.startContainer, off = r.startOffset, t = tn.nodeValue.slice(0, off);
+    if (!tn.parentElement || !tn.parentElement.closest(".prose")) return;
+    let len = 0, rep = "";
+    if (/["']$/.test(t)) { const d = t.slice(-1), open = quoteOpens(d, textBefore().slice(0, -1)); len = 1; rep = d === '"' ? (open ? "“" : "”") : (open ? "‘" : "’"); }
+    else if (t.endsWith("--")) { len = 2; rep = "—"; }
+    else if (t.endsWith("...")) { len = 3; rep = "…"; }
+    if (!len) return;
+    const rg = document.createRange(); rg.setStart(tn, off - len); rg.setEnd(tn, off);
+    s.removeAllRanges(); s.addRange(rg);
+    fixing = true; try { document.execCommand("insertText", false, rep); } finally { fixing = false; }
   }
   function placeCaret(el, atEnd = true) {
     el.focus({ preventScroll: true });
@@ -136,11 +158,12 @@ const Editor = (() => {
 
   async function render(stage) {
     saveDirty();
-    const p = P();
-    if (!S.sel || !node(S.sel)) { if (IX.order.length) S.sel = IX.order[0]; }
-    const ids = S.sel ? scenesUnder(S.sel) : [];
+    const p = P(), seq = ++renderSeq;
+    if (S.sel && !node(S.sel)) S.sel = null;
+    // With the project itself selected the page opens on the first scene; the selection stays on the project.
+    const scope = S.sel, ids = scope ? scenesUnder(scope) : IX.order.slice(0, 1);
     if (!ids.length) {
-      const n = S.sel && node(S.sel);
+      const n = scope && node(scope);
       stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
         <h3>${n ? esc(n.title || labelOf(n.type)) + " is empty" : "No scenes yet"}</h3>
         <p>Scenes are where the words live. Add one and the page will open for writing.</p>
@@ -150,13 +173,17 @@ const Editor = (() => {
     try { await Promise.all(ids.map(getText)); }
     catch (e) { // show the failure; an empty page here would invite typing over text that is still in storage
       console.warn("scene text not loaded", e);
+      if (seq !== renderSeq || S.mode !== "write" || P() !== p) return;
       stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
         <h3>This text could not be loaded</h3>
         <p>${esc((e && e.message) || "Storage did not answer.")} Nothing has been changed. Check your connection and try again.</p>
         <button class="btn gild" type="button" data-cmd="retry">Try again</button></div></div>`;
       paintAstros(stage); return;
     }
-    const st = S.meta.settings, multi = ids.length > 1 || node(S.sel).type !== "scene";
+    // A later selection, or another view, may have taken the stage while the text was loading.
+    if (seq !== renderSeq || S.mode !== "write" || P() !== p) return;
+    saveDirty(); // anything typed into the outgoing page meanwhile
+    const st = S.meta.settings, multi = ids.length > 1 || (!!scope && node(scope).type !== "scene");
     let html = "", lastCh = undefined;
     for (const id of ids) {
       const n = node(id), ch = chapterOf(id);
@@ -182,6 +209,7 @@ const Editor = (() => {
     const blk = $(`.scene-block[data-id="${CSS.escape(target)}"]`); blk && blk.classList.add("active");
     if (multi && target !== ids[0]) blk && blk.scrollIntoView({ block: "start" });
     if (!matchMedia("(max-width: 900px)").matches) { const el = proseEl(target); el && placeCaret(el, true); if (!multi) keepCaret(); }
+    UI.refreshMentions(); // the inspector was drawn before this text had loaded
   }
 
   function bind(stage) {
@@ -193,6 +221,7 @@ const Editor = (() => {
       }
       onInput(e);
     });
+    stage.addEventListener("compositionend", e => { if (e.target.closest && e.target.closest(".prose")) setTimeout(fixTyped, 0); });
     stage.addEventListener("paste", onPaste);
     stage.addEventListener("focusin", onFocusIn);
     stage.addEventListener("keyup", e => { if (e.key.startsWith("Arrow") || e.key === "Enter" || e.key === "PageDown" || e.key === "PageUp") keepCaret(); });

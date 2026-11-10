@@ -82,6 +82,7 @@ const UI = (() => {
 
   /* ═════ Shell ═════ */
   function showLibrary() {
+    if (S.sprint) endSprint(true); // log it here rather than let it run on into another project
     flushAll(); S.focus = false;
     $("#desk").hidden = true; $("#library").hidden = false; $("#desk").classList.remove("focus-mode");
     renderLibrary(); document.title = "Astrolabe";
@@ -221,6 +222,12 @@ const UI = (() => {
     inp.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
     inp.addEventListener("blur", () => finish(true));
   }
+  function redrawAll() { renderBinder(); renderStage(); renderInspector(); renderStatus(); }
+  function trashWithUndo(id) {
+    const n = node(id); if (!n) return;
+    trashNode(id); redrawAll();
+    toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { if (P() && restoreTrashed(id)) redrawAll(); } });
+  }
   function nodeMenu(id, x, y) {
     const n = node(id); const L = labelOf;
     const items = [
@@ -237,7 +244,7 @@ const UI = (() => {
       { label: "Move down", kbd: "Alt+↓", run: () => { nudge(id, 1) && (renderBinder(), renderStage()); } },
       { label: n.include === false ? "Include in export" : "Leave out of export", run: () => { n.include = n.include === false; touch(); renderBinder(); renderInspector(); } },
       "-",
-      { label: "Move to trash", danger: true, kbd: "Del", run: () => { trashNode(id); renderBinder(); renderStage(); renderInspector(); renderStatus(); toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { restoreTrash(0); renderBinder(); renderStage(); } }); } },
+      { label: "Move to trash", danger: true, kbd: "Del", run: () => trashWithUndo(id) },
     );
     ctxMenu(x, y, items);
   }
@@ -250,8 +257,8 @@ const UI = (() => {
       if (e.target.closest("#projRow")) { select(null); return; }
       const a = e.target.closest("[data-act]");
       const li = e.target.closest(".node");
-      if (a && a.dataset.act === "restore") { restoreTrash(+a.dataset.i); renderBinder(); renderStage(); return; }
-      if (a && a.dataset.act === "purge") { ask("Empty the trash?", "Everything in the trash, with its text and snapshots, will be deleted for good.", [["Cancel"], ["Delete for good", "danger"]]).then(r => { if (r === 1) { purgeTrash(); renderBinder(); } }); return; }
+      if (a && a.dataset.act === "restore") { restoreTrash(+a.dataset.i); redrawAll(); return; }
+      if (a && a.dataset.act === "purge") { ask("Empty the trash?", "Everything in the trash, with its text and snapshots, will be deleted for good.", [["Cancel"], ["Delete for good", "danger"]]).then(r => { if (r === 1) { purgeTrash(); redrawAll(); } }); return; }
       if (!li) return;
       const id = li.dataset.id;
       if (a && a.dataset.act === "twist") { const n = node(id); n.collapsed = !n.collapsed; li.classList.toggle("collapsed", n.collapsed); li.setAttribute("aria-expanded", String(!n.collapsed)); saveProjectSoon(); return; }
@@ -269,7 +276,7 @@ const UI = (() => {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const r = rows[clamp(i + (e.key === "ArrowDown" ? 1 : -1), 0, rows.length - 1)]; if (r) { r.tabIndex = 0; r.focus(); } return; }
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); const r = $(`#tree .node[data-id="${CSS.escape(id)}"] > .row`); r && r.focus(); return; }
       if (e.key === "F2") { e.preventDefault(); renameInline(id); return; }
-      if (e.key === "Delete") { e.preventDefault(); const n = node(id); trashNode(id); renderBinder(); renderStage(); renderInspector(); toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { restoreTrash(0); renderBinder(); renderStage(); } }); }
+      if (e.key === "Delete") { e.preventDefault(); trashWithUndo(id); }
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") { const n = node(id); if (n.type !== "scene") { n.collapsed = e.key === "ArrowLeft"; renderBinder(); const r = $(`#tree .node[data-id="${CSS.escape(id)}"] > .row`); r && r.focus(); } }
     });
     b.addEventListener("dragstart", e => {
@@ -505,6 +512,15 @@ const UI = (() => {
     if (k === "cloud") return { warn: false, html: `<span class="dot"></span><span><b>Private archive.</b> Your projects are stored with this page on claude.ai, readable only by you, on any device where you open it.</span>` };
     if (k === "local") return { warn: !lb || Date.now() - lb > 7 * 864e5, html: `<span class="dot"></span><span><b>Saved in this browser.</b> Clearing this site's data would erase it, so keep a backup. Last backup: ${lb ? ago(lb) : "never"}.</span>` };
     return { warn: true, html: `<span class="dot"></span><span><b>This browser refused storage.</b> Nothing will be kept after you close the page. Download a backup before you leave.</span>` };
+  }
+  /* Work kept only in this browser is one cleared cache from gone. The library says so, but a writer
+     who resumes straight into a project never passes through it, so say it at the desk too. */
+  function backupNudge() {
+    if (Store.kind() !== "local") return;
+    const lb = S.meta.settings.lastBackup || 0, words = S.meta.projects.filter(p => !p.sample).reduce((a, p) => a + (p.words || 0), 0);
+    if (words < 1000 || Date.now() - lb < 7 * 864e5 || Date.now() - lsGet("nudged", 0) < 864e5) return;
+    lsSet("nudged", Date.now());
+    toast(lb ? `Your last backup was ${esc(ago(lb))}. This work is kept only in this browser.` : "This work is kept only in this browser, and there is no backup of it yet.", { action: "Download backup", onAction: () => backupAll(), ms: 15000 });
   }
   function renderLibrary() {
     const note = storageNote(), ls = $("#libStorage");
@@ -744,6 +760,7 @@ const UI = (() => {
   }
 
   /* ═════ Export ═════ */
+  const cssStr = s => String(s).replace(/["\\<>&\n\r\f]/g, c => "\\" + c.codePointAt(0).toString(16) + " ");
   function included(id) { return node(id).include !== false && ancestors(id).every(a => node(a).include !== false); }
   function headingFor(ch, style) {
     const n = node(ch), num = IX.chapters.indexOf(ch) + 1, lab = labelOf("chapter");
@@ -773,8 +790,8 @@ const UI = (() => {
       for (const it of items) {
         if (it.part) s += `\n# ${partHead(it.part)}\n\n`;
         else if (it.chapter) s += `\n## ${headingFor(it.chapter, o.heads)}\n\n`;
-        else if (it.sep) s += `${sep}\n\n`;
-        else for (const b of it.blocks) s += b.hr ? `${sep}\n\n` : b.md.trim() + "\n\n";
+        else if (it.sep) s += o.titles ? "" : `${sep}\n\n`;
+        else { if (o.titles) s += `### ${node(it.scene).title || "Untitled scene"}\n\n`; for (const b of it.blocks) s += b.hr ? `${sep}\n\n` : b.md.trim() + "\n\n"; }
       }
       return { name: fileSafe(title) + ".md", data: s.replace(/\n{3,}/g, "\n\n").trim() + "\n", mime: "text/markdown" };
     }
@@ -799,7 +816,7 @@ const UI = (() => {
         else for (const b of it.blocks) { if (b.hr) { body += `<p class="brk">${esc(sep)}</p>`; first = true; } else { body += `<p${first ? ' class="first"' : ""}>${b.html}</p>`; first = false; } }
       }
       const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
-@page { size: letter; margin: 1in; @top-right { content: "${esc(surname)} / ${esc(title.slice(0, 40)).toUpperCase()} / " counter(page); font: 12pt "Times New Roman", serif; } }
+@page { size: letter; margin: 1in; @top-right { content: "${cssStr(surname)} / ${cssStr(title.slice(0, 40).toUpperCase())} / " counter(page); font: 12pt "Times New Roman", serif; } }
 body { font: 12pt/2 ${o.font === "courier" ? '"Courier New", Courier, monospace' : '"Times New Roman", Times, serif'}; color: #000; background: #fff; max-width: 6.5in; margin: 1in auto; }
 .cover { height: 9in; position: relative; page-break-after: always; }
 .cover .who { position: absolute; top: 0; left: 0; line-height: 1.2; }
@@ -849,15 +866,16 @@ ${body}<p class="end">END</p></body></html>`;
         <label class="field"><span>Scene break</span><select id="ex-sep"><option value="* * *">* * *</option><option value="#">#</option><option value="✦">✦</option></select></label></div>
       <div class="row2" id="ex-ms"><label class="field"><span>Manuscript font</span><select id="ex-font"><option value="times">Times New Roman</option><option value="courier">Courier</option></select></label>
         <label class="field"><span>Contact block</span><textarea id="ex-contact" rows="2" placeholder="Address, email, phone">${esc(lsGet("contact", ""))}</textarea></label></div>
+      <label class="check" id="ex-titles-row"><input type="checkbox" id="ex-titles"> Keep scene titles as headings, so the file can be imported again with its scenes intact</label>
       <p class="muted" style="margin:0">Scenes and ${esc(labelOf("chapter").toLowerCase())}s marked “Leave out of export” in the binder are skipped.</p>
       <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button><button class="btn gild" type="button" data-go>Export</button></div>`);
-    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-scope").disabled = f === "json"; };
+    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
     sync(); m.el.addEventListener("change", sync);
     m.el.addEventListener("click", async e => {
       if (e.target.closest("[data-x]")) m.close();
       if (e.target.closest("[data-go]")) {
         const fmt = $('input[name="ex-fmt"]:checked').value;
-        const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value };
+        const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value, titles: $("#ex-titles").checked };
         lsSet("contact", o.contact);
         let out; try { out = await buildExport(fmt, $("#ex-scope").value || null, o); }
         catch (err) { console.warn("export failed", err); toast("The export could not be built: " + esc((err && err.message) || "storage did not answer") + ".", { err: true, ms: 8000 }); return; }
@@ -1036,7 +1054,7 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog, changedElsewhere, checkRemote,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
 })();

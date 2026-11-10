@@ -19,7 +19,7 @@ A drafting and planning instrument for long-form fiction: short stories, novella
 
 **Safety nets.** Autosave on every pause. A snapshot of each scene the first time you edit it each day, plus manual snapshots (`Ctrl+Shift+S`) you can preview and restore. Deleting goes to a trash you can restore from. Full backups download as JSON and restore from the library; a restored file is checked and its prose cleaned before it is let in. If the same project is open in two tabs or on two devices, the one that falls behind brings itself up to date when you return to it, or asks which version to keep if both have changes.
 
-**In and out.** Export Markdown, plain text, an HTML manuscript in standard manuscript format, an outline, or a project backup; leave any scene or chapter out of the export from the binder. Import a Markdown or text manuscript (`#`/`##` headings become chapters, `* * *` becomes a scene break) or a backup.
+**In and out.** Export Markdown, plain text, an HTML manuscript in standard manuscript format, an outline, or a project backup; leave any scene or chapter out of the export from the binder. Import a Markdown or text manuscript or a backup. A single `#` heading is the title and a `by …` line under it the author; several `#` headings are parts when there are `##` chapters beneath them, and chapters when there are not; `###` is a scene and `* * *` a scene break. A Markdown export can keep its scene titles as headings, so it reads back in with the same binder.
 
 **Look.** Five skins: Auto (follows the system), Astral (deep void and astrolabe brass), Vellum (light observatory paper), Nebula (cyan and magenta HUD) and Ember (dark grimoire). Five prose faces, adjustable size, spacing and page width, and a slow starfield that can be turned off.
 
@@ -28,7 +28,7 @@ A drafting and planning instrument for long-form fiction: short stories, novella
 | Opened as | Storage |
 |---|---|
 | A claude.ai Artifact (yours, or shared with you as an editor) | The artifact's database, in your own private subtree: only you can read it, on any device |
-| A file or a static site | IndexedDB in that browser. Clearing the site's data erases it, so download a backup now and then; the library reminds you after a week |
+| A file or a static site | IndexedDB in that browser. Clearing the site's data erases it, so download a backup now and then; Astrolabe reminds you after a week, in the library and when you resume a project |
 | A browser that refuses storage | Memory only, with a warning and a prompt before you close the page |
 
 ## Keys

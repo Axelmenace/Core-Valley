@@ -4,14 +4,15 @@
    memory → nothing survives a reload (last resort; the UI says so loudly)
    Keys: meta · p.<pid> project · r.<pid> its revision · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
 const Store = (() => {
-  let be = null;
+  let be = null, skipped = false;
   const pending = new Map(), inflight = new Map(); // key → the write waiting, and the write on its way
-  let failures = 0, lastError = "", listeners = [];
+  const failing = new Map(); // key → failed attempts in a row; one record saving must not hide another that is not
+  let lastError = "", listeners = [];
   const CHUNK = 60000; // characters per cloud document (worst case ~180 KB of UTF-8, under the 256 KB cap)
 
   function emit() { const s = status(); listeners.forEach(f => f(s)); }
   function status() {
-    if (failures) return { state: "error", text: "Not saved", detail: lastError };
+    if (failing.size) return { state: "error", text: "Not saved", detail: lastError };
     if (pending.size || inflight.size) return { state: "saving", text: "Saving" };
     return { state: "ok", text: be && be.kind === "memory" ? "Unsaved session" : "Saved" };
   }
@@ -119,9 +120,9 @@ const Store = (() => {
       const op = pending.get(k); pending.delete(k); inflight.set(k, op); emit();
       try {
         if (op.del) await be.del(k); else await be.set(k, op.v);
-        failures = 0; lastError = "";
+        failing.delete(k); if (!failing.size) lastError = "";
       } catch (e) {
-        failures++; lastError = (e && (e.message || e.code)) || "Write failed";
+        const failures = (failing.get(k) || 0) + 1; failing.set(k, failures); lastError = (e && (e.message || e.code)) || "Write failed";
         if (!pending.has(k)) pending.set(k, op); // keep the newest value queued
         inflight.delete(k); emit();
         const wait = Math.min(30000, 1500 * 2 ** Math.min(failures, 4)) * (0.75 + Math.random() * .5);
@@ -135,14 +136,26 @@ const Store = (() => {
 
   return {
     async init(onStep) {
-      if (window.claude && typeof window.claude.use === "function") {
+      let skip = false; try { skip = sessionStorage.getItem("astrolabe:skipCloud") === "1"; } catch { /* storage blocked */ }
+      if (!skip && window.claude && typeof window.claude.use === "function") {
         onStep && onStep("Reaching your private archive…");
-        try { const c = await cloud(); if (c) { be = c; return be.kind; } } catch (e) { console.warn("cloud store unavailable", e); }
+        let err = null;
+        for (let i = 0; i < 2; i++) {
+          try { const c = await cloud(); err = null; if (c) { be = c; lsSet("cloudSeen", true); return be.kind; } break; }
+          catch (e) { err = e; console.warn("cloud store unavailable", e); }
+        }
+        // Falling back quietly would show an empty library and split the work across two places.
+        if (err && lsGet("cloudSeen", false)) {
+          const e = new Error("your private archive could not be reached (" + ((err && err.message) || "no answer") + "). Nothing has been changed.");
+          e.offerLocal = true; throw e;
+        }
       }
+      skipped = skip;
       try { be = await idb(); await be.get("meta"); return be.kind; } catch (e) { console.warn("IndexedDB unavailable", e); }
       be = memory(); return be.kind;
     },
     kind: () => be && be.kind,
+    skippedCloud: () => skipped,
     // A read sees this page's own latest write, whether it is still queued or already on its way.
     get(k) { const op = pending.get(k) || inflight.get(k); return op ? Promise.resolve(op.del ? undefined : structuredClone(op.v)) : be.get(k); },
     put(k, v) { pending.set(k, { v: structuredClone(v) }); flushKey(k); emit(); },

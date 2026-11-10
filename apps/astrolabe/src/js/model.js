@@ -310,6 +310,7 @@ function trashNode(id) {
   if (S.sel === id || ancestors(S.sel || "").includes(id)) S.sel = par;
   touch();
 }
+function restoreTrashed(id) { const i = P().trash.findIndex(t => t.id === id); if (i < 0) return false; restoreTrash(i); return true; }
 function restoreTrash(ti) {
   const item = P().trash[ti]; if (!item) return;
   P().trash.splice(ti, 1);
@@ -488,33 +489,48 @@ function proseBlocks(html) {
 function mdInline(s) {
   return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>").replace(/(^|\W)_(?!\s)(.+?)_(?=\W|$)/g, "$1<em>$2</em>");
 }
-/* Turn a Markdown or plain-text manuscript into a project. */
+/* Turn a Markdown or plain-text manuscript into a project.
+   One "#" heading is the title; several, with "##" beneath them, are parts; several on their own are
+   chapters. "##" is a chapter, "###" a scene. A numbering prefix ("Chapter Three: ") is dropped, since
+   the binder numbers things itself, and a "by …" line under the title becomes the author. */
 function projectFromText(text, filename) {
   const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
-  const titleLine = lines.find(l => /^#\s+/.test(l));
-  const hasCh = lines.some(l => /^##\s+/.test(l)) || lines.filter(l => /^#\s+/.test(l)).length > 1;
+  const h1s = lines.filter(l => /^#\s+\S/.test(l)).length, hasH2 = lines.some(l => /^##\s+/.test(l));
+  const useH1asChapters = !hasH2 && h1s > 1;
+  const hasCh = hasH2 || useH1asChapters;
   const p = newProject({ title: (filename || "Imported manuscript").replace(/\.(md|markdown|txt)$/i, ""), form: hasCh ? "novel" : "short", template: "blank" });
   p.nodes = {}; p.root = []; const texts = {};
-  let chap = null, scene = null, buf = [];
-  const useH1asChapters = !lines.some(l => /^##\s+/.test(l));
-  const flushPara = () => { if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>"; };
+  let part = null, chap = null, scene = null, buf = [], titled = false, body = false;
+  const bare = (s, words) => { const m = s.match(new RegExp("^(?:" + words + ")\\s+[\\w-]+\\s*[:.–—-]\\s*(\\S.*)$", "i")); return m ? m[1].trim() : s; };
+  const shelf = () => (part ? part.children : p.root);
   const ensureScene = (title) => {
     if (scene && !title) return;
+    if (p.form !== "short" && !chap) { chap = mkNode(p, "chapter", "Chapter one"); shelf().push(chap.id); }
     scene = mkNode(p, "scene", title || "Scene " + ((chap ? chap.children.length : p.root.length) + 1), { status: "draft" });
-    if (p.form === "short") p.root.push(scene.id);
-    else { if (!chap) { chap = mkNode(p, "chapter", "Chapter one"); p.root.push(chap.id); } chap.children.push(scene.id); }
+    (chap ? chap.children : p.root).push(scene.id);
+  };
+  const flushPara = () => {
+    if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return;
+    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s.!?,;:]+\s+){0,3}[^\s.!?,;:]+)$/i));
+    if (by) { p.author = by[2].trim(); return; }
+    body = true; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>";
   };
   const singleNewlineParas = !/\n\s*\n/.test(text);
   for (const raw of lines) {
     const l = raw.trimEnd();
     let m;
-    if (!useH1asChapters && (m = l.match(/^#\s+(.*)/))) { flushPara(); if (!titleLine || l !== titleLine) continue; p.title = m[1].trim(); continue; }
-    if ((m = l.match(/^(#{1,2})\s+(.*)/))) {
+    if (!useH1asChapters && (m = l.match(/^#\s+(\S.*)/))) {
       flushPara();
-      if (p.form === "short") { scene = null; ensureScene(m[2].trim()); continue; }
-      chap = mkNode(p, "chapter", m[2].trim()); p.root.push(chap.id); scene = null; continue;
+      if (!titled) { titled = true; p.title = m[1].trim(); continue; }
+      body = true;
+      if (p.form === "short") { scene = null; ensureScene(m[1].trim()); continue; }
+      part = mkNode(p, "part", bare(m[1].trim(), "part|arc|book|act|movement")); p.root.push(part.id); chap = null; scene = null; continue;
     }
-    if ((m = l.match(/^###\s+(.*)/))) { flushPara(); scene = null; ensureScene(m[1].trim()); continue; }
+    if ((m = l.match(/^(#{1,2})\s+(\S.*)/))) {
+      flushPara(); body = true;
+      chap = mkNode(p, "chapter", bare(m[2].trim(), "chapter|episode|section")); shelf().push(chap.id); scene = null; continue;
+    }
+    if ((m = l.match(/^###\s+(.*)/))) { flushPara(); body = true; scene = null; ensureScene(m[1].trim()); continue; }
     if (/^\s*(\*\s*\*\s*\*|#|~~~|—{3}|-{3,}|✦.*)\s*$/.test(l)) { flushPara(); scene = null; continue; }
     if (!l.trim()) { flushPara(); continue; }
     buf.push(l.trim());

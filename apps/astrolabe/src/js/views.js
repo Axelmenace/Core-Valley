@@ -195,9 +195,11 @@ const Views = (() => {
   const entryById = id => entries().find(e => e.id === id);
   function namesOf(e) { return [e.name, ...String(e.aliases || "").split(",")].map(s => s.trim()).filter(s => s.length > 1); }
   function mentionRe(e) {
-    const names = namesOf(e).map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    if (!names.length) return null;
-    return new RegExp("(^|[^\\p{L}\\p{N}])(" + names.join("|") + ")(?=$|[^\\p{L}\\p{N}])", "iu");
+    const names = namesOf(e); if (!names.length) return null;
+    const re = (list, flags) => list.length ? new RegExp("(^|[^\\p{L}\\p{N}])(" + list.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?=$|[^\\p{L}\\p{N}])", flags) : null;
+    const proper = s => /^\p{Lu}/u.test(s);
+    const exact = re(names.filter(proper), "u"), loose = re(names.filter(s => !proper(s)), "iu");
+    return { test: t => !!((exact && exact.test(t)) || (loose && loose.test(t))) };
   }
   function mentionsIn(text) {
     return entries().filter(e => { const re = mentionRe(e); return re && re.test(text); });
@@ -223,7 +225,9 @@ const Views = (() => {
         <p>Characters, places, factions, magic and machines, creatures, events and loose notes. Names and aliases you record here are spotted automatically in your scenes and shown in the inspector.</p>
         <button class="btn gild" type="button" data-act="codex-new">+ New entry</button></div></div>`;
     } else {
+      const p = P();
       try { await loadAllTexts(); } catch (err) { console.warn("some scene text not loaded", err); }
+      if (S.mode !== "codex" || P() !== p) return; // another view took the stage meanwhile
       const app = appearances(e);
       main = `<div class="codex-entry" data-eid="${e.id}">
         <div style="display:flex;gap:10px;align-items:center"><span class="hud" style="color:var(--gild)">${catGlyph(e.cat)} ${esc(catName(e.cat))}</span><span style="flex:1"></span>

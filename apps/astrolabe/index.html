@@ -911,7 +911,7 @@ const FORMS = {
   short:   { name: "Short story", part: "Movement", chapter: "Section", target: 6000,   daily: 500,  range: "1,000 – 7,500 words",  blurb: "One sitting, one turn. Scenes, with optional sections." },
   novella: { name: "Novella",     part: "Part",     chapter: "Chapter", target: 32000,  daily: 750,  range: "17,500 – 40,000 words", blurb: "A single thread pulled taut. Chapters and scenes." },
   novel:   { name: "Novel",       part: "Part",     chapter: "Chapter", target: 90000,  daily: 1000, range: "40,000 words and up",   blurb: "The full voyage. Parts, chapters, scenes and subplots." },
-  serial:  { name: "Serial",      part: "Arc",      chapter: "Episode", target: 120000, daily: 1000, range: "Installments, released over time", blurb: "Arcs and episodes with release dates and per-episode targets." },
+  serial:  { name: "Serial",      part: "Arc",      chapter: "Episode", target: 120000, daily: 1000, range: "Installments, released over time", blurb: "Arcs and episodes with release dates and per-episode targets.", episodeTarget: 3000 },
 };
 const STATUSES = [["seed", "Seed"], ["outline", "Outlined"], ["draft", "Drafting"], ["revised", "Revised"], ["final", "Final"]];
 const STATUS_IX = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));
@@ -1038,14 +1038,15 @@ const Sky = (() => {
    memory → nothing survives a reload (last resort; the UI says so loudly)
    Keys: meta · p.<pid> project · r.<pid> its revision · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
 const Store = (() => {
-  let be = null;
+  let be = null, skipped = false;
   const pending = new Map(), inflight = new Map(); // key → the write waiting, and the write on its way
-  let failures = 0, lastError = "", listeners = [];
+  const failing = new Map(); // key → failed attempts in a row; one record saving must not hide another that is not
+  let lastError = "", listeners = [];
   const CHUNK = 60000; // characters per cloud document (worst case ~180 KB of UTF-8, under the 256 KB cap)
 
   function emit() { const s = status(); listeners.forEach(f => f(s)); }
   function status() {
-    if (failures) return { state: "error", text: "Not saved", detail: lastError };
+    if (failing.size) return { state: "error", text: "Not saved", detail: lastError };
     if (pending.size || inflight.size) return { state: "saving", text: "Saving" };
     return { state: "ok", text: be && be.kind === "memory" ? "Unsaved session" : "Saved" };
   }
@@ -1153,9 +1154,9 @@ const Store = (() => {
       const op = pending.get(k); pending.delete(k); inflight.set(k, op); emit();
       try {
         if (op.del) await be.del(k); else await be.set(k, op.v);
-        failures = 0; lastError = "";
+        failing.delete(k); if (!failing.size) lastError = "";
       } catch (e) {
-        failures++; lastError = (e && (e.message || e.code)) || "Write failed";
+        const failures = (failing.get(k) || 0) + 1; failing.set(k, failures); lastError = (e && (e.message || e.code)) || "Write failed";
         if (!pending.has(k)) pending.set(k, op); // keep the newest value queued
         inflight.delete(k); emit();
         const wait = Math.min(30000, 1500 * 2 ** Math.min(failures, 4)) * (0.75 + Math.random() * .5);
@@ -1169,14 +1170,26 @@ const Store = (() => {
 
   return {
     async init(onStep) {
-      if (window.claude && typeof window.claude.use === "function") {
+      let skip = false; try { skip = sessionStorage.getItem("astrolabe:skipCloud") === "1"; } catch { /* storage blocked */ }
+      if (!skip && window.claude && typeof window.claude.use === "function") {
         onStep && onStep("Reaching your private archive…");
-        try { const c = await cloud(); if (c) { be = c; return be.kind; } } catch (e) { console.warn("cloud store unavailable", e); }
+        let err = null;
+        for (let i = 0; i < 2; i++) {
+          try { const c = await cloud(); err = null; if (c) { be = c; lsSet("cloudSeen", true); return be.kind; } break; }
+          catch (e) { err = e; console.warn("cloud store unavailable", e); }
+        }
+        // Falling back quietly would show an empty library and split the work across two places.
+        if (err && lsGet("cloudSeen", false)) {
+          const e = new Error("your private archive could not be reached (" + ((err && err.message) || "no answer") + "). Nothing has been changed.");
+          e.offerLocal = true; throw e;
+        }
       }
+      skipped = skip;
       try { be = await idb(); await be.get("meta"); return be.kind; } catch (e) { console.warn("IndexedDB unavailable", e); }
       be = memory(); return be.kind;
     },
     kind: () => be && be.kind,
+    skippedCloud: () => skipped,
     // A read sees this page's own latest write, whether it is still queued or already on its way.
     get(k) { const op = pending.get(k) || inflight.get(k); return op ? Promise.resolve(op.del ? undefined : structuredClone(op.v)) : be.get(k); },
     put(k, v) { pending.set(k, { v: structuredClone(v) }); flushKey(k); emit(); },
@@ -1507,6 +1520,7 @@ function trashNode(id) {
   if (S.sel === id || ancestors(S.sel || "").includes(id)) S.sel = par;
   touch();
 }
+function restoreTrashed(id) { const i = P().trash.findIndex(t => t.id === id); if (i < 0) return false; restoreTrash(i); return true; }
 function restoreTrash(ti) {
   const item = P().trash[ti]; if (!item) return;
   P().trash.splice(ti, 1);
@@ -1685,33 +1699,48 @@ function proseBlocks(html) {
 function mdInline(s) {
   return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>").replace(/(^|\W)_(?!\s)(.+?)_(?=\W|$)/g, "$1<em>$2</em>");
 }
-/* Turn a Markdown or plain-text manuscript into a project. */
+/* Turn a Markdown or plain-text manuscript into a project.
+   One "#" heading is the title; several, with "##" beneath them, are parts; several on their own are
+   chapters. "##" is a chapter, "###" a scene. A numbering prefix ("Chapter Three: ") is dropped, since
+   the binder numbers things itself, and a "by …" line under the title becomes the author. */
 function projectFromText(text, filename) {
   const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
-  const titleLine = lines.find(l => /^#\s+/.test(l));
-  const hasCh = lines.some(l => /^##\s+/.test(l)) || lines.filter(l => /^#\s+/.test(l)).length > 1;
+  const h1s = lines.filter(l => /^#\s+\S/.test(l)).length, hasH2 = lines.some(l => /^##\s+/.test(l));
+  const useH1asChapters = !hasH2 && h1s > 1;
+  const hasCh = hasH2 || useH1asChapters;
   const p = newProject({ title: (filename || "Imported manuscript").replace(/\.(md|markdown|txt)$/i, ""), form: hasCh ? "novel" : "short", template: "blank" });
   p.nodes = {}; p.root = []; const texts = {};
-  let chap = null, scene = null, buf = [];
-  const useH1asChapters = !lines.some(l => /^##\s+/.test(l));
-  const flushPara = () => { if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>"; };
+  let part = null, chap = null, scene = null, buf = [], titled = false, body = false;
+  const bare = (s, words) => { const m = s.match(new RegExp("^(?:" + words + ")\\s+[\\w-]+\\s*[:.–—-]\\s*(\\S.*)$", "i")); return m ? m[1].trim() : s; };
+  const shelf = () => (part ? part.children : p.root);
   const ensureScene = (title) => {
     if (scene && !title) return;
+    if (p.form !== "short" && !chap) { chap = mkNode(p, "chapter", "Chapter one"); shelf().push(chap.id); }
     scene = mkNode(p, "scene", title || "Scene " + ((chap ? chap.children.length : p.root.length) + 1), { status: "draft" });
-    if (p.form === "short") p.root.push(scene.id);
-    else { if (!chap) { chap = mkNode(p, "chapter", "Chapter one"); p.root.push(chap.id); } chap.children.push(scene.id); }
+    (chap ? chap.children : p.root).push(scene.id);
+  };
+  const flushPara = () => {
+    if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return;
+    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s.!?,;:]+\s+){0,3}[^\s.!?,;:]+)$/i));
+    if (by) { p.author = by[2].trim(); return; }
+    body = true; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>";
   };
   const singleNewlineParas = !/\n\s*\n/.test(text);
   for (const raw of lines) {
     const l = raw.trimEnd();
     let m;
-    if (!useH1asChapters && (m = l.match(/^#\s+(.*)/))) { flushPara(); if (!titleLine || l !== titleLine) continue; p.title = m[1].trim(); continue; }
-    if ((m = l.match(/^(#{1,2})\s+(.*)/))) {
+    if (!useH1asChapters && (m = l.match(/^#\s+(\S.*)/))) {
       flushPara();
-      if (p.form === "short") { scene = null; ensureScene(m[2].trim()); continue; }
-      chap = mkNode(p, "chapter", m[2].trim()); p.root.push(chap.id); scene = null; continue;
+      if (!titled) { titled = true; p.title = m[1].trim(); continue; }
+      body = true;
+      if (p.form === "short") { scene = null; ensureScene(m[1].trim()); continue; }
+      part = mkNode(p, "part", bare(m[1].trim(), "part|arc|book|act|movement")); p.root.push(part.id); chap = null; scene = null; continue;
     }
-    if ((m = l.match(/^###\s+(.*)/))) { flushPara(); scene = null; ensureScene(m[1].trim()); continue; }
+    if ((m = l.match(/^(#{1,2})\s+(\S.*)/))) {
+      flushPara(); body = true;
+      chap = mkNode(p, "chapter", bare(m[2].trim(), "chapter|episode|section")); shelf().push(chap.id); scene = null; continue;
+    }
+    if ((m = l.match(/^###\s+(.*)/))) { flushPara(); body = true; scene = null; ensureScene(m[1].trim()); continue; }
     if (/^\s*(\*\s*\*\s*\*|#|~~~|—{3}|-{3,}|✦.*)\s*$/.test(l)) { flushPara(); scene = null; continue; }
     if (!l.trim()) { flushPara(); continue; }
     buf.push(l.trim());
@@ -1797,7 +1826,8 @@ function cleanBackupItem(it) {
    One contenteditable per scene. Selecting a chapter or part stacks its scenes
    into one continuous page; each scene still saves to its own record. */
 const Editor = (() => {
-  const dirty = new Set(), touched = new Set();
+  const dirty = new Set(), touched = new Map(); // touched: scene → the day it was last edited in this page
+  let renderSeq = 0, fixing = false;
   const saveSoon = debounce(saveDirty, 900);
   let curPara = null;
 
@@ -1806,7 +1836,9 @@ const Editor = (() => {
       const el = proseEl(id); if (!el || !node(id)) continue;
       putText(id, sanitizeProse(el.innerHTML));
     }
+    const any = dirty.size > 0;
     dirty.clear();
+    if (any) UI.refreshMentions(); // the codex names in the inspector follow the text as it is saved
   }
   const proseEl = id => $(`.prose[data-id="${CSS.escape(id)}"]`);
   const recount = throttle(el => {
@@ -1874,10 +1906,29 @@ const Editor = (() => {
   function onInput(e) {
     const el = e.target.closest(".prose"); if (!el) return;
     const id = el.dataset.id;
-    if (!touched.has(id)) { touched.add(id); dailySnapshot(id); }
+    const today = dayKey();
+    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id); } // per day, so a page left open overnight still gets one
     if (!el.firstElementChild) { el.innerHTML = "<p><br></p>"; placeCaret(el, false); }
     el.classList.toggle("blank", !el.textContent.trim() && !el.querySelector("hr"));
     dirty.add(id); saveSoon(); recount(el); keepCaret();
+    if (e.inputType === "insertCompositionText" && !e.isComposing) fixTyped();
+  }
+  /* Keyboards that compose text (most phones, dead keys, input methods) do not let a keystroke be
+     replaced before it lands, so their punctuation is corrected just after instead. */
+  function fixTyped() {
+    if (!S.meta.settings.smart || fixing) return;
+    const s = getSelection(), r = s.rangeCount && s.getRangeAt(0);
+    if (!r || !r.collapsed || r.startContainer.nodeType !== 3) return;
+    const tn = r.startContainer, off = r.startOffset, t = tn.nodeValue.slice(0, off);
+    if (!tn.parentElement || !tn.parentElement.closest(".prose")) return;
+    let len = 0, rep = "";
+    if (/["']$/.test(t)) { const d = t.slice(-1), open = quoteOpens(d, textBefore().slice(0, -1)); len = 1; rep = d === '"' ? (open ? "“" : "”") : (open ? "‘" : "’"); }
+    else if (t.endsWith("--")) { len = 2; rep = "—"; }
+    else if (t.endsWith("...")) { len = 3; rep = "…"; }
+    if (!len) return;
+    const rg = document.createRange(); rg.setStart(tn, off - len); rg.setEnd(tn, off);
+    s.removeAllRanges(); s.addRange(rg);
+    fixing = true; try { document.execCommand("insertText", false, rep); } finally { fixing = false; }
   }
   function placeCaret(el, atEnd = true) {
     el.focus({ preventScroll: true });
@@ -1931,11 +1982,12 @@ const Editor = (() => {
 
   async function render(stage) {
     saveDirty();
-    const p = P();
-    if (!S.sel || !node(S.sel)) { if (IX.order.length) S.sel = IX.order[0]; }
-    const ids = S.sel ? scenesUnder(S.sel) : [];
+    const p = P(), seq = ++renderSeq;
+    if (S.sel && !node(S.sel)) S.sel = null;
+    // With the project itself selected the page opens on the first scene; the selection stays on the project.
+    const scope = S.sel, ids = scope ? scenesUnder(scope) : IX.order.slice(0, 1);
     if (!ids.length) {
-      const n = S.sel && node(S.sel);
+      const n = scope && node(scope);
       stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
         <h3>${n ? esc(n.title || labelOf(n.type)) + " is empty" : "No scenes yet"}</h3>
         <p>Scenes are where the words live. Add one and the page will open for writing.</p>
@@ -1945,13 +1997,17 @@ const Editor = (() => {
     try { await Promise.all(ids.map(getText)); }
     catch (e) { // show the failure; an empty page here would invite typing over text that is still in storage
       console.warn("scene text not loaded", e);
+      if (seq !== renderSeq || S.mode !== "write" || P() !== p) return;
       stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
         <h3>This text could not be loaded</h3>
         <p>${esc((e && e.message) || "Storage did not answer.")} Nothing has been changed. Check your connection and try again.</p>
         <button class="btn gild" type="button" data-cmd="retry">Try again</button></div></div>`;
       paintAstros(stage); return;
     }
-    const st = S.meta.settings, multi = ids.length > 1 || node(S.sel).type !== "scene";
+    // A later selection, or another view, may have taken the stage while the text was loading.
+    if (seq !== renderSeq || S.mode !== "write" || P() !== p) return;
+    saveDirty(); // anything typed into the outgoing page meanwhile
+    const st = S.meta.settings, multi = ids.length > 1 || (!!scope && node(scope).type !== "scene");
     let html = "", lastCh = undefined;
     for (const id of ids) {
       const n = node(id), ch = chapterOf(id);
@@ -1977,6 +2033,7 @@ const Editor = (() => {
     const blk = $(`.scene-block[data-id="${CSS.escape(target)}"]`); blk && blk.classList.add("active");
     if (multi && target !== ids[0]) blk && blk.scrollIntoView({ block: "start" });
     if (!matchMedia("(max-width: 900px)").matches) { const el = proseEl(target); el && placeCaret(el, true); if (!multi) keepCaret(); }
+    UI.refreshMentions(); // the inspector was drawn before this text had loaded
   }
 
   function bind(stage) {
@@ -1988,6 +2045,7 @@ const Editor = (() => {
       }
       onInput(e);
     });
+    stage.addEventListener("compositionend", e => { if (e.target.closest && e.target.closest(".prose")) setTimeout(fixTyped, 0); });
     stage.addEventListener("paste", onPaste);
     stage.addEventListener("focusin", onFocusIn);
     stage.addEventListener("keyup", e => { if (e.key.startsWith("Arrow") || e.key === "Enter" || e.key === "PageDown" || e.key === "PageUp") keepCaret(); });
@@ -2215,9 +2273,11 @@ const Views = (() => {
   const entryById = id => entries().find(e => e.id === id);
   function namesOf(e) { return [e.name, ...String(e.aliases || "").split(",")].map(s => s.trim()).filter(s => s.length > 1); }
   function mentionRe(e) {
-    const names = namesOf(e).map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    if (!names.length) return null;
-    return new RegExp("(^|[^\\p{L}\\p{N}])(" + names.join("|") + ")(?=$|[^\\p{L}\\p{N}])", "iu");
+    const names = namesOf(e); if (!names.length) return null;
+    const re = (list, flags) => list.length ? new RegExp("(^|[^\\p{L}\\p{N}])(" + list.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?=$|[^\\p{L}\\p{N}])", flags) : null;
+    const proper = s => /^\p{Lu}/u.test(s);
+    const exact = re(names.filter(proper), "u"), loose = re(names.filter(s => !proper(s)), "iu");
+    return { test: t => !!((exact && exact.test(t)) || (loose && loose.test(t))) };
   }
   function mentionsIn(text) {
     return entries().filter(e => { const re = mentionRe(e); return re && re.test(text); });
@@ -2243,7 +2303,9 @@ const Views = (() => {
         <p>Characters, places, factions, magic and machines, creatures, events and loose notes. Names and aliases you record here are spotted automatically in your scenes and shown in the inspector.</p>
         <button class="btn gild" type="button" data-act="codex-new">+ New entry</button></div></div>`;
     } else {
+      const p = P();
       try { await loadAllTexts(); } catch (err) { console.warn("some scene text not loaded", err); }
+      if (S.mode !== "codex" || P() !== p) return; // another view took the stage meanwhile
       const app = appearances(e);
       main = `<div class="codex-entry" data-eid="${e.id}">
         <div style="display:flex;gap:10px;align-items:center"><span class="hud" style="color:var(--gild)">${catGlyph(e.cat)} ${esc(catName(e.cat))}</span><span style="flex:1"></span>
@@ -2483,6 +2545,7 @@ const UI = (() => {
 
   /* ═════ Shell ═════ */
   function showLibrary() {
+    if (S.sprint) endSprint(true); // log it here rather than let it run on into another project
     flushAll(); S.focus = false;
     $("#desk").hidden = true; $("#library").hidden = false; $("#desk").classList.remove("focus-mode");
     renderLibrary(); document.title = "Astrolabe";
@@ -2622,6 +2685,12 @@ const UI = (() => {
     inp.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
     inp.addEventListener("blur", () => finish(true));
   }
+  function redrawAll() { renderBinder(); renderStage(); renderInspector(); renderStatus(); }
+  function trashWithUndo(id) {
+    const n = node(id); if (!n) return;
+    trashNode(id); redrawAll();
+    toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { if (P() && restoreTrashed(id)) redrawAll(); } });
+  }
   function nodeMenu(id, x, y) {
     const n = node(id); const L = labelOf;
     const items = [
@@ -2638,7 +2707,7 @@ const UI = (() => {
       { label: "Move down", kbd: "Alt+↓", run: () => { nudge(id, 1) && (renderBinder(), renderStage()); } },
       { label: n.include === false ? "Include in export" : "Leave out of export", run: () => { n.include = n.include === false; touch(); renderBinder(); renderInspector(); } },
       "-",
-      { label: "Move to trash", danger: true, kbd: "Del", run: () => { trashNode(id); renderBinder(); renderStage(); renderInspector(); renderStatus(); toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { restoreTrash(0); renderBinder(); renderStage(); } }); } },
+      { label: "Move to trash", danger: true, kbd: "Del", run: () => trashWithUndo(id) },
     );
     ctxMenu(x, y, items);
   }
@@ -2651,8 +2720,8 @@ const UI = (() => {
       if (e.target.closest("#projRow")) { select(null); return; }
       const a = e.target.closest("[data-act]");
       const li = e.target.closest(".node");
-      if (a && a.dataset.act === "restore") { restoreTrash(+a.dataset.i); renderBinder(); renderStage(); return; }
-      if (a && a.dataset.act === "purge") { ask("Empty the trash?", "Everything in the trash, with its text and snapshots, will be deleted for good.", [["Cancel"], ["Delete for good", "danger"]]).then(r => { if (r === 1) { purgeTrash(); renderBinder(); } }); return; }
+      if (a && a.dataset.act === "restore") { restoreTrash(+a.dataset.i); redrawAll(); return; }
+      if (a && a.dataset.act === "purge") { ask("Empty the trash?", "Everything in the trash, with its text and snapshots, will be deleted for good.", [["Cancel"], ["Delete for good", "danger"]]).then(r => { if (r === 1) { purgeTrash(); redrawAll(); } }); return; }
       if (!li) return;
       const id = li.dataset.id;
       if (a && a.dataset.act === "twist") { const n = node(id); n.collapsed = !n.collapsed; li.classList.toggle("collapsed", n.collapsed); li.setAttribute("aria-expanded", String(!n.collapsed)); saveProjectSoon(); return; }
@@ -2670,7 +2739,7 @@ const UI = (() => {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const r = rows[clamp(i + (e.key === "ArrowDown" ? 1 : -1), 0, rows.length - 1)]; if (r) { r.tabIndex = 0; r.focus(); } return; }
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); const r = $(`#tree .node[data-id="${CSS.escape(id)}"] > .row`); r && r.focus(); return; }
       if (e.key === "F2") { e.preventDefault(); renameInline(id); return; }
-      if (e.key === "Delete") { e.preventDefault(); const n = node(id); trashNode(id); renderBinder(); renderStage(); renderInspector(); toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { restoreTrash(0); renderBinder(); renderStage(); } }); }
+      if (e.key === "Delete") { e.preventDefault(); trashWithUndo(id); }
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") { const n = node(id); if (n.type !== "scene") { n.collapsed = e.key === "ArrowLeft"; renderBinder(); const r = $(`#tree .node[data-id="${CSS.escape(id)}"] > .row`); r && r.focus(); } }
     });
     b.addEventListener("dragstart", e => {
@@ -2906,6 +2975,15 @@ const UI = (() => {
     if (k === "cloud") return { warn: false, html: `<span class="dot"></span><span><b>Private archive.</b> Your projects are stored with this page on claude.ai, readable only by you, on any device where you open it.</span>` };
     if (k === "local") return { warn: !lb || Date.now() - lb > 7 * 864e5, html: `<span class="dot"></span><span><b>Saved in this browser.</b> Clearing this site's data would erase it, so keep a backup. Last backup: ${lb ? ago(lb) : "never"}.</span>` };
     return { warn: true, html: `<span class="dot"></span><span><b>This browser refused storage.</b> Nothing will be kept after you close the page. Download a backup before you leave.</span>` };
+  }
+  /* Work kept only in this browser is one cleared cache from gone. The library says so, but a writer
+     who resumes straight into a project never passes through it, so say it at the desk too. */
+  function backupNudge() {
+    if (Store.kind() !== "local") return;
+    const lb = S.meta.settings.lastBackup || 0, words = S.meta.projects.filter(p => !p.sample).reduce((a, p) => a + (p.words || 0), 0);
+    if (words < 1000 || Date.now() - lb < 7 * 864e5 || Date.now() - lsGet("nudged", 0) < 864e5) return;
+    lsSet("nudged", Date.now());
+    toast(lb ? `Your last backup was ${esc(ago(lb))}. This work is kept only in this browser.` : "This work is kept only in this browser, and there is no backup of it yet.", { action: "Download backup", onAction: () => backupAll(), ms: 15000 });
   }
   function renderLibrary() {
     const note = storageNote(), ls = $("#libStorage");
@@ -3145,6 +3223,7 @@ const UI = (() => {
   }
 
   /* ═════ Export ═════ */
+  const cssStr = s => String(s).replace(/["\\<>&\n\r\f]/g, c => "\\" + c.codePointAt(0).toString(16) + " ");
   function included(id) { return node(id).include !== false && ancestors(id).every(a => node(a).include !== false); }
   function headingFor(ch, style) {
     const n = node(ch), num = IX.chapters.indexOf(ch) + 1, lab = labelOf("chapter");
@@ -3174,8 +3253,8 @@ const UI = (() => {
       for (const it of items) {
         if (it.part) s += `\n# ${partHead(it.part)}\n\n`;
         else if (it.chapter) s += `\n## ${headingFor(it.chapter, o.heads)}\n\n`;
-        else if (it.sep) s += `${sep}\n\n`;
-        else for (const b of it.blocks) s += b.hr ? `${sep}\n\n` : b.md.trim() + "\n\n";
+        else if (it.sep) s += o.titles ? "" : `${sep}\n\n`;
+        else { if (o.titles) s += `### ${node(it.scene).title || "Untitled scene"}\n\n`; for (const b of it.blocks) s += b.hr ? `${sep}\n\n` : b.md.trim() + "\n\n"; }
       }
       return { name: fileSafe(title) + ".md", data: s.replace(/\n{3,}/g, "\n\n").trim() + "\n", mime: "text/markdown" };
     }
@@ -3200,7 +3279,7 @@ const UI = (() => {
         else for (const b of it.blocks) { if (b.hr) { body += `<p class="brk">${esc(sep)}</p>`; first = true; } else { body += `<p${first ? ' class="first"' : ""}>${b.html}</p>`; first = false; } }
       }
       const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
-@page { size: letter; margin: 1in; @top-right { content: "${esc(surname)} / ${esc(title.slice(0, 40)).toUpperCase()} / " counter(page); font: 12pt "Times New Roman", serif; } }
+@page { size: letter; margin: 1in; @top-right { content: "${cssStr(surname)} / ${cssStr(title.slice(0, 40).toUpperCase())} / " counter(page); font: 12pt "Times New Roman", serif; } }
 body { font: 12pt/2 ${o.font === "courier" ? '"Courier New", Courier, monospace' : '"Times New Roman", Times, serif'}; color: #000; background: #fff; max-width: 6.5in; margin: 1in auto; }
 .cover { height: 9in; position: relative; page-break-after: always; }
 .cover .who { position: absolute; top: 0; left: 0; line-height: 1.2; }
@@ -3250,15 +3329,16 @@ ${body}<p class="end">END</p></body></html>`;
         <label class="field"><span>Scene break</span><select id="ex-sep"><option value="* * *">* * *</option><option value="#">#</option><option value="✦">✦</option></select></label></div>
       <div class="row2" id="ex-ms"><label class="field"><span>Manuscript font</span><select id="ex-font"><option value="times">Times New Roman</option><option value="courier">Courier</option></select></label>
         <label class="field"><span>Contact block</span><textarea id="ex-contact" rows="2" placeholder="Address, email, phone">${esc(lsGet("contact", ""))}</textarea></label></div>
+      <label class="check" id="ex-titles-row"><input type="checkbox" id="ex-titles"> Keep scene titles as headings, so the file can be imported again with its scenes intact</label>
       <p class="muted" style="margin:0">Scenes and ${esc(labelOf("chapter").toLowerCase())}s marked “Leave out of export” in the binder are skipped.</p>
       <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button><button class="btn gild" type="button" data-go>Export</button></div>`);
-    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-scope").disabled = f === "json"; };
+    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
     sync(); m.el.addEventListener("change", sync);
     m.el.addEventListener("click", async e => {
       if (e.target.closest("[data-x]")) m.close();
       if (e.target.closest("[data-go]")) {
         const fmt = $('input[name="ex-fmt"]:checked').value;
-        const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value };
+        const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value, titles: $("#ex-titles").checked };
         lsSet("contact", o.contact);
         let out; try { out = await buildExport(fmt, $("#ex-scope").value || null, o); }
         catch (err) { console.warn("export failed", err); toast("The export could not be built: " + esc((err && err.message) || "storage did not answer") + ".", { err: true, ms: 8000 }); return; }
@@ -3437,7 +3517,7 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog, changedElsewhere, checkRemote,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
 })();
@@ -3506,9 +3586,12 @@ async function boot() {
   UI.bind(); Editor.bind($("#stage")); Views.bind($("#stage")); bindKeys();
   $("#boot").hidden = true; $("#app").hidden = false;
   if (kind === "memory") UI.toast("This browser is refusing storage. Download a backup before closing the page.", { err: true, ms: 10000 });
+  if (Store.skippedCloud()) UI.toast("Working in this browser's storage for now. Projects in your private archive are not shown; reopen the page to try the archive again.", { err: true, ms: 12000 });
+  // Ask the browser not to clear this site's storage on its own when space runs short or after a spell away.
+  if (kind === "local" && S.meta.projects.length && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   const last = lsGet("last", null);
   if (last && S.meta.projects.some(p => p.id === last)) {
-    try { await openProject(last); UI.showDesk(); return; } catch (e) { console.warn(e); }
+    try { await openProject(last); UI.showDesk(); UI.backupNudge(); return; } catch (e) { console.warn(e); }
   }
   UI.showLibrary();
 }
@@ -3528,6 +3611,11 @@ boot().catch(e => {
   if (!$("#bootRetry")) {
     const b = document.createElement("button"); b.id = "bootRetry"; b.type = "button"; b.className = "btn"; b.textContent = "Try again";
     b.onclick = () => location.reload(); $("#boot").appendChild(b);
+    if (e && e.offerLocal) {
+      const l = document.createElement("button"); l.type = "button"; l.className = "btn ghost"; l.textContent = "Work in this browser for now";
+      l.onclick = () => { try { sessionStorage.setItem("astrolabe:skipCloud", "1"); } catch { /* storage blocked */ } location.reload(); };
+      $("#boot").appendChild(l);
+    }
   }
 });
 
