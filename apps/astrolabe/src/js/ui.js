@@ -66,6 +66,7 @@ const UI = (() => {
     } catch { return copyFallback(name, data); }
   }
   function copyFallback(name, data) {
+    if (typeof data !== "string") { toast("This view cannot save “" + esc(name) + "”. Open Astrolabe in a browser tab to export it.", { err: true, ms: 8000 }); return false; }
     const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Copy ${esc(name)}</h2>
       <p class="lede">This view can't save files, so here is the content to copy into a file of your own.</p>
       <textarea class="inp" id="copyArea" rows="12" readonly style="font-family:var(--f-hud);font-size:12px">${esc(data)}</textarea>
@@ -196,9 +197,12 @@ const UI = (() => {
     tr.innerHTML = p.trash.length ? `<details><summary class="hud"><span>Trash · ${p.trash.length}</span><span>▾</span></summary>
       ${p.trash.map((t, i) => `<div class="trash-item"><span title="${esc(t.title)}">${esc(t.title || "Untitled")}</span><button class="chip" type="button" data-act="restore" data-i="${i}">Restore</button></div>`).join("")}
       <div style="margin-top:6px"><button class="chip" type="button" data-act="purge">Empty trash</button></div></details>` : "";
+    markBinderActive();
   }
   function markBinderActive() {
     $$("#tree .node.active-scene").forEach(n => n.classList.remove("active-scene"));
+    if (S.mode !== "write" || !S.active || S.active === S.sel) return;
+    const li = $(`#tree .node[data-id="${CSS.escape(S.active)}"]`); li && li.classList.add("active-scene");
   }
   function updateLabels(id) {
     const n = node(id); if (!n) return;
@@ -228,6 +232,53 @@ const UI = (() => {
     trashNode(id); redrawAll();
     toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { if (P() && restoreTrashed(id)) redrawAll(); } });
   }
+  /* Split the scene in two where the caret is; the second half becomes a new scene after it. */
+  async function splitScene() {
+    Editor.flush();
+    const sp = Editor.splitPoint(), n = sp && node(sp.id);
+    if (!n) { toast("Click into the text where the new scene should begin, then split."); return; }
+    if (!sp.before || !sp.after) { toast("Put the cursor between the two parts: there is nothing " + (sp.before ? "after" : "before") + " it to split off."); return; }
+    await takeSnapshot(sp.id, "Before split", true);
+    putText(sp.id, sp.before); setSceneWords(sp.id, wordsOfHtml(sp.before), false);
+    const m = addNode("scene", sp.id, (n.title || "Untitled scene") + ", continued");
+    Object.assign(m, { status: n.status, pov: n.pov, place: n.place, when: n.when, threads: n.threads.slice() });
+    putText(m.id, sp.after); setSceneWords(m.id, wordsOfHtml(sp.after), false);
+    touch();
+    if (S.sel === sp.id) openScene(m.id); else { S.active = m.id; redrawAll(); }
+    toast("Split in two. The scene as it was is kept in its Snapshots.", { ms: 6000 });
+  }
+  const nextScene = id => { const arr = childrenOf(IX.parent[id] ?? null), nx = arr[arr.indexOf(id) + 1]; return nx && node(nx) && node(nx).type === "scene" ? nx : null; };
+  /* Join a scene with the one after it. The second goes to the trash with its text, so this can be undone by hand. */
+  async function mergeNext(id) {
+    const nx = nextScene(id), a = node(id), b = nx && node(nx); if (!a || !b || a.type !== "scene") return;
+    Editor.flush();
+    let ta, tb; try { [ta, tb] = await Promise.all([getText(id), getText(nx)]); } catch (e) { toast("The text could not be read: " + esc((e && e.message) || "storage did not answer") + ".", { err: true }); return; }
+    await takeSnapshot(id, "Before merge", true);
+    const empty = h => !h.replace(/<[^>]+>/g, "").trim() && !h.includes("<hr>");
+    putText(id, empty(ta) ? tb : empty(tb) ? ta : ta + tb);
+    setSceneWords(id, (a.words || 0) + (b.words || 0), false);
+    a.synopsis = [a.synopsis, b.synopsis].filter(Boolean).join("\n"); a.notes = [a.notes, b.notes].filter(Boolean).join("\n");
+    a.threads = [...new Set([...a.threads, ...b.threads])]; if (a.target && b.target) a.target += b.target;
+    if (S.active === nx) S.active = id; if (S.sel === nx) S.sel = id;
+    trashNode(nx); saveView(); redrawAll();
+    toast(`Merged “${esc(b.title)}” into “${esc(a.title)}”. The second scene is in the trash, and the first as it was is in its Snapshots.`, { ms: 8000 });
+  }
+  /* Choose a new home for a scene, chapter or part from a list: the way to move things without dragging. */
+  function moveDialog(id) {
+    const n = node(id); if (!n) return;
+    const cur = IX.parent[id] ?? null, opts = [[null, "Top level of the project", ""]];
+    const walk = ids => ids.forEach(c => { const m = node(c); if (!m || m.type === "scene" || c === id) return; if (canNest(n.type, c)) opts.push([c, m.title || "Untitled", IX.coord[c] + " · " + labelOf(m.type)]); walk(m.children); });
+    walk(P().root);
+    const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Move “${esc(n.title || "Untitled")}” to…</h2>
+      <div class="move-list">${opts.map(([k, t, h], i) => `<button type="button" class="pal-item" data-i="${i}" ${k === cur ? "disabled" : ""}><span class="g">${k ? "❡" : "⌂"}</span><span class="t">${esc(t)}</span><span class="h">${k === cur ? "it is here now" : esc(h)}</span></button>`).join("")}</div>
+      <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button></div>`);
+    m.el.addEventListener("click", e => {
+      if (e.target.closest("[data-x]")) { m.close(); return; }
+      const b = e.target.closest("[data-i]"); if (!b) return;
+      const [k, t] = opts[+b.dataset.i]; m.close();
+      if (moveIntoEnd(id, k)) { redrawAll(); toast(`Moved to ${k ? "“" + esc(t) + "”" : "the top level"}, at the end.`); }
+    });
+  }
   function nodeMenu(id, x, y) {
     const n = node(id); const L = labelOf;
     const items = [
@@ -239,6 +290,8 @@ const UI = (() => {
     ];
     if (n.type !== "part" && P().form !== "short") items.push({ label: "New " + L("chapter").toLowerCase() + " after", run: () => { const c = addNode("chapter", id); renderBinder(); select(c.id); renameInline(c.id); } });
     items.push(
+      { label: "Move to…", run: () => moveDialog(id) },
+      ...(n.type === "scene" && nextScene(id) ? [{ label: "Merge with next scene", run: () => mergeNext(id) }] : []),
       { label: "Duplicate", run: () => { const d = duplicateNode(id); renderBinder(); select(d); toast("Duplicated."); } },
       { label: "Move up", kbd: "Alt+↑", run: () => { nudge(id, -1) && (renderBinder(), renderStage()); } },
       { label: "Move down", kbd: "Alt+↓", run: () => { nudge(id, 1) && (renderBinder(), renderStage()); } },
@@ -383,6 +436,7 @@ const UI = (() => {
     box.innerHTML = list.length ? list.slice(0, 12).map((s, i) => `<button type="button" class="snap" data-snap="${i}"><span class="when">${esc(s.label || "Snapshot")} · ${stamp(s.t)}</span><span class="wc">${fmtN(s.words)} w</span></button>`).join("")
       : '<span class="muted">None yet. One is taken automatically the first time you edit a scene each day.</span>';
   }
+  function refreshSnaps() { const id = inspTarget(); if (id && node(id).type === "scene" && $("#snaps")) loadSnaps(id); }
   async function snapView(id, i) {
     const list = await getSnaps(id); const s = list[i]; if (!s) return;
     const cur = node(id).words;
@@ -396,7 +450,7 @@ const UI = (() => {
       if (e.target.closest("[data-restore]")) {
         Editor.flush();
         await takeSnapshot(id, "Before restore", true);
-        putText(id, s.html); setSceneWords(id, s.words);
+        putText(id, s.html); setSceneWords(id, s.words, false);
         m.close(); renderBinder(); if (S.mode === "write") renderStage(); renderInspector(); renderStatus();
         toast("Restored. The version you replaced is saved as a snapshot.");
       }
@@ -667,6 +721,7 @@ const UI = (() => {
           <kbd>Ctrl Shift S</kbd><span>Snapshot the current scene</span>
           <kbd>Ctrl \\</kbd><span>Retract or bring back the binder (rest the pointer on the left edge to peek)</span>
           <kbd>Ctrl Shift \\</kbd><span>Retract or bring back the inspector</span>
+          <kbd>Ctrl Shift H</kbd><span>Find and replace across the manuscript</span>
           <kbd>Ctrl Shift F</kbd><span>Focus mode</span>
           <kbd>Ctrl Alt N</kbd><span>New scene after this one</span>
           <kbd>Ctrl Shift Enter</kbd><span>Scene break</span>
@@ -847,6 +902,19 @@ ${body}<p class="end">END</p></body></html>`;
       walk(scope ? [scope] : p.root, 0);
       return { name: fileSafe(title) + " outline.md", data: s.replace(/\n(#)/g, "\n\n$1").replace(/\n{3,}/g, "\n\n"), mime: "text/markdown" };
     }
+    if (fmt === "docx" || fmt === "epub") {
+      const doc = [];
+      for (const it of items) {
+        if (it.part) doc.push({ kind: "part", text: partHead(it.part) });
+        else if (it.chapter) doc.push({ kind: "chapter", text: headingFor(it.chapter, o.heads) });
+        else if (it.sep) doc.push({ kind: "break" });
+        else for (const b of it.blocks) doc.push(b.hr ? { kind: "break" } : { kind: "para", runs: Formats.inlineRuns(b.html) });
+      }
+      const meta = { id: p.id + (scope ? "." + scope : ""), title, author, words, contact: o.contact, font: o.font, sep };
+      return fmt === "docx"
+        ? { name: fileSafe(title) + ".docx", data: Formats.docx(meta, doc), mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }
+        : { name: fileSafe(title) + ".epub", data: Formats.epub(meta, doc), mime: "application/epub+zip" };
+    }
     if (fmt === "json") {
       const b = await backupOf(p.id, true);
       return { name: fileSafe(p.title) + ".astrolabe.json", data: JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects: [b] }), mime: "application/json" };
@@ -858,7 +926,7 @@ ${body}<p class="end">END</p></body></html>`;
     const scopes = [["", "Whole project · " + fmtFull(projectWords()) + " words"]];
     if (sel) { const c = sel.type === "scene" ? chapterOf(sel.id) : sel.id; if (c) scopes.push([c, labelOf(node(c).type) + " " + IX.coord[c] + " · " + node(c).title]); if (sel.type === "scene") scopes.push([sel.id, "Scene " + IX.coord[sel.id] + " · " + sel.title]); }
     if (p.form === "serial") IX.chapters.forEach(c => { if (!scopes.some(s => s[0] === c)) scopes.push([c, "Episode " + IX.coord[c] + " · " + node(c).title]); });
-    const fmts = [["md", "Markdown", ".md · for editors, Obsidian, Ulysses, the web"], ["html", "Manuscript", ".html · standard manuscript format, ready to print or open in Word"], ["txt", "Plain text", ".txt · paste anywhere"], ["outline", "Outline", ".md · synopses, POV, status"], ["json", "Project backup", ".json · everything, to restore later"]];
+    const fmts = [["md", "Markdown", ".md · for editors, Obsidian, Ulysses, the web"], ["docx", "Word", ".docx · standard manuscript format, for agents, editors and submissions"], ["epub", "E-book", ".epub · for e-readers and beta readers"], ["html", "Manuscript page", ".html · standard manuscript format, ready to print"], ["txt", "Plain text", ".txt · paste anywhere"], ["outline", "Outline", ".md · synopses, POV, status"], ["json", "Project backup", ".json · everything, to restore later"]];
     const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Export</h2>
       <div class="field"><span>Format</span><div class="form-pick">${fmts.map(([k, l, d]) => `<label><input type="radio" name="ex-fmt" value="${k}" ${k === (preset || "md") ? "checked" : ""}><b>${l}</b><small>${d}</small></label>`).join("")}</div></div>
       <label class="field"><span>What to export</span><select id="ex-scope">${scopes.map(([k, l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join("")}</select></label>
@@ -869,7 +937,7 @@ ${body}<p class="end">END</p></body></html>`;
       <label class="check" id="ex-titles-row"><input type="checkbox" id="ex-titles"> Keep scene titles as headings, so the file can be imported again with its scenes intact</label>
       <p class="muted" style="margin:0">Scenes and ${esc(labelOf("chapter").toLowerCase())}s marked “Leave out of export” in the binder are skipped.</p>
       <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button><button class="btn gild" type="button" data-go>Export</button></div>`);
-    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
+    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html", "docx", "epub"].includes(f); $("#ex-ms").hidden = f !== "html" && f !== "docx"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
     sync(); m.el.addEventListener("change", sync);
     m.el.addEventListener("click", async e => {
       if (e.target.closest("[data-x]")) m.close();
@@ -892,6 +960,10 @@ ${body}<p class="end">END</p></body></html>`;
     const cmds = [
       ["Write", "✎", () => setMode("write"), "Alt+1"], ["Board", "▦", () => setMode("board"), "Alt+2"], ["Outline", "☰", () => setMode("outline"), "Alt+3"],
       ["Threads", "≋", () => setMode("threads"), "Alt+4"], ["Codex", "✶", () => setMode("codex"), "Alt+5"], ["Progress", "◔", () => setMode("progress"), "Alt+6"],
+      ["Find and replace…", "⌕", () => Find.open(), "Ctrl+Shift+H"],
+      ["Split the scene at the cursor", "✂", () => splitScene()],
+      ...(S.active && nextScene(S.active) ? [["Merge this scene with the next", "⧉", () => mergeNext(S.active)]] : []),
+      ...(S.active || S.sel ? [["Move this to…", "↹", () => moveDialog(S.active || S.sel)]] : []),
       ["New scene", "+", () => { const n = addNode("scene"); renderBinder(); openScene(n.id); }, "Ctrl+Alt+N"],
       ["New " + labelOf("chapter").toLowerCase(), "+", () => { const n = addNode("chapter"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New " + labelOf("part").toLowerCase(), "+", () => { const n = addNode("part"); renderBinder(); select(n.id); renameInline(n.id); }],
@@ -1030,6 +1102,7 @@ ${body}<p class="end">END</p></body></html>`;
       if (c) {
         const k = c.dataset.cmd;
         if (k === "bold" || k === "italic" || k === "break") { e.preventDefault(); Editor.exec(k); return; }
+        if (k === "split") { e.preventDefault(); return splitScene(); }
         if (k === "typewriter") return toggleTypewriter();
         if (k === "focus") return toggleFocus();
         if (k === "snapshot") return snapshotActive();
@@ -1046,7 +1119,7 @@ ${body}<p class="end">END</p></body></html>`;
       }
     });
     // keep the B / I / ✦ buttons from stealing the caret
-    stage.addEventListener("mousedown", e => { const c = e.target.closest("[data-cmd]"); if (c && ["bold", "italic", "break"].includes(c.dataset.cmd)) e.preventDefault(); });
+    stage.addEventListener("mousedown", e => { const c = e.target.closest("[data-cmd]"); if (c && ["bold", "italic", "break", "split"].includes(c.dataset.cmd)) e.preventDefault(); });
   }
 
   return {
@@ -1054,7 +1127,7 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge, redrawAll, splitScene, refreshSnaps,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
 })();

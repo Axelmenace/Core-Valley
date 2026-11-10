@@ -633,6 +633,19 @@ table.matrix { border-collapse: separate; border-spacing: 0; font-size: 12px; }
 .set-row > span:first-child { font-family: var(--f-hud); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); }
 .range-val { display: flex; align-items: center; gap: 10px; }
 .range-val output { font-family: var(--f-hud); font-size: 11px; color: var(--ink2); min-width: 44px; text-align: right; }
+.node.active-scene > .row .label { color: var(--gild); }
+.node.active-scene > .row::before { content: ""; position: absolute; left: -2px; top: 11px; bottom: 11px; width: 2px; background: var(--gild); border-radius: 2px; opacity: .6; }
+.move-list { display: grid; gap: 2px; max-height: 52vh; overflow-y: auto; }
+.move-list .pal-item:hover:not(:disabled) { background: var(--gild-soft); }
+.move-list .pal-item:disabled { opacity: .55; cursor: default; }
+.find-opts { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.find-list { display: grid; gap: 6px; max-height: 40vh; overflow-y: auto; }
+.find-scene { display: grid; gap: 4px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink2); cursor: pointer; width: 100%; }
+.find-scene:hover, .find-scene:focus-visible { border-color: var(--gild); }
+.find-scene .head { display: flex; align-items: baseline; gap: 8px; color: var(--ink); }
+.find-scene .head b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.find-scene .snip { font-family: var(--f-prose); font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.find-scene mark { background: var(--gild-soft); color: var(--ink); border-radius: 2px; box-shadow: 0 0 0 1px var(--gild); padding: 0 1px; }
 .snap-preview { max-height: 46vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 18px 22px; background: var(--page); }
 .snap-preview .prose { font-size: 16px; }
 .kbd-list { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 13px; color: var(--ink2); }
@@ -715,9 +728,13 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
   .set-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
 }
 @media (max-width: 560px) {
-  .proj-id { display: none; }
-  .modes button { padding: 6px 8px; }
-  #btnExport { display: none; }
+  /* Two rows on a phone: the tools above, all six views below, so nothing is hidden off the edge. */
+  .topbar { flex-wrap: wrap; row-gap: 2px; padding-bottom: 0; }
+  .proj-id { display: flex; flex: 1 1 0; }
+  .proj-title { font-size: 14px; }
+  .modes { order: 9; flex: 1 0 100%; margin: 0; justify-content: space-between; }
+  .modes button { padding: 8px 4px; flex: 1 1 auto; justify-content: center; font-size: 13px; }
+  .find-list { max-height: 34vh; }
   .form-pick { grid-template-columns: minmax(0, 1fr); }
   .row2 { grid-template-columns: minmax(0, 1fr); }
   .thread-row { grid-template-columns: 22px minmax(0, 1fr) auto; }
@@ -1377,7 +1394,7 @@ async function openProject(pid) {
 function normalizeProject(p) {
   p.nodes = p.nodes || {}; p.root = p.root || []; p.threads = p.threads || []; p.history = p.history || {}; p.trash = p.trash || [];
   p.goal = { words: FORMS[p.form].target, daily: FORMS[p.form].daily, deadline: "", ...(p.goal || {}) };
-  p.sprints = p.sprints || [];
+  p.sprints = p.sprints || []; p.worked = p.worked || {};
   for (const n of Object.values(p.nodes)) { n.threads = n.threads || []; if (n.type !== "scene") n.children = n.children || []; if (n.include === undefined) n.include = true; }
 }
 /* Write out everything still waiting. `leaving` is for a page about to close: nothing can be
@@ -1402,15 +1419,19 @@ function putText(nid, html) {
   Store.put(keyT(P().id, nid), html);
 }
 /* Record a change in a scene's length: cached word count + today's ledger. */
-function setSceneWords(nid, words) {
+/* `ledger: false` is for changes that are not writing: restoring a snapshot, splitting, merging, replacing. */
+function setSceneWords(nid, words, ledger = true) {
   const n = node(nid); if (!n) return 0;
   const delta = words - (n.words || 0);
   if (!delta) return 0;
   n.words = words;
-  const d = dayKey(); P().history[d] = (P().history[d] || 0) + delta;
+  if (ledger) { const d = dayKey(); P().history[d] = (P().history[d] || 0) + delta; P().worked[d] = 1; }
   reindex(); saveProjectSoon();
   return delta;
 }
+
+/* A day counts as a writing day if the text was worked on, even when cutting left it shorter. */
+const workedOn = d => !!P().worked[d] || (P().history[d] || 0) > 0;
 
 /* ── Snapshots ── */
 async function getSnaps(nid) { return (await Store.get(keyS(P().id, nid))) || []; }
@@ -1567,7 +1588,7 @@ const TEMPLATES = {
 };
 function newProject({ title, author, form, template, target }) {
   const p = { id: uid(), v: 1, title: title || "Untitled", subtitle: "", author: author || "", form, created: now(), updated: now(),
-    goal: { words: target || FORMS[form].target, daily: FORMS[form].daily, deadline: "" }, nodes: {}, root: [], threads: [], history: {}, trash: [], sprints: [], mode: "write" };
+    goal: { words: target || FORMS[form].target, daily: FORMS[form].daily, deadline: "" }, nodes: {}, root: [], threads: [], history: {}, worked: {}, trash: [], sprints: [], mode: "write" };
   const T = TEMPLATES[template] || TEMPLATES.blank;
   const sc = (t, syn, extra) => mkNode(p, "scene", t, { synopsis: syn || "", status: syn ? "outline" : "seed", ...extra });
   const ch = (t, syn, kids, extra = {}) => { const c = mkNode(p, "chapter", t, { synopsis: syn || "", ...extra }); (kids || []).forEach(k => c.children.push(k.id)); return c; };
@@ -1721,7 +1742,7 @@ function projectFromText(text, filename) {
   };
   const flushPara = () => {
     if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return;
-    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s.!?,;:]+\s+){0,3}[^\s.!?,;:]+)$/i));
+    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s!?,;:]+\s+){0,3}[^\s!?,;:]*[^\s.!?,;:])$/i));
     if (by) { p.author = by[2].trim(); return; }
     body = true; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>";
   };
@@ -1802,7 +1823,7 @@ function cleanBackupItem(it) {
     id: src.id, v: 1, title: asStr(src.title, 500) || "Untitled", subtitle: asStr(src.subtitle, 500), author: asStr(src.author, 500),
     logline: asStr(src.logline), notes: asStr(src.notes, 200000), form, created: asNum(src.created) || now(), updated: asNum(src.updated) || now(), sample: !!src.sample,
     goal: { words: g.words === undefined ? FORMS[form].target : Math.max(0, asNum(g.words)), daily: g.daily === undefined ? FORMS[form].daily : Math.max(0, asNum(g.daily)), deadline: DAY_RE.test(g.deadline) ? g.deadline : "" },
-    nodes, root, threads, history, trash,
+    nodes, root, threads, history, trash, worked: Object.fromEntries(Object.keys(src.worked && typeof src.worked === "object" ? src.worked : {}).filter(k => DAY_RE.test(k)).map(k => [k, 1])),
     sprints: asList(src.sprints).filter(s => s && typeof s === "object").slice(-200).map(s => ({ t: asNum(s.t), min: Math.max(1, asNum(s.min)), words: asNum(s.words) })),
     sel: seen.has(src.sel) ? src.sel : null, mode: ["write", "board", "outline", "threads", "codex", "progress"].includes(src.mode) ? src.mode : "write",
   };
@@ -1822,12 +1843,167 @@ function cleanBackupItem(it) {
   return { project, codex, texts, snaps };
 }
 
+/* ── formats: a small zip writer, and the Word and e-book exporters ─────────
+   Both exporters take the same plain description of a manuscript:
+     meta  { title, author, words, contact, font, sep }
+     doc   [{ kind: "part" | "chapter", text } | { kind: "break" } | { kind: "para", runs }]
+   where runs come from inlineRuns(): [{ t, b, i } | { br: true }]. */
+const Formats = (() => {
+  const enc = new TextEncoder();
+  const CRC = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc32 = b => { let c = ~0; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return ~c >>> 0; };
+
+  /* files: [[name, string | Uint8Array]], stored without compression (which is all an e-book's first entry may be). */
+  function zip(files) {
+    const chunks = [], central = []; let offset = 0;
+    for (const [name, content] of files) {
+      const nb = enc.encode(name), data = typeof content === "string" ? enc.encode(content) : content, crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); // names are UTF-8
+      h.setUint16(12, 33, true); // 1 January 1980: the same bytes for the same book, whenever it is exported
+      h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nb.length, true);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(14, 33, true);
+      c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, nb.length, true); c.setUint32(42, offset, true);
+      chunks.push(new Uint8Array(h.buffer), nb, data); central.push(new Uint8Array(c.buffer), nb);
+      offset += 30 + nb.length + data.length;
+    }
+    const size = central.reduce((a, b) => a + b.length, 0);
+    const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
+    const all = [...chunks, ...central, new Uint8Array(e.buffer)], out = new Uint8Array(offset + size + 22);
+    let p = 0; for (const a of all) { out.set(a, p); p += a.length; }
+    return out;
+  }
+
+  const xml = s => String(s ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/g, "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function inlineRuns(html) {
+    const t = document.createElement("template"); t.innerHTML = html || ""; const out = [];
+    const walk = (n, b, i) => n.childNodes.forEach(c => {
+      if (c.nodeType === 3) { if (c.nodeValue) out.push({ t: c.nodeValue, b, i }); }
+      else if (c.nodeType === 1) { if (c.tagName === "BR") out.push({ br: true }); else walk(c, b || c.tagName === "STRONG" || c.tagName === "B", i || c.tagName === "EM" || c.tagName === "I"); }
+    });
+    walk(t.content, false, false);
+    return out;
+  }
+  const roundWords = w => (w < 20000 ? Math.max(100, Math.round(w / 100) * 100) : Math.round(w / 1000) * 1000);
+
+  /* ═════ Word: standard manuscript format ═════ */
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  function docx(meta, doc) {
+    const font = meta.font === "courier" ? "Courier New" : "Times New Roman";
+    const run = r => r.br ? "<w:r><w:br/></w:r>" : `<w:r>${r.b || r.i ? `<w:rPr>${r.b ? "<w:b/>" : ""}${r.i ? "<w:i/>" : ""}</w:rPr>` : ""}<w:t xml:space="preserve">${xml(r.t)}</w:t></w:r>`;
+    const para = (style, inner) => `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr>${inner}</w:p>`;
+    const text = (style, s) => para(style, s ? run({ t: s }) : "");
+    const author = meta.author || "Author name", surname = meta.author ? author.trim().split(/\s+/).pop() : "Author";
+    let body = "";
+    for (const line of (meta.contact || "Address · email · phone").split("\n")) body += text("Contact", line);
+    body += text("Contact", author) + para("Count", run({ t: "About " + roundWords(meta.words).toLocaleString("en-US") + " words" }));
+    body += text("TitlePage", meta.title.toUpperCase()) + text("Center", "by " + author);
+    let first = true, started = false;
+    for (const it of doc) {
+      if (it.kind === "part") { body += text("Heading1", it.text); first = true; started = true; }
+      else if (it.kind === "chapter") { body += text("Heading2", it.text); first = true; started = true; }
+      else if (it.kind === "break") { body += text("Center", meta.sep); first = true; }
+      else {
+        if (!started) { body += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'; started = true; } // a story with no headings starts on a page of its own
+        body += para(first ? "First" : "Body", it.runs.map(run).join("")); first = false;
+      }
+    }
+    body += text("Center", "END");
+    const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document ${W}><w:body>${body}<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/><w:titlePg/></w:sectPr></w:body></w:document>`;
+    const style = (id, name, ppr, extra = "") => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/>${extra}<w:pPr>${ppr}</w:pPr></w:style>`;
+    const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:before="0" w:after="0" w:line="480" w:lineRule="auto"/></w:pPr></w:style>
+${style("Body", "Body Text", '<w:ind w:firstLine="720"/>')}
+${style("First", "Body Text First", "")}
+${style("Center", "Centered", '<w:jc w:val="center"/>')}
+${style("Contact", "Contact", '<w:spacing w:line="240" w:lineRule="auto"/>')}
+${style("Count", "Word Count", '<w:spacing w:line="240" w:lineRule="auto"/><w:jc w:val="right"/>')}
+${style("TitlePage", "Title Page", '<w:spacing w:before="4320"/><w:jc w:val="center"/>')}
+${style("Heading1", "heading 1", '<w:pageBreakBefore/><w:spacing w:before="2880" w:after="480"/><w:jc w:val="center"/><w:outlineLvl w:val="0"/>', '<w:next w:val="First"/><w:rPr><w:caps/></w:rPr>')}
+${style("Heading2", "heading 2", '<w:pageBreakBefore/><w:spacing w:before="2880" w:after="480"/><w:jc w:val="center"/><w:outlineLvl w:val="1"/>', '<w:next w:val="First"/>')}
+${style("Header", "header", '<w:spacing w:line="240" w:lineRule="auto"/><w:jc w:val="right"/>')}
+</w:styles>`;
+    const header = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:hdr ${W}><w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr><w:r><w:t xml:space="preserve">${xml(surname)} / ${xml(meta.title.slice(0, 40).toUpperCase())} / </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:hdr>`;
+    const WML = "application/vnd.openxmlformats-officedocument.wordprocessingml.", REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    return zip([
+      ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${WML}document.main+xml"/><Override PartName="/word/styles.xml" ContentType="${WML}styles+xml"/><Override PartName="/word/header1.xml" ContentType="${WML}header+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`],
+      ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`],
+      ["docProps/core.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${xml(meta.title)}</dc:title><dc:creator>${xml(meta.author || "")}</dc:creator></cp:coreProperties>`],
+      ["word/document.xml", document],
+      ["word/styles.xml", styles],
+      ["word/header1.xml", header],
+      ["word/_rels/document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/header" Target="header1.xml"/><Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>`],
+    ]);
+  }
+
+  /* ═════ E-book: EPUB 3, with the older table of contents alongside for older readers ═════ */
+  function epub(meta, doc) {
+    const author = meta.author || "", lang = "en";
+    const run = r => r.br ? "<br/>" : (r.b ? "<strong>" : "") + (r.i ? "<em>" : "") + xml(r.t) + (r.i ? "</em>" : "") + (r.b ? "</strong>" : "");
+    const page = (title, body) => `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${lang}" xml:lang="${lang}"><head><meta charset="utf-8"/><title>${xml(title)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${body}</body></html>`;
+    // One file per part heading and per chapter; text before any heading is a section of its own.
+    const sections = []; let cur = null, first = true;
+    const open = (label, head) => { cur = { label, body: head }; sections.push(cur); first = true; };
+    for (const it of doc) {
+      if (it.kind === "part") open(it.text, `<h1 class="part">${xml(it.text)}</h1>`);
+      else if (it.kind === "chapter") open(it.text, `<h2 class="chapter">${xml(it.text)}</h2>`);
+      else {
+        if (!cur) open(meta.title, "");
+        if (it.kind === "break") { cur.body += `<p class="brk">${xml(meta.sep)}</p>`; first = true; }
+        else { cur.body += `<p${first ? ' class="first"' : ""}>${it.runs.map(run).join("")}</p>`; first = false; }
+      }
+    }
+    if (!sections.length) open(meta.title, "<p> </p>");
+    sections.forEach((s, i) => { s.file = "s" + String(i + 1).padStart(3, "0") + ".xhtml"; if (!s.body) s.body = "<p> </p>"; });
+    const id = "astrolabe:" + meta.id, stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const items = sections.map((s, i) => `<item id="s${i + 1}" href="${s.file}" media-type="application/xhtml+xml"/>`).join("");
+    const opf = `<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid" xml:lang="${lang}"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${xml(id)}</dc:identifier><dc:title>${xml(meta.title)}</dc:title>${author ? `<dc:creator>${xml(author)}</dc:creator>` : ""}<dc:language>${lang}</dc:language><meta property="dcterms:modified">${stamp}</meta></metadata>
+<manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/><item id="css" href="style.css" media-type="text/css"/><item id="title" href="title.xhtml" media-type="application/xhtml+xml"/>${items}</manifest>
+<spine toc="ncx"><itemref idref="title"/>${sections.map((_, i) => `<itemref idref="s${i + 1}"/>`).join("")}</spine></package>`;
+    const nav = page("Contents", `<nav epub:type="toc" id="toc"><h1>Contents</h1><ol>${sections.map(s => `<li><a href="${s.file}">${xml(s.label)}</a></li>`).join("")}</ol></nav>`);
+    const ncx = `<?xml version="1.0" encoding="utf-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${xml(id)}"/></head><docTitle><text>${xml(meta.title)}</text></docTitle><navMap>${sections.map((s, i) => `<navPoint id="n${i + 1}" playOrder="${i + 1}"><navLabel><text>${xml(s.label)}</text></navLabel><content src="${s.file}"/></navPoint>`).join("")}</navMap></ncx>`;
+    const css = `body { font-family: serif; line-height: 1.5; margin: 0 5%; }
+h1, h2 { text-align: center; font-weight: normal; margin: 3em 0 1.5em; page-break-before: always; }
+h1.part { text-transform: uppercase; letter-spacing: .08em; }
+p { margin: 0; text-indent: 1.5em; text-align: justify; }
+p.first { text-indent: 0; }
+p.brk { text-indent: 0; text-align: center; margin: 1em 0; }
+.titlepage { text-align: center; margin-top: 30%; }
+.titlepage h1 { page-break-before: auto; margin: 0 0 1em; }
+.titlepage p { text-indent: 0; text-align: center; }
+`;
+    return zip([
+      ["mimetype", "application/epub+zip"],
+      ["META-INF/container.xml", `<?xml version="1.0" encoding="utf-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`],
+      ["OEBPS/content.opf", opf], ["OEBPS/nav.xhtml", nav], ["OEBPS/toc.ncx", ncx], ["OEBPS/style.css", css],
+      ["OEBPS/title.xhtml", page(meta.title, `<div class="titlepage"><h1>${xml(meta.title)}</h1>${author ? `<p>${xml(author)}</p>` : ""}</div>`)],
+      ...sections.map(s => ["OEBPS/" + s.file, page(s.label, s.body)]),
+    ]);
+  }
+
+  return { zip, docx, epub, inlineRuns };
+})();
+
 /* ── editor: the manuscript page ───────────────────────────────────────────
    One contenteditable per scene. Selecting a chapter or part stacks its scenes
    into one continuous page; each scene still saves to its own record. */
 const Editor = (() => {
   const dirty = new Set(), touched = new Map(); // touched: scene → the day it was last edited in this page
-  let renderSeq = 0, fixing = false;
+  let renderSeq = 0, fixing = false, lastRange = null;
   const saveSoon = debounce(saveDirty, 900);
   let curPara = null;
 
@@ -1907,7 +2083,7 @@ const Editor = (() => {
     const el = e.target.closest(".prose"); if (!el) return;
     const id = el.dataset.id;
     const today = dayKey();
-    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id); } // per day, so a page left open overnight still gets one
+    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id).then(() => UI.refreshSnaps()); } // per day, so a page left open overnight still gets one
     if (!el.firstElementChild) { el.innerHTML = "<p><br></p>"; placeCaret(el, false); }
     el.classList.toggle("blank", !el.textContent.trim() && !el.querySelector("hr"));
     dirty.add(id); saveSoon(); recount(el); keepCaret();
@@ -1950,6 +2126,7 @@ const Editor = (() => {
   function onSelection() {
     const s = getSelection(); if (!s.rangeCount) return;
     const n = s.anchorNode; const el = n && (n.nodeType === 1 ? n : n.parentElement);
+    if (el && el.closest && el.closest(".prose")) lastRange = s.getRangeAt(0).cloneRange(); // survives a trip to a menu or the palette
     const p = el && el.closest && el.closest(".prose > p");
     if (p !== curPara) { if (curPara) curPara.classList.remove("cur"); curPara = p || null; if (p) p.classList.add("cur"); }
   }
@@ -1975,6 +2152,8 @@ const Editor = (() => {
         <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8h8M8 16h8"/></svg></button>
       <button class="iconbtn ${S.focus ? "on" : ""}" type="button" data-cmd="focus" title="Focus mode (Ctrl+Shift+F)" aria-label="Focus mode" aria-pressed="${S.focus}">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3"/></svg></button>
+      <button class="iconbtn" type="button" data-cmd="split" title="Split the scene at the cursor" aria-label="Split the scene at the cursor">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M9 12h6M3 12h2M19 12h2"/></svg></button>
       <button class="iconbtn" type="button" data-cmd="snapshot" title="Take snapshot (Ctrl+Shift+S)" aria-label="Take snapshot">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="13" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6.5l1.5-2h3L15 6.5"/></svg></button>
     </div>`;
@@ -2060,6 +2239,14 @@ const Editor = (() => {
     render, bind, placeCaret,
     flush() { saveSoon.flush(); saveDirty(); },
     isDirty: () => dirty.size > 0,
+    /* The text of the scene on either side of the caret, without changing the page. */
+    splitPoint() {
+      const r = lastRange; if (!r || !r.startContainer.isConnected) return null;
+      const at = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement;
+      const el = at && at.closest(".prose"); if (!el) return null;
+      const part = (a, ao, b, bo) => { const g = document.createRange(); g.setStart(a, ao); g.setEnd(b, bo); const d = document.createElement("div"); d.appendChild(g.cloneContents()); return sanitizeProse(d.innerHTML).replace(/^(?:<p><br><\/p>|<hr>)+|(?:<p><br><\/p>|<hr>)+$/g, ""); };
+      return { id: el.dataset.id, before: part(el, 0, r.startContainer, r.startOffset), after: part(r.startContainer, r.startOffset, el, el.childNodes.length) };
+    },
     discard() { saveSoon.cancel(); dirty.clear(); },
     exec(cmd) {
       const el = document.activeElement && document.activeElement.closest && document.activeElement.closest(".prose");
@@ -2337,8 +2524,8 @@ const Views = (() => {
   /* ═════ Progress ═════ */
   function streak(h) {
     let d = new Date(), n = 0;
-    if (!(h[dayKey(d)] > 0)) d.setDate(d.getDate() - 1);
-    while (h[dayKey(d)] > 0) { n++; d.setDate(d.getDate() - 1); }
+    if (!workedOn(dayKey(d))) d.setDate(d.getDate() - 1);
+    while (workedOn(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
     return n;
   }
   function progress(stage) {
@@ -2354,7 +2541,7 @@ const Views = (() => {
     const bars = vals.map((v, i) => { const x = padL + i * cw + 2, top = y(Math.max(v, 0)), bot = y(Math.min(v, 0)); return `<rect class="bar ${i === 29 ? "today" : ""} ${v < 0 ? "neg" : ""}" x="${x.toFixed(1)}" width="${Math.max(1, cw - 4).toFixed(1)}" y="${top.toFixed(1)}" height="${Math.max(v ? 1 : 0, bot - top).toFixed(1)}" rx="1.5"><title>${days[i]}: ${fmtFull(v)} words</title></rect>`; }).join("");
     const labels = [0, 7, 14, 21, 29].map(i => `<text x="${(padL + i * cw + cw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">${i === 29 ? "today" : parseDay(days[i]).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</text>`).join("");
     const goalLine = p.goal.daily ? `<line class="goal-line" x1="${padL}" x2="${W - 4}" y1="${y(p.goal.daily).toFixed(1)}" y2="${y(p.goal.daily).toFixed(1)}"/>` : "";
-    const last30 = vals.reduce((a, b) => a + b, 0), activeDays = vals.filter(v => v > 0).length;
+    const last30 = vals.reduce((a, b) => a + b, 0), activeDays = days.filter(workedOn).length;
     let pace = "";
     if (p.goal.deadline && goal) {
       const left = daysBetween(dayKey(), p.goal.deadline), remain = Math.max(0, goal - total);
@@ -2529,6 +2716,7 @@ const UI = (() => {
     } catch { return copyFallback(name, data); }
   }
   function copyFallback(name, data) {
+    if (typeof data !== "string") { toast("This view cannot save “" + esc(name) + "”. Open Astrolabe in a browser tab to export it.", { err: true, ms: 8000 }); return false; }
     const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Copy ${esc(name)}</h2>
       <p class="lede">This view can't save files, so here is the content to copy into a file of your own.</p>
       <textarea class="inp" id="copyArea" rows="12" readonly style="font-family:var(--f-hud);font-size:12px">${esc(data)}</textarea>
@@ -2659,9 +2847,12 @@ const UI = (() => {
     tr.innerHTML = p.trash.length ? `<details><summary class="hud"><span>Trash · ${p.trash.length}</span><span>▾</span></summary>
       ${p.trash.map((t, i) => `<div class="trash-item"><span title="${esc(t.title)}">${esc(t.title || "Untitled")}</span><button class="chip" type="button" data-act="restore" data-i="${i}">Restore</button></div>`).join("")}
       <div style="margin-top:6px"><button class="chip" type="button" data-act="purge">Empty trash</button></div></details>` : "";
+    markBinderActive();
   }
   function markBinderActive() {
     $$("#tree .node.active-scene").forEach(n => n.classList.remove("active-scene"));
+    if (S.mode !== "write" || !S.active || S.active === S.sel) return;
+    const li = $(`#tree .node[data-id="${CSS.escape(S.active)}"]`); li && li.classList.add("active-scene");
   }
   function updateLabels(id) {
     const n = node(id); if (!n) return;
@@ -2691,6 +2882,53 @@ const UI = (() => {
     trashNode(id); redrawAll();
     toast(`Moved “${esc(n.title)}” to the trash.`, { action: "Undo", onAction: () => { if (P() && restoreTrashed(id)) redrawAll(); } });
   }
+  /* Split the scene in two where the caret is; the second half becomes a new scene after it. */
+  async function splitScene() {
+    Editor.flush();
+    const sp = Editor.splitPoint(), n = sp && node(sp.id);
+    if (!n) { toast("Click into the text where the new scene should begin, then split."); return; }
+    if (!sp.before || !sp.after) { toast("Put the cursor between the two parts: there is nothing " + (sp.before ? "after" : "before") + " it to split off."); return; }
+    await takeSnapshot(sp.id, "Before split", true);
+    putText(sp.id, sp.before); setSceneWords(sp.id, wordsOfHtml(sp.before), false);
+    const m = addNode("scene", sp.id, (n.title || "Untitled scene") + ", continued");
+    Object.assign(m, { status: n.status, pov: n.pov, place: n.place, when: n.when, threads: n.threads.slice() });
+    putText(m.id, sp.after); setSceneWords(m.id, wordsOfHtml(sp.after), false);
+    touch();
+    if (S.sel === sp.id) openScene(m.id); else { S.active = m.id; redrawAll(); }
+    toast("Split in two. The scene as it was is kept in its Snapshots.", { ms: 6000 });
+  }
+  const nextScene = id => { const arr = childrenOf(IX.parent[id] ?? null), nx = arr[arr.indexOf(id) + 1]; return nx && node(nx) && node(nx).type === "scene" ? nx : null; };
+  /* Join a scene with the one after it. The second goes to the trash with its text, so this can be undone by hand. */
+  async function mergeNext(id) {
+    const nx = nextScene(id), a = node(id), b = nx && node(nx); if (!a || !b || a.type !== "scene") return;
+    Editor.flush();
+    let ta, tb; try { [ta, tb] = await Promise.all([getText(id), getText(nx)]); } catch (e) { toast("The text could not be read: " + esc((e && e.message) || "storage did not answer") + ".", { err: true }); return; }
+    await takeSnapshot(id, "Before merge", true);
+    const empty = h => !h.replace(/<[^>]+>/g, "").trim() && !h.includes("<hr>");
+    putText(id, empty(ta) ? tb : empty(tb) ? ta : ta + tb);
+    setSceneWords(id, (a.words || 0) + (b.words || 0), false);
+    a.synopsis = [a.synopsis, b.synopsis].filter(Boolean).join("\n"); a.notes = [a.notes, b.notes].filter(Boolean).join("\n");
+    a.threads = [...new Set([...a.threads, ...b.threads])]; if (a.target && b.target) a.target += b.target;
+    if (S.active === nx) S.active = id; if (S.sel === nx) S.sel = id;
+    trashNode(nx); saveView(); redrawAll();
+    toast(`Merged “${esc(b.title)}” into “${esc(a.title)}”. The second scene is in the trash, and the first as it was is in its Snapshots.`, { ms: 8000 });
+  }
+  /* Choose a new home for a scene, chapter or part from a list: the way to move things without dragging. */
+  function moveDialog(id) {
+    const n = node(id); if (!n) return;
+    const cur = IX.parent[id] ?? null, opts = [[null, "Top level of the project", ""]];
+    const walk = ids => ids.forEach(c => { const m = node(c); if (!m || m.type === "scene" || c === id) return; if (canNest(n.type, c)) opts.push([c, m.title || "Untitled", IX.coord[c] + " · " + labelOf(m.type)]); walk(m.children); });
+    walk(P().root);
+    const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Move “${esc(n.title || "Untitled")}” to…</h2>
+      <div class="move-list">${opts.map(([k, t, h], i) => `<button type="button" class="pal-item" data-i="${i}" ${k === cur ? "disabled" : ""}><span class="g">${k ? "❡" : "⌂"}</span><span class="t">${esc(t)}</span><span class="h">${k === cur ? "it is here now" : esc(h)}</span></button>`).join("")}</div>
+      <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button></div>`);
+    m.el.addEventListener("click", e => {
+      if (e.target.closest("[data-x]")) { m.close(); return; }
+      const b = e.target.closest("[data-i]"); if (!b) return;
+      const [k, t] = opts[+b.dataset.i]; m.close();
+      if (moveIntoEnd(id, k)) { redrawAll(); toast(`Moved to ${k ? "“" + esc(t) + "”" : "the top level"}, at the end.`); }
+    });
+  }
   function nodeMenu(id, x, y) {
     const n = node(id); const L = labelOf;
     const items = [
@@ -2702,6 +2940,8 @@ const UI = (() => {
     ];
     if (n.type !== "part" && P().form !== "short") items.push({ label: "New " + L("chapter").toLowerCase() + " after", run: () => { const c = addNode("chapter", id); renderBinder(); select(c.id); renameInline(c.id); } });
     items.push(
+      { label: "Move to…", run: () => moveDialog(id) },
+      ...(n.type === "scene" && nextScene(id) ? [{ label: "Merge with next scene", run: () => mergeNext(id) }] : []),
       { label: "Duplicate", run: () => { const d = duplicateNode(id); renderBinder(); select(d); toast("Duplicated."); } },
       { label: "Move up", kbd: "Alt+↑", run: () => { nudge(id, -1) && (renderBinder(), renderStage()); } },
       { label: "Move down", kbd: "Alt+↓", run: () => { nudge(id, 1) && (renderBinder(), renderStage()); } },
@@ -2846,6 +3086,7 @@ const UI = (() => {
     box.innerHTML = list.length ? list.slice(0, 12).map((s, i) => `<button type="button" class="snap" data-snap="${i}"><span class="when">${esc(s.label || "Snapshot")} · ${stamp(s.t)}</span><span class="wc">${fmtN(s.words)} w</span></button>`).join("")
       : '<span class="muted">None yet. One is taken automatically the first time you edit a scene each day.</span>';
   }
+  function refreshSnaps() { const id = inspTarget(); if (id && node(id).type === "scene" && $("#snaps")) loadSnaps(id); }
   async function snapView(id, i) {
     const list = await getSnaps(id); const s = list[i]; if (!s) return;
     const cur = node(id).words;
@@ -2859,7 +3100,7 @@ const UI = (() => {
       if (e.target.closest("[data-restore]")) {
         Editor.flush();
         await takeSnapshot(id, "Before restore", true);
-        putText(id, s.html); setSceneWords(id, s.words);
+        putText(id, s.html); setSceneWords(id, s.words, false);
         m.close(); renderBinder(); if (S.mode === "write") renderStage(); renderInspector(); renderStatus();
         toast("Restored. The version you replaced is saved as a snapshot.");
       }
@@ -3130,6 +3371,7 @@ const UI = (() => {
           <kbd>Ctrl Shift S</kbd><span>Snapshot the current scene</span>
           <kbd>Ctrl \\</kbd><span>Retract or bring back the binder (rest the pointer on the left edge to peek)</span>
           <kbd>Ctrl Shift \\</kbd><span>Retract or bring back the inspector</span>
+          <kbd>Ctrl Shift H</kbd><span>Find and replace across the manuscript</span>
           <kbd>Ctrl Shift F</kbd><span>Focus mode</span>
           <kbd>Ctrl Alt N</kbd><span>New scene after this one</span>
           <kbd>Ctrl Shift Enter</kbd><span>Scene break</span>
@@ -3310,6 +3552,19 @@ ${body}<p class="end">END</p></body></html>`;
       walk(scope ? [scope] : p.root, 0);
       return { name: fileSafe(title) + " outline.md", data: s.replace(/\n(#)/g, "\n\n$1").replace(/\n{3,}/g, "\n\n"), mime: "text/markdown" };
     }
+    if (fmt === "docx" || fmt === "epub") {
+      const doc = [];
+      for (const it of items) {
+        if (it.part) doc.push({ kind: "part", text: partHead(it.part) });
+        else if (it.chapter) doc.push({ kind: "chapter", text: headingFor(it.chapter, o.heads) });
+        else if (it.sep) doc.push({ kind: "break" });
+        else for (const b of it.blocks) doc.push(b.hr ? { kind: "break" } : { kind: "para", runs: Formats.inlineRuns(b.html) });
+      }
+      const meta = { id: p.id + (scope ? "." + scope : ""), title, author, words, contact: o.contact, font: o.font, sep };
+      return fmt === "docx"
+        ? { name: fileSafe(title) + ".docx", data: Formats.docx(meta, doc), mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }
+        : { name: fileSafe(title) + ".epub", data: Formats.epub(meta, doc), mime: "application/epub+zip" };
+    }
     if (fmt === "json") {
       const b = await backupOf(p.id, true);
       return { name: fileSafe(p.title) + ".astrolabe.json", data: JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects: [b] }), mime: "application/json" };
@@ -3321,7 +3576,7 @@ ${body}<p class="end">END</p></body></html>`;
     const scopes = [["", "Whole project · " + fmtFull(projectWords()) + " words"]];
     if (sel) { const c = sel.type === "scene" ? chapterOf(sel.id) : sel.id; if (c) scopes.push([c, labelOf(node(c).type) + " " + IX.coord[c] + " · " + node(c).title]); if (sel.type === "scene") scopes.push([sel.id, "Scene " + IX.coord[sel.id] + " · " + sel.title]); }
     if (p.form === "serial") IX.chapters.forEach(c => { if (!scopes.some(s => s[0] === c)) scopes.push([c, "Episode " + IX.coord[c] + " · " + node(c).title]); });
-    const fmts = [["md", "Markdown", ".md · for editors, Obsidian, Ulysses, the web"], ["html", "Manuscript", ".html · standard manuscript format, ready to print or open in Word"], ["txt", "Plain text", ".txt · paste anywhere"], ["outline", "Outline", ".md · synopses, POV, status"], ["json", "Project backup", ".json · everything, to restore later"]];
+    const fmts = [["md", "Markdown", ".md · for editors, Obsidian, Ulysses, the web"], ["docx", "Word", ".docx · standard manuscript format, for agents, editors and submissions"], ["epub", "E-book", ".epub · for e-readers and beta readers"], ["html", "Manuscript page", ".html · standard manuscript format, ready to print"], ["txt", "Plain text", ".txt · paste anywhere"], ["outline", "Outline", ".md · synopses, POV, status"], ["json", "Project backup", ".json · everything, to restore later"]];
     const m = modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Export</h2>
       <div class="field"><span>Format</span><div class="form-pick">${fmts.map(([k, l, d]) => `<label><input type="radio" name="ex-fmt" value="${k}" ${k === (preset || "md") ? "checked" : ""}><b>${l}</b><small>${d}</small></label>`).join("")}</div></div>
       <label class="field"><span>What to export</span><select id="ex-scope">${scopes.map(([k, l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join("")}</select></label>
@@ -3332,7 +3587,7 @@ ${body}<p class="end">END</p></body></html>`;
       <label class="check" id="ex-titles-row"><input type="checkbox" id="ex-titles"> Keep scene titles as headings, so the file can be imported again with its scenes intact</label>
       <p class="muted" style="margin:0">Scenes and ${esc(labelOf("chapter").toLowerCase())}s marked “Leave out of export” in the binder are skipped.</p>
       <div class="modal-foot"><button class="btn" type="button" data-x>Cancel</button><button class="btn gild" type="button" data-go>Export</button></div>`);
-    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html"].includes(f); $("#ex-ms").hidden = f !== "html"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
+    const sync = () => { const f = $('input[name="ex-fmt"]:checked').value; $("#ex-opts").hidden = !["md", "txt", "html", "docx", "epub"].includes(f); $("#ex-ms").hidden = f !== "html" && f !== "docx"; $("#ex-titles-row").hidden = f !== "md"; $("#ex-scope").disabled = f === "json"; };
     sync(); m.el.addEventListener("change", sync);
     m.el.addEventListener("click", async e => {
       if (e.target.closest("[data-x]")) m.close();
@@ -3355,6 +3610,10 @@ ${body}<p class="end">END</p></body></html>`;
     const cmds = [
       ["Write", "✎", () => setMode("write"), "Alt+1"], ["Board", "▦", () => setMode("board"), "Alt+2"], ["Outline", "☰", () => setMode("outline"), "Alt+3"],
       ["Threads", "≋", () => setMode("threads"), "Alt+4"], ["Codex", "✶", () => setMode("codex"), "Alt+5"], ["Progress", "◔", () => setMode("progress"), "Alt+6"],
+      ["Find and replace…", "⌕", () => Find.open(), "Ctrl+Shift+H"],
+      ["Split the scene at the cursor", "✂", () => splitScene()],
+      ...(S.active && nextScene(S.active) ? [["Merge this scene with the next", "⧉", () => mergeNext(S.active)]] : []),
+      ...(S.active || S.sel ? [["Move this to…", "↹", () => moveDialog(S.active || S.sel)]] : []),
       ["New scene", "+", () => { const n = addNode("scene"); renderBinder(); openScene(n.id); }, "Ctrl+Alt+N"],
       ["New " + labelOf("chapter").toLowerCase(), "+", () => { const n = addNode("chapter"); renderBinder(); select(n.id); renameInline(n.id); }],
       ["New " + labelOf("part").toLowerCase(), "+", () => { const n = addNode("part"); renderBinder(); select(n.id); renameInline(n.id); }],
@@ -3493,6 +3752,7 @@ ${body}<p class="end">END</p></body></html>`;
       if (c) {
         const k = c.dataset.cmd;
         if (k === "bold" || k === "italic" || k === "break") { e.preventDefault(); Editor.exec(k); return; }
+        if (k === "split") { e.preventDefault(); return splitScene(); }
         if (k === "typewriter") return toggleTypewriter();
         if (k === "focus") return toggleFocus();
         if (k === "snapshot") return snapshotActive();
@@ -3509,7 +3769,7 @@ ${body}<p class="end">END</p></body></html>`;
       }
     });
     // keep the B / I / ✦ buttons from stealing the caret
-    stage.addEventListener("mousedown", e => { const c = e.target.closest("[data-cmd]"); if (c && ["bold", "italic", "break"].includes(c.dataset.cmd)) e.preventDefault(); });
+    stage.addEventListener("mousedown", e => { const c = e.target.closest("[data-cmd]"); if (c && ["bold", "italic", "break", "split"].includes(c.dataset.cmd)) e.preventDefault(); });
   }
 
   return {
@@ -3517,9 +3777,114 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote, backupNudge, redrawAll, splitScene, refreshSnaps,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
+})();
+
+/* ── find: search the whole manuscript, and replace across it ─────────────── */
+const Find = (() => {
+  const META = ["title", "synopsis", "notes", "pov", "place", "when"];
+  let last = { q: "", to: "", cs: false, word: false, meta: false };
+
+  /* A typed straight quote finds the curly ones too, since that is what the page holds. */
+  function pattern(q, o) {
+    let src = [...q].map(ch => ch === "'" ? "['’‘]" : ch === '"' ? '["“”]' : ch === " " ? "[ \\u00a0]" : ch.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("");
+    if (o.word) src = "(?<![\\p{L}\\p{N}])" + src + "(?![\\p{L}\\p{N}])";
+    return new RegExp(src, "gu" + (o.cs ? "" : "i"));
+  }
+  /* Matches are looked for inside each run of text; one that straddles the edge of bold or italic is not found. */
+  function textNodes(html) {
+    const t = document.createElement("template"); t.innerHTML = html || "";
+    const w = document.createTreeWalker(t.content, NodeFilter.SHOW_TEXT), nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    return { t, nodes };
+  }
+  function scan(html, re) {
+    const hits = [];
+    for (const n of textNodes(html).nodes) {
+      const s = n.nodeValue; re.lastIndex = 0; let m;
+      while ((m = re.exec(s))) {
+        if (!m[0]) { re.lastIndex++; continue; }
+        hits.push({ pre: s.slice(Math.max(0, m.index - 40), m.index), hit: m[0], post: s.slice(m.index + m[0].length, m.index + m[0].length + 50) });
+      }
+    }
+    return hits;
+  }
+  function replaceIn(html, re, to) {
+    const { t, nodes } = textNodes(html); let n = 0;
+    for (const node of nodes) node.nodeValue = node.nodeValue.replace(re, () => { n++; return to; });
+    return { n, html: n ? sanitizeProse(t.innerHTML) : html };
+  }
+  const count = (s, re) => (String(s || "").match(re) || []).length;
+  function metaHits(re) {
+    let n = 0; const ids = [];
+    for (const id of Object.keys(IX.coord)) { const nd = node(id); let k = 0; for (const f of META) k += count(nd[f], re); if (k) { n += k; ids.push(id); } }
+    return { n, ids };
+  }
+
+  function open() {
+    if (!P()) return;
+    Editor.flush();
+    const m = UI.modal(`<button class="iconbtn x" type="button" data-x aria-label="Close">×</button><h2>Find and replace</h2>
+      <div class="row2"><label class="field"><span>Find</span><input id="fr-q" autofocus autocomplete="off" value="${esc(last.q)}"></label>
+        <label class="field"><span>Replace with</span><input id="fr-to" autocomplete="off" value="${esc(last.to)}"></label></div>
+      <div class="find-opts"><label class="check"><input type="checkbox" id="fr-cs" ${last.cs ? "checked" : ""}> Match case</label>
+        <label class="check"><input type="checkbox" id="fr-word" ${last.word ? "checked" : ""}> Whole words</label>
+        <label class="check"><input type="checkbox" id="fr-meta" ${last.meta ? "checked" : ""}> Also titles, synopses and notes</label></div>
+      <p class="muted" id="fr-sum" style="margin:0" aria-live="polite">Reading the manuscript…</p>
+      <div class="find-list" id="fr-list"></div>
+      <div class="modal-foot"><button class="btn" type="button" data-x>Close</button><button class="btn gild" type="button" data-all disabled>Replace all</button></div>`, { wide: true });
+    const $q = $("#fr-q"), $to = $("#fr-to"), $sum = $("#fr-sum"), $list = $("#fr-list"), $all = $("[data-all]", m.el);
+    let ready = false, found = { scenes: [], meta: { n: 0, ids: [] }, total: 0 };
+    const opts = () => ({ cs: $("#fr-cs").checked, word: $("#fr-word").checked, meta: $("#fr-meta").checked });
+    const run = () => {
+      if (!ready) return;
+      const q = $q.value, o = opts(); last = { q, to: $to.value, ...o };
+      found = { scenes: [], meta: { n: 0, ids: [] }, total: 0 };
+      if (!q) { $sum.textContent = "Type what to look for. The search covers every scene in the binder."; $list.innerHTML = ""; $all.disabled = true; return; }
+      const re = pattern(q, o);
+      for (const id of IX.order) { const hits = scan(S.texts.get(id) || "", re); if (hits.length) { found.scenes.push({ id, hits }); found.total += hits.length; } }
+      if (o.meta) { found.meta = metaHits(re); found.total += found.meta.n; }
+      const inText = found.total - found.meta.n;
+      $sum.textContent = found.total ? `${fmtFull(inText)} in the text of ${found.scenes.length} scene${found.scenes.length === 1 ? "" : "s"}${o.meta ? `, ${fmtFull(found.meta.n)} in titles, synopses and notes` : ""}.` : "Nothing found.";
+      $all.disabled = !found.total;
+      $list.innerHTML = found.scenes.slice(0, 60).map(s => `<button type="button" class="find-scene" data-id="${s.id}"><span class="head"><span class="coord">${esc(IX.coord[s.id])}</span><b>${esc(node(s.id).title || "Untitled scene")}</b><span class="hud">${s.hits.length}</span></span>
+        ${s.hits.slice(0, 3).map(h => `<span class="snip">${h.pre.length === 40 ? "…" : ""}${esc(h.pre)}<mark>${esc(h.hit)}</mark>${esc(h.post)}${h.post.length === 50 ? "…" : ""}</span>`).join("")}</button>`).join("")
+        + (found.scenes.length > 60 ? `<p class="muted" style="margin:6px 2px">and ${found.scenes.length - 60} more scenes.</p>` : "");
+    };
+    const runSoon = debounce(run, 180);
+    m.el.addEventListener("input", e => { if (e.target === $to) { last.to = $to.value; return; } runSoon(); });
+    m.el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target === $q) { e.preventDefault(); runSoon.flush(); const f = $(".find-scene", m.el); f && f.focus(); } });
+    m.el.addEventListener("click", async e => {
+      if (e.target.closest("[data-x]")) { m.close(); return; }
+      const sc = e.target.closest(".find-scene");
+      if (sc) {
+        const q = $q.value, cs = opts().cs; m.close(); UI.openScene(sc.dataset.id);
+        setTimeout(() => { try { getSelection().removeAllRanges(); window.find && window.find(q, cs, false, true); } catch { /* the scene is open either way */ } }, 350);
+        return;
+      }
+      if (e.target.closest("[data-all]") && found.total) {
+        const q = $q.value, to = $to.value, o = opts(), n = found.total;
+        const r = await UI.ask(`Replace ${fmtFull(n)} match${n === 1 ? "" : "es"}?`, `Every “${esc(q)}” found becomes “${esc(to)}”${to ? "" : " (that is, it is removed)"}. A snapshot of each changed scene is taken first, so any of them can be put back from its Snapshots list.`, [["Cancel"], ["Replace all", "gild"]]);
+        if (r !== 1 || !P()) return;
+        const re = pattern(q, o); let done = 0, scenes = 0;
+        $sum.textContent = "Replacing…"; $all.disabled = true;
+        for (const s of found.scenes) {
+          const out = replaceIn(S.texts.get(s.id) || "", re, to); if (!out.n) continue;
+          await takeSnapshot(s.id, "Before replace", true);
+          putText(s.id, out.html); setSceneWords(s.id, wordsOfHtml(out.html), false);
+          done += out.n; scenes++;
+        }
+        if (o.meta) for (const id of found.meta.ids) { const nd = node(id); for (const f of META) if (nd[f]) nd[f] = String(nd[f]).replace(re, () => { done++; return to; }); }
+        touch(); UI.redrawAll();
+        UI.toast(`Replaced ${fmtFull(done)} match${done === 1 ? "" : "es"}${scenes ? ` across ${scenes} scene${scenes === 1 ? "" : "s"}` : ""}.`, { ms: 6000 });
+        run();
+      }
+    });
+    loadAllTexts().then(() => { ready = true; run(); }, err => { console.warn("manuscript not read", err); $sum.textContent = "The manuscript could not be read: " + ((err && err.message) || "storage did not answer") + "."; });
+  }
+  return { open, pattern, scan, replaceIn };
 })();
 
 /* ── main: settings, keys, boot ────────────────────────────────────────── */
@@ -3554,6 +3919,7 @@ function bindKeys() {
     if (mod && e.code === "Backslash") { e.preventDefault(); if (e.shiftKey) UI.toggleInspector(); else UI.toggleBinder(); return; }
     if (mod && !e.shiftKey && k === "s") { e.preventDefault(); flushAll(); Store.drain(4000).then(ok => UI.toast(ok ? "Saved." : "Still saving. Your work is queued and will retry.", { err: !ok })); return; }
     if (mod && e.shiftKey && k === "s") { e.preventDefault(); UI.snapshotActive(); return; }
+    if (mod && e.shiftKey && k === "h") { e.preventDefault(); Find.open(); return; }
     if (mod && e.shiftKey && k === "f") { e.preventDefault(); UI.toggleFocus(); return; }
     if (mod && e.shiftKey && e.key === "Enter") { e.preventDefault(); Editor.exec("break"); return; }
     if (mod && e.altKey && k === "n") { e.preventDefault(); const n = addNode("scene", S.active || S.sel); UI.renderBinder(); UI.openScene(n.id); return; }

@@ -3,7 +3,7 @@
    into one continuous page; each scene still saves to its own record. */
 const Editor = (() => {
   const dirty = new Set(), touched = new Map(); // touched: scene → the day it was last edited in this page
-  let renderSeq = 0, fixing = false;
+  let renderSeq = 0, fixing = false, lastRange = null;
   const saveSoon = debounce(saveDirty, 900);
   let curPara = null;
 
@@ -83,7 +83,7 @@ const Editor = (() => {
     const el = e.target.closest(".prose"); if (!el) return;
     const id = el.dataset.id;
     const today = dayKey();
-    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id); } // per day, so a page left open overnight still gets one
+    if (touched.get(id) !== today) { touched.set(id, today); dailySnapshot(id).then(() => UI.refreshSnaps()); } // per day, so a page left open overnight still gets one
     if (!el.firstElementChild) { el.innerHTML = "<p><br></p>"; placeCaret(el, false); }
     el.classList.toggle("blank", !el.textContent.trim() && !el.querySelector("hr"));
     dirty.add(id); saveSoon(); recount(el); keepCaret();
@@ -126,6 +126,7 @@ const Editor = (() => {
   function onSelection() {
     const s = getSelection(); if (!s.rangeCount) return;
     const n = s.anchorNode; const el = n && (n.nodeType === 1 ? n : n.parentElement);
+    if (el && el.closest && el.closest(".prose")) lastRange = s.getRangeAt(0).cloneRange(); // survives a trip to a menu or the palette
     const p = el && el.closest && el.closest(".prose > p");
     if (p !== curPara) { if (curPara) curPara.classList.remove("cur"); curPara = p || null; if (p) p.classList.add("cur"); }
   }
@@ -151,6 +152,8 @@ const Editor = (() => {
         <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8h8M8 16h8"/></svg></button>
       <button class="iconbtn ${S.focus ? "on" : ""}" type="button" data-cmd="focus" title="Focus mode (Ctrl+Shift+F)" aria-label="Focus mode" aria-pressed="${S.focus}">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3"/></svg></button>
+      <button class="iconbtn" type="button" data-cmd="split" title="Split the scene at the cursor" aria-label="Split the scene at the cursor">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M9 12h6M3 12h2M19 12h2"/></svg></button>
       <button class="iconbtn" type="button" data-cmd="snapshot" title="Take snapshot (Ctrl+Shift+S)" aria-label="Take snapshot">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="13" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6.5l1.5-2h3L15 6.5"/></svg></button>
     </div>`;
@@ -236,6 +239,14 @@ const Editor = (() => {
     render, bind, placeCaret,
     flush() { saveSoon.flush(); saveDirty(); },
     isDirty: () => dirty.size > 0,
+    /* The text of the scene on either side of the caret, without changing the page. */
+    splitPoint() {
+      const r = lastRange; if (!r || !r.startContainer.isConnected) return null;
+      const at = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement;
+      const el = at && at.closest(".prose"); if (!el) return null;
+      const part = (a, ao, b, bo) => { const g = document.createRange(); g.setStart(a, ao); g.setEnd(b, bo); const d = document.createElement("div"); d.appendChild(g.cloneContents()); return sanitizeProse(d.innerHTML).replace(/^(?:<p><br><\/p>|<hr>)+|(?:<p><br><\/p>|<hr>)+$/g, ""); };
+      return { id: el.dataset.id, before: part(el, 0, r.startContainer, r.startOffset), after: part(r.startContainer, r.startOffset, el, el.childNodes.length) };
+    },
     discard() { saveSoon.cancel(); dirty.clear(); },
     exec(cmd) {
       const el = document.activeElement && document.activeElement.closest && document.activeElement.closest(".prose");

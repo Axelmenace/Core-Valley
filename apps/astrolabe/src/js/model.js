@@ -167,7 +167,7 @@ async function openProject(pid) {
 function normalizeProject(p) {
   p.nodes = p.nodes || {}; p.root = p.root || []; p.threads = p.threads || []; p.history = p.history || {}; p.trash = p.trash || [];
   p.goal = { words: FORMS[p.form].target, daily: FORMS[p.form].daily, deadline: "", ...(p.goal || {}) };
-  p.sprints = p.sprints || [];
+  p.sprints = p.sprints || []; p.worked = p.worked || {};
   for (const n of Object.values(p.nodes)) { n.threads = n.threads || []; if (n.type !== "scene") n.children = n.children || []; if (n.include === undefined) n.include = true; }
 }
 /* Write out everything still waiting. `leaving` is for a page about to close: nothing can be
@@ -192,15 +192,19 @@ function putText(nid, html) {
   Store.put(keyT(P().id, nid), html);
 }
 /* Record a change in a scene's length: cached word count + today's ledger. */
-function setSceneWords(nid, words) {
+/* `ledger: false` is for changes that are not writing: restoring a snapshot, splitting, merging, replacing. */
+function setSceneWords(nid, words, ledger = true) {
   const n = node(nid); if (!n) return 0;
   const delta = words - (n.words || 0);
   if (!delta) return 0;
   n.words = words;
-  const d = dayKey(); P().history[d] = (P().history[d] || 0) + delta;
+  if (ledger) { const d = dayKey(); P().history[d] = (P().history[d] || 0) + delta; P().worked[d] = 1; }
   reindex(); saveProjectSoon();
   return delta;
 }
+
+/* A day counts as a writing day if the text was worked on, even when cutting left it shorter. */
+const workedOn = d => !!P().worked[d] || (P().history[d] || 0) > 0;
 
 /* ── Snapshots ── */
 async function getSnaps(nid) { return (await Store.get(keyS(P().id, nid))) || []; }
@@ -357,7 +361,7 @@ const TEMPLATES = {
 };
 function newProject({ title, author, form, template, target }) {
   const p = { id: uid(), v: 1, title: title || "Untitled", subtitle: "", author: author || "", form, created: now(), updated: now(),
-    goal: { words: target || FORMS[form].target, daily: FORMS[form].daily, deadline: "" }, nodes: {}, root: [], threads: [], history: {}, trash: [], sprints: [], mode: "write" };
+    goal: { words: target || FORMS[form].target, daily: FORMS[form].daily, deadline: "" }, nodes: {}, root: [], threads: [], history: {}, worked: {}, trash: [], sprints: [], mode: "write" };
   const T = TEMPLATES[template] || TEMPLATES.blank;
   const sc = (t, syn, extra) => mkNode(p, "scene", t, { synopsis: syn || "", status: syn ? "outline" : "seed", ...extra });
   const ch = (t, syn, kids, extra = {}) => { const c = mkNode(p, "chapter", t, { synopsis: syn || "", ...extra }); (kids || []).forEach(k => c.children.push(k.id)); return c; };
@@ -511,7 +515,7 @@ function projectFromText(text, filename) {
   };
   const flushPara = () => {
     if (!buf.length) return; const t = buf.join(" ").trim(); buf = []; if (!t) return;
-    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s.!?,;:]+\s+){0,3}[^\s.!?,;:]+)$/i));
+    const by = !body && !p.author && (t.match(/^([*_]{1,2})by\s+(.{1,80}?)\1$/i) || t.match(/^()by\s+((?:[^\s!?,;:]+\s+){0,3}[^\s!?,;:]*[^\s.!?,;:])$/i));
     if (by) { p.author = by[2].trim(); return; }
     body = true; ensureScene(); texts[scene.id] = (texts[scene.id] || "") + "<p>" + mdInline(t) + "</p>";
   };
@@ -592,7 +596,7 @@ function cleanBackupItem(it) {
     id: src.id, v: 1, title: asStr(src.title, 500) || "Untitled", subtitle: asStr(src.subtitle, 500), author: asStr(src.author, 500),
     logline: asStr(src.logline), notes: asStr(src.notes, 200000), form, created: asNum(src.created) || now(), updated: asNum(src.updated) || now(), sample: !!src.sample,
     goal: { words: g.words === undefined ? FORMS[form].target : Math.max(0, asNum(g.words)), daily: g.daily === undefined ? FORMS[form].daily : Math.max(0, asNum(g.daily)), deadline: DAY_RE.test(g.deadline) ? g.deadline : "" },
-    nodes, root, threads, history, trash,
+    nodes, root, threads, history, trash, worked: Object.fromEntries(Object.keys(src.worked && typeof src.worked === "object" ? src.worked : {}).filter(k => DAY_RE.test(k)).map(k => [k, 1])),
     sprints: asList(src.sprints).filter(s => s && typeof s === "object").slice(-200).map(s => ({ t: asNum(s.t), min: Math.max(1, asNum(s.min)), words: asNum(s.words) })),
     sel: seen.has(src.sel) ? src.sel : null, mode: ["write", "board", "outline", "threads", "codex", "progress"].includes(src.mode) ? src.mode : "write",
   };

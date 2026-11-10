@@ -259,8 +259,8 @@ const Views = (() => {
   /* ═════ Progress ═════ */
   function streak(h) {
     let d = new Date(), n = 0;
-    if (!(h[dayKey(d)] > 0)) d.setDate(d.getDate() - 1);
-    while (h[dayKey(d)] > 0) { n++; d.setDate(d.getDate() - 1); }
+    if (!workedOn(dayKey(d))) d.setDate(d.getDate() - 1);
+    while (workedOn(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
     return n;
   }
   function progress(stage) {
@@ -276,7 +276,7 @@ const Views = (() => {
     const bars = vals.map((v, i) => { const x = padL + i * cw + 2, top = y(Math.max(v, 0)), bot = y(Math.min(v, 0)); return `<rect class="bar ${i === 29 ? "today" : ""} ${v < 0 ? "neg" : ""}" x="${x.toFixed(1)}" width="${Math.max(1, cw - 4).toFixed(1)}" y="${top.toFixed(1)}" height="${Math.max(v ? 1 : 0, bot - top).toFixed(1)}" rx="1.5"><title>${days[i]}: ${fmtFull(v)} words</title></rect>`; }).join("");
     const labels = [0, 7, 14, 21, 29].map(i => `<text x="${(padL + i * cw + cw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">${i === 29 ? "today" : parseDay(days[i]).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</text>`).join("");
     const goalLine = p.goal.daily ? `<line class="goal-line" x1="${padL}" x2="${W - 4}" y1="${y(p.goal.daily).toFixed(1)}" y2="${y(p.goal.daily).toFixed(1)}"/>` : "";
-    const last30 = vals.reduce((a, b) => a + b, 0), activeDays = vals.filter(v => v > 0).length;
+    const last30 = vals.reduce((a, b) => a + b, 0), activeDays = days.filter(workedOn).length;
     let pace = "";
     if (p.goal.deadline && goal) {
       const left = daysBetween(dayKey(), p.goal.deadline), remain = Math.max(0, goal - total);

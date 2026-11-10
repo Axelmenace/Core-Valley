@@ -14,7 +14,7 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "apps", "astrolabe", "src")
 OUT = os.path.join(ROOT, "apps", "astrolabe", "index.html")
-MODULES = ["core.js", "store.js", "model.js", "editor.js", "views.js", "ui.js", "main.js"]
+MODULES = ["core.js", "store.js", "model.js", "formats.js", "editor.js", "views.js", "ui.js", "find.js", "main.js"]
 
 
 def read(*parts):

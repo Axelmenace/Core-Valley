@@ -30,6 +30,7 @@ function bindKeys() {
     if (mod && e.code === "Backslash") { e.preventDefault(); if (e.shiftKey) UI.toggleInspector(); else UI.toggleBinder(); return; }
     if (mod && !e.shiftKey && k === "s") { e.preventDefault(); flushAll(); Store.drain(4000).then(ok => UI.toast(ok ? "Saved." : "Still saving. Your work is queued and will retry.", { err: !ok })); return; }
     if (mod && e.shiftKey && k === "s") { e.preventDefault(); UI.snapshotActive(); return; }
+    if (mod && e.shiftKey && k === "h") { e.preventDefault(); Find.open(); return; }
     if (mod && e.shiftKey && k === "f") { e.preventDefault(); UI.toggleFocus(); return; }
     if (mod && e.shiftKey && e.key === "Enter") { e.preventDefault(); Editor.exec("break"); return; }
     if (mod && e.altKey && k === "n") { e.preventDefault(); const n = addNode("scene", S.active || S.sel); UI.renderBinder(); UI.openScene(n.id); return; }
