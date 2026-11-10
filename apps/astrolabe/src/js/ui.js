@@ -85,6 +85,48 @@ const UI = (() => {
     flushAll(); S.focus = false;
     $("#desk").hidden = true; $("#library").hidden = false; $("#desk").classList.remove("focus-mode");
     renderLibrary(); document.title = "Astrolabe";
+    refreshMeta().then(ok => { if (ok && !$("#library").hidden) renderLibrary(); }); // pick up projects made in other tabs
+  }
+
+  /* ═════ The same archive open elsewhere ═════ */
+  let remoteBusy = false;
+  async function reloadProject(msg) {
+    const pid = P().id, sel = S.sel, mode = S.mode, active = S.active;
+    try { await openProject(pid); }
+    catch (e) {
+      console.warn("project not reloaded", e);
+      S.project = null; showLibrary();
+      toast("This project could not be reloaded. It may have been deleted in another tab or on another device.", { err: true, ms: 8000 });
+      return;
+    }
+    S.mode = mode; if (sel && node(sel)) S.sel = sel; if (active && node(active)) S.active = active;
+    showDesk(); if (msg) toast(msg, { ms: 6000 });
+  }
+  /* Another writer saved this project after this page loaded it. With nothing unsaved here, take the
+     newer copy; otherwise the writer chooses, because one of the two versions has to give way. */
+  async function changedElsewhere(theirs, unsaved) {
+    if (remoteBusy || S.conflict || !P()) return;
+    remoteBusy = true;
+    try {
+      if (!unsaved) { await reloadProject("Brought up to date: this project was changed in another tab or on another device."); return; }
+      S.conflict = true; // holds back project saves until there is an answer
+      const title = P().title;
+      const r = await ask("This project was changed somewhere else", `Another tab or device saved “${esc(title)}” after this page opened it, and this page has changes of its own. <b>Load the latest</b> drops what was changed here since it last saved. <b>Keep this version</b> replaces the other one, including any scenes added or moved there.`, [["Load the latest"], ["Keep this version", "danger"]]);
+      S.conflict = false;
+      if (!P()) return;
+      if (r === 0) { dropLocalChanges(); await reloadProject("Loaded the latest version."); }
+      else if (r === 1) { S.rev = theirs; saveProject(); toast("Kept this version."); }
+      else toast("Nothing was saved over. You will be asked again at the next change.", { ms: 6000 });
+    } finally { remoteBusy = false; }
+  }
+  /* Called when this page comes back into view. */
+  async function checkRemote() {
+    if (remoteBusy || S.conflict || !P()) return;
+    if (!$("#library").hidden) { if (await refreshMeta()) renderLibrary(); return; }
+    if ($("#desk").hidden) return;
+    const p = P(); let theirs;
+    try { theirs = await storedRev(p.id); } catch { return; }
+    if (P() === p && theirs !== S.rev) changedElsewhere(theirs, localChanges());
   }
   function showDesk() {
     const d = $("#desk");
@@ -99,7 +141,7 @@ const UI = (() => {
   function setMode(m, force) {
     if (S.mode === "write" && m !== "write") Editor.flush();
     if (!force && m === S.mode) return;
-    S.mode = m; P().mode = m; saveProjectSoon();
+    S.mode = m; saveView();
     $$("#modes [data-mode]").forEach(b => { b.setAttribute("aria-selected", b.dataset.mode === m ? "true" : "false"); b.tabIndex = b.dataset.mode === m ? 0 : -1; });
     renderStage(); renderStatus();
   }
@@ -113,11 +155,11 @@ const UI = (() => {
   }
   function select(id, opts = {}) {
     if (S.mode === "write") Editor.flush();
-    S.sel = id; P().sel = id;
+    S.sel = id;
     const n = id && node(id);
     S.active = n && n.type === "scene" ? id : null;
-    if (n) ancestors(id).forEach(a => { if (node(a).collapsed) node(a).collapsed = false; });
-    saveProjectSoon();
+    if (n) ancestors(id).forEach(a => { if (node(a).collapsed) { node(a).collapsed = false; saveProjectSoon(); } });
+    saveView();
     renderBinder();
     if (opts.mode && opts.mode !== S.mode) setMode(opts.mode); else if (S.mode === "write" || S.mode === "board") renderStage();
     renderInspector(); renderStatus();
@@ -492,7 +534,7 @@ const UI = (() => {
     Store.put(keyC(p.id), codex || { entries: [] });
     S.project = p; reindex();
     Store.put(keyP(p.id), p);
-    const sum = summaryOf(p); S.meta.projects = S.meta.projects.filter(x => x.id !== p.id); S.meta.projects.push(sum); saveMeta();
+    metaUpsert(summaryOf(p)); saveMeta();
     await openProject(p.id);
     showDesk();
   }
@@ -509,7 +551,7 @@ const UI = (() => {
       const b = await backupOf(id, false); const copy = b.project; const oldId = copy.id; copy.id = uid(); copy.title += " (copy)"; copy.created = now(); copy.sample = false;
       for (const [nid, html] of Object.entries(b.texts)) Store.put(keyT(copy.id, nid), html);
       Store.put(keyC(copy.id), b.codex); Store.put(keyP(copy.id), copy);
-      S.meta.projects.push({ ...sum, id: copy.id, title: copy.title, updated: now(), sample: false }); saveMeta(); renderLibrary();
+      metaUpsert({ ...sum, id: copy.id, title: copy.title, updated: now(), sample: false }); saveMeta(); renderLibrary();
       toast("Duplicated “" + esc(sum.title) + "”."); void oldId;
     }
     if (act === "backup") { const b = await backupOf(id, true); saveFile(fileSafe(sum.title) + ".astrolabe.json", JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects: [b] }), "application/json"); }
@@ -519,10 +561,11 @@ const UI = (() => {
       if (r !== 2) return;
       const p = await Store.get(keyP(id));
       if (p) Object.values(p.nodes || {}).forEach(n => { if (n.type === "scene") { Store.del(keyT(id, n.id)); Store.del(keyS(id, n.id)); } });
-      Store.del(keyP(id)); Store.del(keyC(id));
-      S.meta.projects = S.meta.projects.filter(x => x.id !== id); saveMeta();
+      Store.del(keyP(id)); Store.del(keyC(id)); Store.del(keyR(id));
+      metaRemove(id); saveMeta();
       if (S.project && S.project.id === id) S.project = null;
       if (lsGet("last") === id) lsSet("last", null);
+      lsSet("view." + id, null);
       renderLibrary(); toast("Deleted “" + esc(sum.title) + "”.");
     }
   }
@@ -658,7 +701,9 @@ const UI = (() => {
   }
   async function backupAll() {
     const projects = [];
-    for (const s of S.meta.projects) { try { projects.push(await backupOf(s.id, true)); } catch (e) { console.warn("backup skipped", s.id, e); } }
+    const skipped = [];
+    for (const s of S.meta.projects) { try { projects.push(await backupOf(s.id, true)); } catch (e) { console.warn("backup skipped", s.id, e); skipped.push(s.title); } }
+    if (skipped.length) toast("Not in this backup, because it could not be read: " + skipped.map(esc).join(", ") + ".", { err: true, ms: 10000 });
     const ok = await saveFile("astrolabe-backup-" + dayKey() + ".json", JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects }), "application/json");
     if (ok !== false) { S.meta.settings.lastBackup = now(); saveMeta(); if (!$("#library").hidden) renderLibrary(); }
   }
@@ -670,20 +715,24 @@ const UI = (() => {
       const items = data && data.kind === "astrolabe-backup" ? data.projects : data && data.project ? [data] : null;
       if (!items || !items.length) { toast("That file is not an Astrolabe backup.", { err: true }); return; }
       let n = 0;
-      for (const it of items) {
-        const p = it.project; if (!p || !p.id || !p.nodes) continue;
+      for (const raw of items) {
+        let it = null; try { it = cleanBackupItem(raw); } catch (e) { console.warn("backup item rejected", e); }
+        if (!it) continue;
+        const p = it.project;
         normalizeProject(p);
         if (S.meta.projects.some(x => x.id === p.id)) {
           const r = await ask("“" + p.title + "” is already in your library", "Replace the copy here with the one in the backup, or keep both?", [["Skip"], ["Replace", "danger"], ["Keep both", "gild"]]);
           if (r <= 0) continue;
           if (r === 2) { p.id = uid(); p.title += " (restored)"; }
         }
-        for (const [nid, html] of Object.entries(it.texts || {})) Store.put(keyT(p.id, nid), html);
-        for (const [nid, s] of Object.entries(it.snaps || {})) Store.put(keyS(p.id, nid), s);
-        Store.put(keyC(p.id), it.codex || { entries: [] });
-        Store.put(keyP(p.id), p);
+        for (const [nid, html] of Object.entries(it.texts)) Store.put(keyT(p.id, nid), html);
+        for (const [nid, s] of Object.entries(it.snaps)) Store.put(keyS(p.id, nid), s);
+        Store.put(keyC(p.id), it.codex);
+        p.rev = uid(); // a tab that has the replaced copy open will notice and reload
+        Store.put(keyP(p.id), p); Store.put(keyR(p.id), { rev: p.rev, t: now() });
+        lsSet("view." + p.id, null);
         const prev = S.project; S.project = p; reindex(); const sum = summaryOf(p); S.project = prev; if (prev) reindex();
-        S.meta.projects = S.meta.projects.filter(x => x.id !== p.id); S.meta.projects.push(sum); n++;
+        metaUpsert(sum); n++;
       }
       saveMeta(); showLibrary(); toast(n ? `Restored ${n} project${n === 1 ? "" : "s"}.` : "Nothing was restored.");
       return;
@@ -810,7 +859,8 @@ ${body}<p class="end">END</p></body></html>`;
         const fmt = $('input[name="ex-fmt"]:checked').value;
         const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value };
         lsSet("contact", o.contact);
-        const out = await buildExport(fmt, $("#ex-scope").value || null, o);
+        let out; try { out = await buildExport(fmt, $("#ex-scope").value || null, o); }
+        catch (err) { console.warn("export failed", err); toast("The export could not be built: " + esc((err && err.message) || "storage did not answer") + ".", { err: true, ms: 8000 }); return; }
         m.close();
         const ok = await saveFile(out.name, out.data, out.mime);
         if (ok !== false && fmt === "json") { S.meta.settings.lastBackup = now(); saveMetaSoon(); }
@@ -965,13 +1015,14 @@ ${body}<p class="end">END</p></body></html>`;
         if (k === "typewriter") return toggleTypewriter();
         if (k === "focus") return toggleFocus();
         if (k === "snapshot") return snapshotActive();
+        if (k === "retry") return renderStage();
         if (k === "addscene") { const n = addNode("scene", S.active || S.sel); renderBinder(); openScene(n.id); return; }
         if (k === "addchapter") { const n = addNode("chapter", S.active || S.sel); renderBinder(); select(n.id, { mode: "write" }); return; }
       }
       const a = e.target.closest("[data-act]"); if (a) { Views.act(a.dataset.act, a); return; }
       const card = e.target.closest(".card[data-id]");
       if (card && S.mode === "board" && S.sel !== card.dataset.id) {
-        S.sel = card.dataset.id; P().sel = S.sel; S.active = S.sel;
+        S.sel = card.dataset.id; S.active = S.sel; saveView();
         $$(".card.sel", stage).forEach(x => x.classList.remove("sel")); card.classList.add("sel");
         renderBinder(); renderInspector(); renderStatus();
       }
@@ -985,7 +1036,7 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
 })();

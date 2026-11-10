@@ -22,14 +22,25 @@ const Editor = (() => {
     UI.updateCounts();
   }, 300);
 
-  function charBefore() {
+  /* The text of the current paragraph up to the caret. */
+  function textBefore() {
     const s = getSelection(); if (!s.rangeCount) return "";
     const r = s.getRangeAt(0); if (!r.collapsed) return "";
     const el = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement;
     const scope = el.closest("p") || el.closest(".prose"); if (!scope) return "";
     const pre = document.createRange(); pre.selectNodeContents(scope);
     try { pre.setEnd(r.startContainer, r.startOffset); } catch { return ""; }
-    return pre.toString().slice(-1);
+    return pre.toString();
+  }
+  const charBefore = () => textBefore().slice(-1);
+  /* Which way a typed quote should face. After a dash it depends on whether speech is already open in
+     this paragraph: “Wait—” closes, but: he said—“Stop” opens. */
+  function quoteOpens(d, before) {
+    const prev = before.slice(-1);
+    if (!prev) return true;
+    if (!/[—–]/.test(prev)) return /[\s(\[{“‘]/.test(prev);
+    const count = re => (before.match(re) || []).length;
+    return d === '"' ? count(/“/g) <= count(/”/g) : count(/‘/g) <= count(/’(?!\p{L})/gu); // ’ inside a word is an apostrophe
   }
   function onBeforeInput(e) {
     if (!S.meta.settings.smart || e.inputType !== "insertText" || !e.data) return;
@@ -47,8 +58,7 @@ const Editor = (() => {
     }
     if (d !== '"' && d !== "'") return;
     e.preventDefault();
-    const prev = charBefore();
-    const open = !prev || /[\s(\[{—–“‘]/.test(prev);
+    const open = quoteOpens(d, textBefore());
     document.execCommand("insertText", false, d === '"' ? (open ? "“" : "”") : (open ? "‘" : "’"));
   }
   function onPaste(e) {
@@ -137,7 +147,15 @@ const Editor = (() => {
         <button class="btn gild" type="button" data-cmd="addscene">+ New scene</button></div></div>`;
       paintAstros(stage); return;
     }
-    await Promise.all(ids.map(getText));
+    try { await Promise.all(ids.map(getText)); }
+    catch (e) { // show the failure; an empty page here would invite typing over text that is still in storage
+      console.warn("scene text not loaded", e);
+      stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
+        <h3>This text could not be loaded</h3>
+        <p>${esc((e && e.message) || "Storage did not answer.")} Nothing has been changed. Check your connection and try again.</p>
+        <button class="btn gild" type="button" data-cmd="retry">Try again</button></div></div>`;
+      paintAstros(stage); return;
+    }
     const st = S.meta.settings, multi = ids.length > 1 || node(S.sel).type !== "scene";
     let html = "", lastCh = undefined;
     for (const id of ids) {
@@ -188,6 +206,8 @@ const Editor = (() => {
   return {
     render, bind, placeCaret,
     flush() { saveSoon.flush(); saveDirty(); },
+    isDirty: () => dirty.size > 0,
+    discard() { saveSoon.cancel(); dirty.clear(); },
     exec(cmd) {
       const el = document.activeElement && document.activeElement.closest && document.activeElement.closest(".prose");
       if (cmd === "bold" || cmd === "italic") { if (el) document.execCommand(cmd); return; }

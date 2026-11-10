@@ -2,10 +2,10 @@
    cloud  → claude.ai artifact database, each writer's own private subtree (data/users/<id>/…)
    local  → IndexedDB in this browser
    memory → nothing survives a reload (last resort; the UI says so loudly)
-   Keys: meta · p.<pid> project · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
+   Keys: meta · p.<pid> project · r.<pid> its revision · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
 const Store = (() => {
   let be = null;
-  const pending = new Map(), inflight = new Set();
+  const pending = new Map(), inflight = new Map(); // key → the write waiting, and the write on its way
   let failures = 0, lastError = "", listeners = [];
   const CHUNK = 60000; // characters per cloud document (worst case ~180 KB of UTF-8, under the 256 KB cap)
 
@@ -57,42 +57,58 @@ const Store = (() => {
     const col = db.collection("data/users/" + id);
     await withTimeout(col.doc("meta").get(), 10000, "Cloud store");
     const getRaw = async k => { const s = await col.doc(k).get(); return s.exists ? s.data() : undefined; };
-    const known = new Map(); // key → number of chunk documents it currently spans
-    const chunksOf = async k => { if (!known.has(k)) { const d = await getRaw(k); known.set(k, (d && d.chunks) || 0); } return known.get(k); };
+    /* A value too long for one document is cut into parts. Each write puts its parts under a fresh
+       generation name and only then points the head document at them, so a reader always finds either
+       the old value or the new one whole, even if this page closes halfway through a write. */
+    const known = new Map(); // key → { n, gen }: the parts it currently spans
+    const partKey = (k, gen, i) => (gen ? k + "~" + gen + "~" + i : k + "~" + i); // no gen: written by an older version
+    const note = (k, d) => { const s = { n: (d && d.chunks) || 0, gen: (d && d.gen) || "" }; known.set(k, s); return s; };
+    const spanOf = async k => known.get(k) || note(k, await getRaw(k));
+    const dropParts = async (k, s) => { // best effort: a part left behind is only clutter
+      for (let i = 0; i < s.n; i++) { try { await col.doc(partKey(k, s.gen, i)).delete(); } catch { /* unreferenced */ } }
+    };
     return {
       kind: "cloud",
       async get(k) {
-        const d = await getRaw(k);
-        if (!d) { known.set(k, 0); return undefined; }
-        known.set(k, d.chunks || 0);
-        let json = d.v;
-        if (d.chunks) {
-          const parts = await Promise.all(Array.from({ length: d.chunks }, (_, i) => getRaw(k + "~" + i)));
-          if (parts.some(p => !p)) throw new Error("A part of " + k + " is missing");
-          json = parts.map(p => p.v).join("");
+        for (let attempt = 0; ; attempt++) {
+          const d = await getRaw(k);
+          const s = note(k, d);
+          if (!d) return undefined;
+          let json = d.v;
+          if (s.n) {
+            const parts = await Promise.all(Array.from({ length: s.n }, (_, i) => getRaw(partKey(k, s.gen, i))));
+            if (parts.some(p => !p)) { // another tab may have replaced the value between our two reads
+              if (attempt < 2) { await new Promise(r => setTimeout(r, 300)); continue; }
+              throw new Error("A part of " + k + " is missing");
+            }
+            json = parts.map(p => p.v).join("");
+          }
+          // Damaged data must never read as "nothing here": the caller would start afresh and save over it.
+          try { return JSON.parse(json); } catch { throw new Error("The stored copy of " + k + " is damaged"); }
         }
-        try { return JSON.parse(json); } catch { return undefined; }
       },
       async set(k, v) {
         const json = JSON.stringify(v);
-        const prevChunks = await chunksOf(k);
+        const prev = await spanOf(k);
         if (json.length <= CHUNK) {
           await col.doc(k).set({ v: json, t: Date.now() });
-          for (let i = 0; i < prevChunks; i++) await col.doc(k + "~" + i).delete();
-          known.set(k, 0);
+          known.set(k, { n: 0, gen: "" });
+          await dropParts(k, prev);
           return;
         }
-        const n = Math.ceil(json.length / CHUNK);
-        for (let i = 0; i < n; i++) await col.doc(k + "~" + i).set({ v: json.slice(i * CHUNK, (i + 1) * CHUNK) });
-        await col.doc(k).set({ chunks: n, t: Date.now() });
-        for (let i = n; i < prevChunks; i++) await col.doc(k + "~" + i).delete();
-        known.set(k, n);
+        const n = Math.ceil(json.length / CHUNK), gen = uid();
+        let done = 0;
+        try { for (; done < n; done++) await col.doc(partKey(k, gen, done)).set({ v: json.slice(done * CHUNK, (done + 1) * CHUNK) }); }
+        catch (e) { await dropParts(k, { n: done + 1, gen }); throw e; } // the head still points at the old parts
+        await col.doc(k).set({ chunks: n, gen, t: Date.now() });
+        known.set(k, { n, gen });
+        await dropParts(k, prev);
       },
       async del(k) {
-        const n = await chunksOf(k);
-        for (let i = 0; i < n; i++) await col.doc(k + "~" + i).delete();
+        const s = await spanOf(k);
         await col.doc(k).delete();
-        known.set(k, 0);
+        known.set(k, { n: 0, gen: "" });
+        await dropParts(k, s);
       },
     };
   }
@@ -100,7 +116,7 @@ const Store = (() => {
   async function flushKey(k) {
     if (inflight.has(k)) return;
     while (pending.has(k)) {
-      const op = pending.get(k); pending.delete(k); inflight.add(k); emit();
+      const op = pending.get(k); pending.delete(k); inflight.set(k, op); emit();
       try {
         if (op.del) await be.del(k); else await be.set(k, op.v);
         failures = 0; lastError = "";
@@ -127,7 +143,8 @@ const Store = (() => {
       be = memory(); return be.kind;
     },
     kind: () => be && be.kind,
-    get: k => (pending.has(k) ? Promise.resolve(pending.get(k).del ? undefined : structuredClone(pending.get(k).v)) : be.get(k)),
+    // A read sees this page's own latest write, whether it is still queued or already on its way.
+    get(k) { const op = pending.get(k) || inflight.get(k); return op ? Promise.resolve(op.del ? undefined : structuredClone(op.v)) : be.get(k); },
     put(k, v) { pending.set(k, { v: structuredClone(v) }); flushKey(k); emit(); },
     del(k) { pending.set(k, { del: true }); flushKey(k); emit(); },
     busy: () => pending.size > 0 || inflight.size > 0,

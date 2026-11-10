@@ -5,12 +5,15 @@ const S = {
   texts: new Map(),          // nid → sanitized html (loaded lazily)
   mode: "write", sel: null, active: null, codexSel: null, codexCat: "all", codexQ: "",
   sessionStart: 0, sprint: null, focus: false,
+  rev: "",                   // revision of the project as this page loaded or last saved it
+  conflict: false,           // true while the writer decides what to do about a newer copy elsewhere
 };
 let IX = { parent: {}, coord: {}, total: {}, order: [], chapters: [], depthOf: {} };
 
 const P = () => S.project;
 const node = id => (S.project && S.project.nodes[id]) || null;
 const labelOf = type => type === "scene" ? "Scene" : FORMS[P().form][type];
+const keyR = pid => "r." + pid;
 const keyP = pid => "p." + pid, keyC = pid => "c." + pid, keyT = (pid, nid) => "t." + pid + "." + nid, keyS = (pid, nid) => "s." + pid + "." + nid;
 const RANK = { part: 3, chapter: 2, scene: 1 };
 
@@ -64,30 +67,88 @@ function targetOf(id) {
   return scenesUnder(id).reduce((a, s) => a + (node(s).target || 0), 0);
 }
 
-/* ── Persistence ── */
-const saveProjectSoon = debounce(() => saveProject(), 1200);
-const saveCodexSoon = debounce(() => saveCodex(), 900);
+/* ── Persistence ──
+   Several tabs or devices can have the same archive open. Each save of a project stamps it with a new
+   revision (in the project, and in the small r.<pid> record that is cheap to check). Before a save, and
+   whenever this page comes back into view, the stored revision is compared with the one this page
+   holds: if another writer has saved since, this page reloads or asks, and never quietly overwrites. */
+const saveProjectSoon = debounce(() => guardedSave(), 1200);
 const saveMetaSoon = debounce(() => saveMeta(), 800);
+let codexDirty = false;
+const saveCodexSoon = () => { codexDirty = true; saveProjectSoon(); };
+function dropLocalChanges() { saveProjectSoon.cancel(); codexDirty = false; if (typeof Editor !== "undefined") Editor.discard(); }
+const localChanges = () => saveProjectSoon.pending() || codexDirty || (typeof Editor !== "undefined" && Editor.isDirty());
 function summaryOf(p) {
   return { id: p.id, title: p.title, subtitle: p.subtitle || "", author: p.author || "", form: p.form, words: IX.total.root || 0, target: p.goal.words || 0, updated: p.updated, created: p.created, sample: !!p.sample };
 }
+async function storedRev(pid) { const r = await Store.get(keyR(pid)); return (r && r.rev) || ""; }
+async function guardedSave() {
+  const p = P(); if (!p || S.conflict) return;
+  let theirs = S.rev;
+  try { theirs = await storedRev(p.id); } catch { /* cannot check; the write queue reports and retries failures */ }
+  if (P() !== p || S.conflict) return;
+  if (theirs !== S.rev) { UI.changedElsewhere(theirs, true); return; }
+  saveProject();
+}
 function saveProject() {
-  const p = P(); if (!p) return;
-  p.updated = now();
+  const p = P(); if (!p || S.conflict) return;
+  p.updated = now(); p.rev = S.rev = uid();
   Store.put(keyP(p.id), p);
-  const i = S.meta.projects.findIndex(x => x.id === p.id);
-  const sum = summaryOf(p);
-  if (i < 0) S.meta.projects.push(sum); else S.meta.projects[i] = sum;
+  Store.put(keyR(p.id), { rev: S.rev, t: p.updated });
+  if (codexDirty && S.codex) { codexDirty = false; Store.put(keyC(p.id), S.codex); }
+  metaUpsert(summaryOf(p));
   saveMetaSoon();
 }
-function saveCodex() { if (P() && S.codex) Store.put(keyC(P().id), S.codex); }
-function saveMeta() { Store.put("meta", S.meta); }
 function touch() { reindex(); saveProjectSoon(); }
+/* Selection and view are kept per browser, not in the project: looking around is not an edit. */
+function saveView() { if (P()) lsSet("view." + P().id, { sel: S.sel, mode: S.mode }); }
 
-async function loadMeta() {
-  const m = await Store.get("meta");
-  if (m && m.projects) S.meta = { ...S.meta, ...m, settings: { ...DEFAULT_SETTINGS, ...(m.settings || {}) } };
+/* The library list is shared by every tab too, so it is never written from memory alone: each save
+   re-reads the stored list and applies only what this page added, changed or removed. */
+let metaBase = null;             // the stored list as last read or written; null until a read has succeeded
+const metaUp = new Set(), metaRm = new Set();
+let metaChain = Promise.resolve();
+function metaUpsert(sum) {
+  const i = S.meta.projects.findIndex(x => x.id === sum.id);
+  if (i < 0) S.meta.projects.push(sum); else S.meta.projects[i] = sum;
+  metaUp.add(sum.id); metaRm.delete(sum.id);
 }
+function metaRemove(id) {
+  S.meta.projects = S.meta.projects.filter(x => x.id !== id);
+  metaRm.add(id); metaUp.delete(id);
+}
+function mergedProjects() {
+  const list = metaBase.filter(x => !metaRm.has(x.id) && !metaUp.has(x.id));
+  for (const x of S.meta.projects) if (metaUp.has(x.id)) list.push(x);
+  return list;
+}
+async function readMeta() {
+  const m = await Store.get("meta");
+  metaBase = (m && Array.isArray(m.projects) ? m.projects : []).filter(x => x && x.id);
+  S.meta.projects = mergedProjects();
+  return m;
+}
+/* Write the list now, against the copy last read. Refuses if the library has never been read. */
+function writeMeta() {
+  if (!metaBase) return false;
+  S.meta.projects = mergedProjects(); metaBase = S.meta.projects.slice();
+  metaUp.clear(); metaRm.clear();
+  Store.put("meta", S.meta);
+  return true;
+}
+function saveMeta() {
+  metaChain = metaChain.then(async () => {
+    try { await readMeta(); } catch (e) { console.warn("library not re-read before saving", e); }
+    if (!writeMeta()) saveMetaSoon();
+  });
+  return metaChain;
+}
+async function loadMeta() {
+  const m = await readMeta();
+  if (m) S.meta = { ...S.meta, ...m, projects: S.meta.projects, settings: { ...DEFAULT_SETTINGS, ...(m.settings || {}) } };
+}
+async function refreshMeta() { try { await readMeta(); return true; } catch { return false; } }
+
 async function openProject(pid) {
   flushAll();
   const p = await Store.get(keyP(pid));
@@ -95,8 +156,10 @@ async function openProject(pid) {
   const c = (await Store.get(keyC(pid))) || { entries: [] };
   normalizeProject(p);
   S.project = p; S.codex = c; S.texts = new Map();
-  S.sel = p.sel && p.nodes[p.sel] ? p.sel : null; S.active = null; S.codexSel = null;
-  S.mode = p.mode || "write";
+  S.rev = p.rev || ""; S.conflict = false; codexDirty = false;
+  const view = lsGet("view." + pid, null) || { sel: p.sel, mode: p.mode }; // where this browser last was in it
+  S.sel = view.sel && p.nodes[view.sel] ? view.sel : null; S.active = null; S.codexSel = null;
+  S.mode = view.mode || "write";
   reindex();
   S.sessionStart = projectWords();
   lsSet("last", pid);
@@ -107,8 +170,11 @@ function normalizeProject(p) {
   p.sprints = p.sprints || [];
   for (const n of Object.values(p.nodes)) { n.threads = n.threads || []; if (n.type !== "scene") n.children = n.children || []; if (n.include === undefined) n.include = true; }
 }
-function flushAll() {
-  saveProjectSoon.flush(); saveCodexSoon.flush(); saveMetaSoon.flush();
+/* Write out everything still waiting. `leaving` is for a page about to close: nothing can be
+   awaited there, so the library list is written against the copy last read instead of a fresh one. */
+function flushAll(leaving = false) {
+  if (saveProjectSoon.pending() || codexDirty) { saveProjectSoon.cancel(); saveProject(); }
+  if (saveMetaSoon.pending() || metaUp.size || metaRm.size) { saveMetaSoon.cancel(); if (leaving) writeMeta(); else saveMeta(); }
   if (typeof Editor !== "undefined") Editor.flush();
 }
 
@@ -459,4 +525,73 @@ function projectFromText(text, filename) {
   for (const [id, html] of Object.entries(texts)) p.nodes[id].words = wordsOfHtml(html);
   p._texts = texts;
   return p;
+}
+
+/* ── Backups from outside ──
+   A backup file may come from anyone, and its ids, labels and prose end up in the page's markup. So a
+   restored project is rebuilt field by field: ids must be plain, the tree must be a tree, numbers must
+   be numbers, and all prose goes through the same cleaner as pasted text. Returns null if the item is
+   not a project at all. */
+const ID_RE = /^[A-Za-z0-9]{1,40}$/, DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const okId = id => typeof id === "string" && ID_RE.test(id) && !(id in Object.prototype);
+const asStr = (v, max = 20000) => (typeof v === "string" ? v : v == null || typeof v === "object" ? "" : String(v)).slice(0, max);
+const asNum = v => { const n = Math.round(Number(v)); return Number.isFinite(n) ? n : 0; };
+const asList = v => (Array.isArray(v) ? v : []);
+function cleanBackupItem(it) {
+  const src = it && it.project;
+  if (!src || typeof src !== "object" || !okId(src.id) || !src.nodes || typeof src.nodes !== "object") return null;
+  const threads = asList(src.threads).filter(t => t && okId(t.id)).map((t, i) => ({ id: t.id, name: asStr(t.name, 200), color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : THREAD_COLORS[i % THREAD_COLORS.length] }));
+  const tids = new Set(threads.map(t => t.id));
+  const nodes = {};
+  for (const [id, n] of Object.entries(src.nodes)) {
+    if (!okId(id) || !n || typeof n !== "object" || !Object.hasOwn(RANK, n.type)) continue;
+    const c = {
+      id, type: n.type, title: asStr(n.title, 500), status: Object.hasOwn(STATUS_IX, n.status) ? n.status : "seed",
+      synopsis: asStr(n.synopsis), notes: asStr(n.notes, 200000), words: Math.max(0, asNum(n.words)), include: n.include !== false,
+      threads: asList(n.threads).filter(x => tids.has(x)), pov: asStr(n.pov, 500), place: asStr(n.place, 500), when: asStr(n.when, 500),
+      target: Math.max(0, asNum(n.target)), lastSnap: Math.max(0, asNum(n.lastSnap)),
+    };
+    if (n.collapsed) c.collapsed = true;
+    if (n.type !== "scene") c.children = asList(n.children);
+    if (n.type === "chapter" && (n.release !== undefined || n.published !== undefined)) { c.release = DAY_RE.test(n.release) ? n.release : ""; c.published = !!n.published; }
+    nodes[id] = c;
+  }
+  // Keep each node once, under a parent that may hold it; anything unreachable is dropped.
+  const seen = new Set();
+  const adopt = (ids, rank) => asList(ids).filter(id => {
+    if (!okId(id) || !Object.hasOwn(nodes, id) || seen.has(id) || RANK[nodes[id].type] >= rank) return false;
+    seen.add(id);
+    const n = nodes[id]; if (n.children) n.children = adopt(n.children, RANK[n.type]);
+    return true;
+  });
+  const root = adopt(src.root, 4);
+  const trashed = asList(src.trash).filter(t => t && adopt([t.id], 4).length);
+  const trash = trashed.map(t => ({ id: t.id, parent: seen.has(t.parent) ? t.parent : null, index: asNum(t.index), t: asNum(t.t), title: nodes[t.id].title, type: nodes[t.id].type }));
+  for (const id of Object.keys(nodes)) if (!seen.has(id)) delete nodes[id];
+  const history = {};
+  if (src.history && typeof src.history === "object") for (const [k, v] of Object.entries(src.history)) if (DAY_RE.test(k)) history[k] = asNum(v);
+  const g = src.goal && typeof src.goal === "object" ? src.goal : {};
+  const form = Object.hasOwn(FORMS, src.form) ? src.form : "novel";
+  const project = {
+    id: src.id, v: 1, title: asStr(src.title, 500) || "Untitled", subtitle: asStr(src.subtitle, 500), author: asStr(src.author, 500),
+    logline: asStr(src.logline), notes: asStr(src.notes, 200000), form, created: asNum(src.created) || now(), updated: asNum(src.updated) || now(), sample: !!src.sample,
+    goal: { words: g.words === undefined ? FORMS[form].target : Math.max(0, asNum(g.words)), daily: g.daily === undefined ? FORMS[form].daily : Math.max(0, asNum(g.daily)), deadline: DAY_RE.test(g.deadline) ? g.deadline : "" },
+    nodes, root, threads, history, trash,
+    sprints: asList(src.sprints).filter(s => s && typeof s === "object").slice(-200).map(s => ({ t: asNum(s.t), min: Math.max(1, asNum(s.min)), words: asNum(s.words) })),
+    sel: seen.has(src.sel) ? src.sel : null, mode: ["write", "board", "outline", "threads", "codex", "progress"].includes(src.mode) ? src.mode : "write",
+  };
+  const cats = new Set(CODEX_CATS.map(c => c[0]));
+  const codex = { entries: asList(it.codex && it.codex.entries).filter(e => e && okId(e.id)).map(e => ({
+    id: e.id, cat: cats.has(e.cat) ? e.cat : "note", name: asStr(e.name, 500), aliases: asStr(e.aliases, 2000), summary: asStr(e.summary, 2000),
+    fields: asList(e.fields).filter(Array.isArray).map(f => [asStr(f[0], 500), asStr(f[1], 5000)]), body: asStr(e.body, 200000),
+  })) };
+  const isScene = id => Object.hasOwn(nodes, id) && nodes[id].type === "scene";
+  const texts = {}, snaps = {};
+  if (it.texts && typeof it.texts === "object") for (const [id, html] of Object.entries(it.texts)) if (isScene(id) && typeof html === "string") texts[id] = sanitizeProse(html);
+  if (it.snaps && typeof it.snaps === "object") for (const [id, list] of Object.entries(it.snaps)) {
+    if (!isScene(id)) continue;
+    const clean = asList(list).filter(s => s && typeof s === "object").slice(0, 30).map(s => ({ t: asNum(s.t), html: sanitizeProse(asStr(s.html, 5000000)), words: Math.max(0, asNum(s.words)), label: asStr(s.label, 100) }));
+    if (clean.length) snaps[id] = clean;
+  }
+  return { project, codex, texts, snaps };
 }

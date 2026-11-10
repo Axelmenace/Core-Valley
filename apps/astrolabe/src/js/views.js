@@ -223,7 +223,7 @@ const Views = (() => {
         <p>Characters, places, factions, magic and machines, creatures, events and loose notes. Names and aliases you record here are spotted automatically in your scenes and shown in the inspector.</p>
         <button class="btn gild" type="button" data-act="codex-new">+ New entry</button></div></div>`;
     } else {
-      await loadAllTexts();
+      try { await loadAllTexts(); } catch (err) { console.warn("some scene text not loaded", err); }
       const app = appearances(e);
       main = `<div class="codex-entry" data-eid="${e.id}">
         <div style="display:flex;gap:10px;align-items:center"><span class="hud" style="color:var(--gild)">${catGlyph(e.cat)} ${esc(catName(e.cat))}</span><span style="flex:1"></span>

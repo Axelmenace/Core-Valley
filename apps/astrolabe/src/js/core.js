@@ -11,6 +11,7 @@ function debounce(fn, ms) {
   const d = (...a) => { args = a; clearTimeout(t); t = setTimeout(() => { t = null; fn(...args); }, ms); };
   d.flush = () => { if (t) { clearTimeout(t); t = null; fn(...args); } };
   d.pending = () => !!t;
+  d.cancel = () => { clearTimeout(t); t = null; };
   return d;
 }
 function throttle(fn, ms) {

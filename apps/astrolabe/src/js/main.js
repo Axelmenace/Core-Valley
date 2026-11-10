@@ -50,7 +50,14 @@ async function boot() {
     el.textContent = s.text; el.title = s.detail || (Store.kind() === "cloud" ? "Saved to your private archive" : Store.kind() === "local" ? "Saved in this browser" : "Not kept after this page closes");
   });
   const kind = await Store.init(msg => { $("#bootMsg").textContent = msg; });
-  try { await loadMeta(); } catch (e) { console.warn("meta load failed", e); }
+  // The library must be read before anything can be saved: starting from an empty list after a failed
+  // read would let the next save replace the real one.
+  let failed = null;
+  for (let i = 0; i < 3; i++) {
+    try { await loadMeta(); failed = null; break; }
+    catch (e) { failed = e; console.warn("library read failed", e); await new Promise(r => setTimeout(r, 700 * (i + 1))); }
+  }
+  if (failed) throw new Error("your library could not be read (" + ((failed && failed.message) || "storage did not answer") + "). Nothing has been changed.");
   applySettings();
   UI.bind(); Editor.bind($("#stage")); Views.bind($("#stage")); bindKeys();
   $("#boot").hidden = true; $("#app").hidden = false;
@@ -63,13 +70,19 @@ async function boot() {
 }
 
 window.addEventListener("beforeunload", e => {
-  if (P()) flushAll();
+  if (P()) flushAll(true);
   if (Store.busy() || (Store.kind() === "memory" && S.meta.projects.length)) { e.preventDefault(); e.returnValue = ""; }
 });
-document.addEventListener("visibilitychange", () => { if (document.hidden && P()) flushAll(); });
+const checkRemoteSoon = debounce(() => UI.checkRemote(), 200);
+document.addEventListener("visibilitychange", () => { if (document.hidden) { if (P()) flushAll(true); } else checkRemoteSoon(); });
+window.addEventListener("focus", checkRemoteSoon);
 setInterval(() => { if (P() && !document.hidden) UI.renderStatus(); }, 60000);
 
 boot().catch(e => {
   console.error(e);
   $("#bootMsg").textContent = "Astrolabe could not start: " + (e && e.message ? e.message : e);
+  if (!$("#bootRetry")) {
+    const b = document.createElement("button"); b.id = "bootRetry"; b.type = "button"; b.className = "btn"; b.textContent = "Try again";
+    b.onclick = () => location.reload(); $("#boot").appendChild(b);
+  }
 });

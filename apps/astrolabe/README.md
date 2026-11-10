@@ -17,7 +17,7 @@ A drafting and planning instrument for long-form fiction: short stories, novella
 
 **Forms.** Each project is a short story (sections and scenes), novella or novel (parts, chapters and scenes) or serial (arcs, episodes with release dates and per-episode targets, and scenes). New projects can start from a structure: five-scene arc, three acts, seven-point, the hero's journey, kishōtenketsu, or a six-episode serial season.
 
-**Safety nets.** Autosave on every pause. A snapshot of each scene the first time you edit it each day, plus manual snapshots (`Ctrl+Shift+S`) you can preview and restore. Deleting goes to a trash you can restore from. Full backups download as JSON and restore from the library.
+**Safety nets.** Autosave on every pause. A snapshot of each scene the first time you edit it each day, plus manual snapshots (`Ctrl+Shift+S`) you can preview and restore. Deleting goes to a trash you can restore from. Full backups download as JSON and restore from the library; a restored file is checked and its prose cleaned before it is let in. If the same project is open in two tabs or on two devices, the one that falls behind brings itself up to date when you return to it, or asks which version to keep if both have changes.
 
 **In and out.** Export Markdown, plain text, an HTML manuscript in standard manuscript format, an outline, or a project backup; leave any scene or chapter out of the export from the binder. Import a Markdown or text manuscript (`#`/`##` headings become chapters, `* * *` becomes a scene break) or a backup.
 

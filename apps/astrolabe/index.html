@@ -851,6 +851,7 @@ function debounce(fn, ms) {
   const d = (...a) => { args = a; clearTimeout(t); t = setTimeout(() => { t = null; fn(...args); }, ms); };
   d.flush = () => { if (t) { clearTimeout(t); t = null; fn(...args); } };
   d.pending = () => !!t;
+  d.cancel = () => { clearTimeout(t); t = null; };
   return d;
 }
 function throttle(fn, ms) {
@@ -1035,10 +1036,10 @@ const Sky = (() => {
    cloud  → claude.ai artifact database, each writer's own private subtree (data/users/<id>/…)
    local  → IndexedDB in this browser
    memory → nothing survives a reload (last resort; the UI says so loudly)
-   Keys: meta · p.<pid> project · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
+   Keys: meta · p.<pid> project · r.<pid> its revision · c.<pid> codex · t.<pid>.<nid> scene text · s.<pid>.<nid> snapshots */
 const Store = (() => {
   let be = null;
-  const pending = new Map(), inflight = new Set();
+  const pending = new Map(), inflight = new Map(); // key → the write waiting, and the write on its way
   let failures = 0, lastError = "", listeners = [];
   const CHUNK = 60000; // characters per cloud document (worst case ~180 KB of UTF-8, under the 256 KB cap)
 
@@ -1090,42 +1091,58 @@ const Store = (() => {
     const col = db.collection("data/users/" + id);
     await withTimeout(col.doc("meta").get(), 10000, "Cloud store");
     const getRaw = async k => { const s = await col.doc(k).get(); return s.exists ? s.data() : undefined; };
-    const known = new Map(); // key → number of chunk documents it currently spans
-    const chunksOf = async k => { if (!known.has(k)) { const d = await getRaw(k); known.set(k, (d && d.chunks) || 0); } return known.get(k); };
+    /* A value too long for one document is cut into parts. Each write puts its parts under a fresh
+       generation name and only then points the head document at them, so a reader always finds either
+       the old value or the new one whole, even if this page closes halfway through a write. */
+    const known = new Map(); // key → { n, gen }: the parts it currently spans
+    const partKey = (k, gen, i) => (gen ? k + "~" + gen + "~" + i : k + "~" + i); // no gen: written by an older version
+    const note = (k, d) => { const s = { n: (d && d.chunks) || 0, gen: (d && d.gen) || "" }; known.set(k, s); return s; };
+    const spanOf = async k => known.get(k) || note(k, await getRaw(k));
+    const dropParts = async (k, s) => { // best effort: a part left behind is only clutter
+      for (let i = 0; i < s.n; i++) { try { await col.doc(partKey(k, s.gen, i)).delete(); } catch { /* unreferenced */ } }
+    };
     return {
       kind: "cloud",
       async get(k) {
-        const d = await getRaw(k);
-        if (!d) { known.set(k, 0); return undefined; }
-        known.set(k, d.chunks || 0);
-        let json = d.v;
-        if (d.chunks) {
-          const parts = await Promise.all(Array.from({ length: d.chunks }, (_, i) => getRaw(k + "~" + i)));
-          if (parts.some(p => !p)) throw new Error("A part of " + k + " is missing");
-          json = parts.map(p => p.v).join("");
+        for (let attempt = 0; ; attempt++) {
+          const d = await getRaw(k);
+          const s = note(k, d);
+          if (!d) return undefined;
+          let json = d.v;
+          if (s.n) {
+            const parts = await Promise.all(Array.from({ length: s.n }, (_, i) => getRaw(partKey(k, s.gen, i))));
+            if (parts.some(p => !p)) { // another tab may have replaced the value between our two reads
+              if (attempt < 2) { await new Promise(r => setTimeout(r, 300)); continue; }
+              throw new Error("A part of " + k + " is missing");
+            }
+            json = parts.map(p => p.v).join("");
+          }
+          // Damaged data must never read as "nothing here": the caller would start afresh and save over it.
+          try { return JSON.parse(json); } catch { throw new Error("The stored copy of " + k + " is damaged"); }
         }
-        try { return JSON.parse(json); } catch { return undefined; }
       },
       async set(k, v) {
         const json = JSON.stringify(v);
-        const prevChunks = await chunksOf(k);
+        const prev = await spanOf(k);
         if (json.length <= CHUNK) {
           await col.doc(k).set({ v: json, t: Date.now() });
-          for (let i = 0; i < prevChunks; i++) await col.doc(k + "~" + i).delete();
-          known.set(k, 0);
+          known.set(k, { n: 0, gen: "" });
+          await dropParts(k, prev);
           return;
         }
-        const n = Math.ceil(json.length / CHUNK);
-        for (let i = 0; i < n; i++) await col.doc(k + "~" + i).set({ v: json.slice(i * CHUNK, (i + 1) * CHUNK) });
-        await col.doc(k).set({ chunks: n, t: Date.now() });
-        for (let i = n; i < prevChunks; i++) await col.doc(k + "~" + i).delete();
-        known.set(k, n);
+        const n = Math.ceil(json.length / CHUNK), gen = uid();
+        let done = 0;
+        try { for (; done < n; done++) await col.doc(partKey(k, gen, done)).set({ v: json.slice(done * CHUNK, (done + 1) * CHUNK) }); }
+        catch (e) { await dropParts(k, { n: done + 1, gen }); throw e; } // the head still points at the old parts
+        await col.doc(k).set({ chunks: n, gen, t: Date.now() });
+        known.set(k, { n, gen });
+        await dropParts(k, prev);
       },
       async del(k) {
-        const n = await chunksOf(k);
-        for (let i = 0; i < n; i++) await col.doc(k + "~" + i).delete();
+        const s = await spanOf(k);
         await col.doc(k).delete();
-        known.set(k, 0);
+        known.set(k, { n: 0, gen: "" });
+        await dropParts(k, s);
       },
     };
   }
@@ -1133,7 +1150,7 @@ const Store = (() => {
   async function flushKey(k) {
     if (inflight.has(k)) return;
     while (pending.has(k)) {
-      const op = pending.get(k); pending.delete(k); inflight.add(k); emit();
+      const op = pending.get(k); pending.delete(k); inflight.set(k, op); emit();
       try {
         if (op.del) await be.del(k); else await be.set(k, op.v);
         failures = 0; lastError = "";
@@ -1160,7 +1177,8 @@ const Store = (() => {
       be = memory(); return be.kind;
     },
     kind: () => be && be.kind,
-    get: k => (pending.has(k) ? Promise.resolve(pending.get(k).del ? undefined : structuredClone(pending.get(k).v)) : be.get(k)),
+    // A read sees this page's own latest write, whether it is still queued or already on its way.
+    get(k) { const op = pending.get(k) || inflight.get(k); return op ? Promise.resolve(op.del ? undefined : structuredClone(op.v)) : be.get(k); },
     put(k, v) { pending.set(k, { v: structuredClone(v) }); flushKey(k); emit(); },
     del(k) { pending.set(k, { del: true }); flushKey(k); emit(); },
     busy: () => pending.size > 0 || inflight.size > 0,
@@ -1184,12 +1202,15 @@ const S = {
   texts: new Map(),          // nid → sanitized html (loaded lazily)
   mode: "write", sel: null, active: null, codexSel: null, codexCat: "all", codexQ: "",
   sessionStart: 0, sprint: null, focus: false,
+  rev: "",                   // revision of the project as this page loaded or last saved it
+  conflict: false,           // true while the writer decides what to do about a newer copy elsewhere
 };
 let IX = { parent: {}, coord: {}, total: {}, order: [], chapters: [], depthOf: {} };
 
 const P = () => S.project;
 const node = id => (S.project && S.project.nodes[id]) || null;
 const labelOf = type => type === "scene" ? "Scene" : FORMS[P().form][type];
+const keyR = pid => "r." + pid;
 const keyP = pid => "p." + pid, keyC = pid => "c." + pid, keyT = (pid, nid) => "t." + pid + "." + nid, keyS = (pid, nid) => "s." + pid + "." + nid;
 const RANK = { part: 3, chapter: 2, scene: 1 };
 
@@ -1243,30 +1264,88 @@ function targetOf(id) {
   return scenesUnder(id).reduce((a, s) => a + (node(s).target || 0), 0);
 }
 
-/* ── Persistence ── */
-const saveProjectSoon = debounce(() => saveProject(), 1200);
-const saveCodexSoon = debounce(() => saveCodex(), 900);
+/* ── Persistence ──
+   Several tabs or devices can have the same archive open. Each save of a project stamps it with a new
+   revision (in the project, and in the small r.<pid> record that is cheap to check). Before a save, and
+   whenever this page comes back into view, the stored revision is compared with the one this page
+   holds: if another writer has saved since, this page reloads or asks, and never quietly overwrites. */
+const saveProjectSoon = debounce(() => guardedSave(), 1200);
 const saveMetaSoon = debounce(() => saveMeta(), 800);
+let codexDirty = false;
+const saveCodexSoon = () => { codexDirty = true; saveProjectSoon(); };
+function dropLocalChanges() { saveProjectSoon.cancel(); codexDirty = false; if (typeof Editor !== "undefined") Editor.discard(); }
+const localChanges = () => saveProjectSoon.pending() || codexDirty || (typeof Editor !== "undefined" && Editor.isDirty());
 function summaryOf(p) {
   return { id: p.id, title: p.title, subtitle: p.subtitle || "", author: p.author || "", form: p.form, words: IX.total.root || 0, target: p.goal.words || 0, updated: p.updated, created: p.created, sample: !!p.sample };
 }
+async function storedRev(pid) { const r = await Store.get(keyR(pid)); return (r && r.rev) || ""; }
+async function guardedSave() {
+  const p = P(); if (!p || S.conflict) return;
+  let theirs = S.rev;
+  try { theirs = await storedRev(p.id); } catch { /* cannot check; the write queue reports and retries failures */ }
+  if (P() !== p || S.conflict) return;
+  if (theirs !== S.rev) { UI.changedElsewhere(theirs, true); return; }
+  saveProject();
+}
 function saveProject() {
-  const p = P(); if (!p) return;
-  p.updated = now();
+  const p = P(); if (!p || S.conflict) return;
+  p.updated = now(); p.rev = S.rev = uid();
   Store.put(keyP(p.id), p);
-  const i = S.meta.projects.findIndex(x => x.id === p.id);
-  const sum = summaryOf(p);
-  if (i < 0) S.meta.projects.push(sum); else S.meta.projects[i] = sum;
+  Store.put(keyR(p.id), { rev: S.rev, t: p.updated });
+  if (codexDirty && S.codex) { codexDirty = false; Store.put(keyC(p.id), S.codex); }
+  metaUpsert(summaryOf(p));
   saveMetaSoon();
 }
-function saveCodex() { if (P() && S.codex) Store.put(keyC(P().id), S.codex); }
-function saveMeta() { Store.put("meta", S.meta); }
 function touch() { reindex(); saveProjectSoon(); }
+/* Selection and view are kept per browser, not in the project: looking around is not an edit. */
+function saveView() { if (P()) lsSet("view." + P().id, { sel: S.sel, mode: S.mode }); }
 
-async function loadMeta() {
-  const m = await Store.get("meta");
-  if (m && m.projects) S.meta = { ...S.meta, ...m, settings: { ...DEFAULT_SETTINGS, ...(m.settings || {}) } };
+/* The library list is shared by every tab too, so it is never written from memory alone: each save
+   re-reads the stored list and applies only what this page added, changed or removed. */
+let metaBase = null;             // the stored list as last read or written; null until a read has succeeded
+const metaUp = new Set(), metaRm = new Set();
+let metaChain = Promise.resolve();
+function metaUpsert(sum) {
+  const i = S.meta.projects.findIndex(x => x.id === sum.id);
+  if (i < 0) S.meta.projects.push(sum); else S.meta.projects[i] = sum;
+  metaUp.add(sum.id); metaRm.delete(sum.id);
 }
+function metaRemove(id) {
+  S.meta.projects = S.meta.projects.filter(x => x.id !== id);
+  metaRm.add(id); metaUp.delete(id);
+}
+function mergedProjects() {
+  const list = metaBase.filter(x => !metaRm.has(x.id) && !metaUp.has(x.id));
+  for (const x of S.meta.projects) if (metaUp.has(x.id)) list.push(x);
+  return list;
+}
+async function readMeta() {
+  const m = await Store.get("meta");
+  metaBase = (m && Array.isArray(m.projects) ? m.projects : []).filter(x => x && x.id);
+  S.meta.projects = mergedProjects();
+  return m;
+}
+/* Write the list now, against the copy last read. Refuses if the library has never been read. */
+function writeMeta() {
+  if (!metaBase) return false;
+  S.meta.projects = mergedProjects(); metaBase = S.meta.projects.slice();
+  metaUp.clear(); metaRm.clear();
+  Store.put("meta", S.meta);
+  return true;
+}
+function saveMeta() {
+  metaChain = metaChain.then(async () => {
+    try { await readMeta(); } catch (e) { console.warn("library not re-read before saving", e); }
+    if (!writeMeta()) saveMetaSoon();
+  });
+  return metaChain;
+}
+async function loadMeta() {
+  const m = await readMeta();
+  if (m) S.meta = { ...S.meta, ...m, projects: S.meta.projects, settings: { ...DEFAULT_SETTINGS, ...(m.settings || {}) } };
+}
+async function refreshMeta() { try { await readMeta(); return true; } catch { return false; } }
+
 async function openProject(pid) {
   flushAll();
   const p = await Store.get(keyP(pid));
@@ -1274,8 +1353,10 @@ async function openProject(pid) {
   const c = (await Store.get(keyC(pid))) || { entries: [] };
   normalizeProject(p);
   S.project = p; S.codex = c; S.texts = new Map();
-  S.sel = p.sel && p.nodes[p.sel] ? p.sel : null; S.active = null; S.codexSel = null;
-  S.mode = p.mode || "write";
+  S.rev = p.rev || ""; S.conflict = false; codexDirty = false;
+  const view = lsGet("view." + pid, null) || { sel: p.sel, mode: p.mode }; // where this browser last was in it
+  S.sel = view.sel && p.nodes[view.sel] ? view.sel : null; S.active = null; S.codexSel = null;
+  S.mode = view.mode || "write";
   reindex();
   S.sessionStart = projectWords();
   lsSet("last", pid);
@@ -1286,8 +1367,11 @@ function normalizeProject(p) {
   p.sprints = p.sprints || [];
   for (const n of Object.values(p.nodes)) { n.threads = n.threads || []; if (n.type !== "scene") n.children = n.children || []; if (n.include === undefined) n.include = true; }
 }
-function flushAll() {
-  saveProjectSoon.flush(); saveCodexSoon.flush(); saveMetaSoon.flush();
+/* Write out everything still waiting. `leaving` is for a page about to close: nothing can be
+   awaited there, so the library list is written against the copy last read instead of a fresh one. */
+function flushAll(leaving = false) {
+  if (saveProjectSoon.pending() || codexDirty) { saveProjectSoon.cancel(); saveProject(); }
+  if (saveMetaSoon.pending() || metaUp.size || metaRm.size) { saveMetaSoon.cancel(); if (leaving) writeMeta(); else saveMeta(); }
   if (typeof Editor !== "undefined") Editor.flush();
 }
 
@@ -1640,6 +1724,75 @@ function projectFromText(text, filename) {
   return p;
 }
 
+/* ── Backups from outside ──
+   A backup file may come from anyone, and its ids, labels and prose end up in the page's markup. So a
+   restored project is rebuilt field by field: ids must be plain, the tree must be a tree, numbers must
+   be numbers, and all prose goes through the same cleaner as pasted text. Returns null if the item is
+   not a project at all. */
+const ID_RE = /^[A-Za-z0-9]{1,40}$/, DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const okId = id => typeof id === "string" && ID_RE.test(id) && !(id in Object.prototype);
+const asStr = (v, max = 20000) => (typeof v === "string" ? v : v == null || typeof v === "object" ? "" : String(v)).slice(0, max);
+const asNum = v => { const n = Math.round(Number(v)); return Number.isFinite(n) ? n : 0; };
+const asList = v => (Array.isArray(v) ? v : []);
+function cleanBackupItem(it) {
+  const src = it && it.project;
+  if (!src || typeof src !== "object" || !okId(src.id) || !src.nodes || typeof src.nodes !== "object") return null;
+  const threads = asList(src.threads).filter(t => t && okId(t.id)).map((t, i) => ({ id: t.id, name: asStr(t.name, 200), color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : THREAD_COLORS[i % THREAD_COLORS.length] }));
+  const tids = new Set(threads.map(t => t.id));
+  const nodes = {};
+  for (const [id, n] of Object.entries(src.nodes)) {
+    if (!okId(id) || !n || typeof n !== "object" || !Object.hasOwn(RANK, n.type)) continue;
+    const c = {
+      id, type: n.type, title: asStr(n.title, 500), status: Object.hasOwn(STATUS_IX, n.status) ? n.status : "seed",
+      synopsis: asStr(n.synopsis), notes: asStr(n.notes, 200000), words: Math.max(0, asNum(n.words)), include: n.include !== false,
+      threads: asList(n.threads).filter(x => tids.has(x)), pov: asStr(n.pov, 500), place: asStr(n.place, 500), when: asStr(n.when, 500),
+      target: Math.max(0, asNum(n.target)), lastSnap: Math.max(0, asNum(n.lastSnap)),
+    };
+    if (n.collapsed) c.collapsed = true;
+    if (n.type !== "scene") c.children = asList(n.children);
+    if (n.type === "chapter" && (n.release !== undefined || n.published !== undefined)) { c.release = DAY_RE.test(n.release) ? n.release : ""; c.published = !!n.published; }
+    nodes[id] = c;
+  }
+  // Keep each node once, under a parent that may hold it; anything unreachable is dropped.
+  const seen = new Set();
+  const adopt = (ids, rank) => asList(ids).filter(id => {
+    if (!okId(id) || !Object.hasOwn(nodes, id) || seen.has(id) || RANK[nodes[id].type] >= rank) return false;
+    seen.add(id);
+    const n = nodes[id]; if (n.children) n.children = adopt(n.children, RANK[n.type]);
+    return true;
+  });
+  const root = adopt(src.root, 4);
+  const trashed = asList(src.trash).filter(t => t && adopt([t.id], 4).length);
+  const trash = trashed.map(t => ({ id: t.id, parent: seen.has(t.parent) ? t.parent : null, index: asNum(t.index), t: asNum(t.t), title: nodes[t.id].title, type: nodes[t.id].type }));
+  for (const id of Object.keys(nodes)) if (!seen.has(id)) delete nodes[id];
+  const history = {};
+  if (src.history && typeof src.history === "object") for (const [k, v] of Object.entries(src.history)) if (DAY_RE.test(k)) history[k] = asNum(v);
+  const g = src.goal && typeof src.goal === "object" ? src.goal : {};
+  const form = Object.hasOwn(FORMS, src.form) ? src.form : "novel";
+  const project = {
+    id: src.id, v: 1, title: asStr(src.title, 500) || "Untitled", subtitle: asStr(src.subtitle, 500), author: asStr(src.author, 500),
+    logline: asStr(src.logline), notes: asStr(src.notes, 200000), form, created: asNum(src.created) || now(), updated: asNum(src.updated) || now(), sample: !!src.sample,
+    goal: { words: g.words === undefined ? FORMS[form].target : Math.max(0, asNum(g.words)), daily: g.daily === undefined ? FORMS[form].daily : Math.max(0, asNum(g.daily)), deadline: DAY_RE.test(g.deadline) ? g.deadline : "" },
+    nodes, root, threads, history, trash,
+    sprints: asList(src.sprints).filter(s => s && typeof s === "object").slice(-200).map(s => ({ t: asNum(s.t), min: Math.max(1, asNum(s.min)), words: asNum(s.words) })),
+    sel: seen.has(src.sel) ? src.sel : null, mode: ["write", "board", "outline", "threads", "codex", "progress"].includes(src.mode) ? src.mode : "write",
+  };
+  const cats = new Set(CODEX_CATS.map(c => c[0]));
+  const codex = { entries: asList(it.codex && it.codex.entries).filter(e => e && okId(e.id)).map(e => ({
+    id: e.id, cat: cats.has(e.cat) ? e.cat : "note", name: asStr(e.name, 500), aliases: asStr(e.aliases, 2000), summary: asStr(e.summary, 2000),
+    fields: asList(e.fields).filter(Array.isArray).map(f => [asStr(f[0], 500), asStr(f[1], 5000)]), body: asStr(e.body, 200000),
+  })) };
+  const isScene = id => Object.hasOwn(nodes, id) && nodes[id].type === "scene";
+  const texts = {}, snaps = {};
+  if (it.texts && typeof it.texts === "object") for (const [id, html] of Object.entries(it.texts)) if (isScene(id) && typeof html === "string") texts[id] = sanitizeProse(html);
+  if (it.snaps && typeof it.snaps === "object") for (const [id, list] of Object.entries(it.snaps)) {
+    if (!isScene(id)) continue;
+    const clean = asList(list).filter(s => s && typeof s === "object").slice(0, 30).map(s => ({ t: asNum(s.t), html: sanitizeProse(asStr(s.html, 5000000)), words: Math.max(0, asNum(s.words)), label: asStr(s.label, 100) }));
+    if (clean.length) snaps[id] = clean;
+  }
+  return { project, codex, texts, snaps };
+}
+
 /* ── editor: the manuscript page ───────────────────────────────────────────
    One contenteditable per scene. Selecting a chapter or part stacks its scenes
    into one continuous page; each scene still saves to its own record. */
@@ -1664,14 +1817,25 @@ const Editor = (() => {
     UI.updateCounts();
   }, 300);
 
-  function charBefore() {
+  /* The text of the current paragraph up to the caret. */
+  function textBefore() {
     const s = getSelection(); if (!s.rangeCount) return "";
     const r = s.getRangeAt(0); if (!r.collapsed) return "";
     const el = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement;
     const scope = el.closest("p") || el.closest(".prose"); if (!scope) return "";
     const pre = document.createRange(); pre.selectNodeContents(scope);
     try { pre.setEnd(r.startContainer, r.startOffset); } catch { return ""; }
-    return pre.toString().slice(-1);
+    return pre.toString();
+  }
+  const charBefore = () => textBefore().slice(-1);
+  /* Which way a typed quote should face. After a dash it depends on whether speech is already open in
+     this paragraph: “Wait—” closes, but: he said—“Stop” opens. */
+  function quoteOpens(d, before) {
+    const prev = before.slice(-1);
+    if (!prev) return true;
+    if (!/[—–]/.test(prev)) return /[\s(\[{“‘]/.test(prev);
+    const count = re => (before.match(re) || []).length;
+    return d === '"' ? count(/“/g) <= count(/”/g) : count(/‘/g) <= count(/’(?!\p{L})/gu); // ’ inside a word is an apostrophe
   }
   function onBeforeInput(e) {
     if (!S.meta.settings.smart || e.inputType !== "insertText" || !e.data) return;
@@ -1689,8 +1853,7 @@ const Editor = (() => {
     }
     if (d !== '"' && d !== "'") return;
     e.preventDefault();
-    const prev = charBefore();
-    const open = !prev || /[\s(\[{—–“‘]/.test(prev);
+    const open = quoteOpens(d, textBefore());
     document.execCommand("insertText", false, d === '"' ? (open ? "“" : "”") : (open ? "‘" : "’"));
   }
   function onPaste(e) {
@@ -1779,7 +1942,15 @@ const Editor = (() => {
         <button class="btn gild" type="button" data-cmd="addscene">+ New scene</button></div></div>`;
       paintAstros(stage); return;
     }
-    await Promise.all(ids.map(getText));
+    try { await Promise.all(ids.map(getText)); }
+    catch (e) { // show the failure; an empty page here would invite typing over text that is still in storage
+      console.warn("scene text not loaded", e);
+      stage.innerHTML = `<div class="scroller"><div class="empty"><div class="astro-s" data-astro="small"></div>
+        <h3>This text could not be loaded</h3>
+        <p>${esc((e && e.message) || "Storage did not answer.")} Nothing has been changed. Check your connection and try again.</p>
+        <button class="btn gild" type="button" data-cmd="retry">Try again</button></div></div>`;
+      paintAstros(stage); return;
+    }
     const st = S.meta.settings, multi = ids.length > 1 || node(S.sel).type !== "scene";
     let html = "", lastCh = undefined;
     for (const id of ids) {
@@ -1830,6 +2001,8 @@ const Editor = (() => {
   return {
     render, bind, placeCaret,
     flush() { saveSoon.flush(); saveDirty(); },
+    isDirty: () => dirty.size > 0,
+    discard() { saveSoon.cancel(); dirty.clear(); },
     exec(cmd) {
       const el = document.activeElement && document.activeElement.closest && document.activeElement.closest(".prose");
       if (cmd === "bold" || cmd === "italic") { if (el) document.execCommand(cmd); return; }
@@ -2070,7 +2243,7 @@ const Views = (() => {
         <p>Characters, places, factions, magic and machines, creatures, events and loose notes. Names and aliases you record here are spotted automatically in your scenes and shown in the inspector.</p>
         <button class="btn gild" type="button" data-act="codex-new">+ New entry</button></div></div>`;
     } else {
-      await loadAllTexts();
+      try { await loadAllTexts(); } catch (err) { console.warn("some scene text not loaded", err); }
       const app = appearances(e);
       main = `<div class="codex-entry" data-eid="${e.id}">
         <div style="display:flex;gap:10px;align-items:center"><span class="hud" style="color:var(--gild)">${catGlyph(e.cat)} ${esc(catName(e.cat))}</span><span style="flex:1"></span>
@@ -2313,6 +2486,48 @@ const UI = (() => {
     flushAll(); S.focus = false;
     $("#desk").hidden = true; $("#library").hidden = false; $("#desk").classList.remove("focus-mode");
     renderLibrary(); document.title = "Astrolabe";
+    refreshMeta().then(ok => { if (ok && !$("#library").hidden) renderLibrary(); }); // pick up projects made in other tabs
+  }
+
+  /* ═════ The same archive open elsewhere ═════ */
+  let remoteBusy = false;
+  async function reloadProject(msg) {
+    const pid = P().id, sel = S.sel, mode = S.mode, active = S.active;
+    try { await openProject(pid); }
+    catch (e) {
+      console.warn("project not reloaded", e);
+      S.project = null; showLibrary();
+      toast("This project could not be reloaded. It may have been deleted in another tab or on another device.", { err: true, ms: 8000 });
+      return;
+    }
+    S.mode = mode; if (sel && node(sel)) S.sel = sel; if (active && node(active)) S.active = active;
+    showDesk(); if (msg) toast(msg, { ms: 6000 });
+  }
+  /* Another writer saved this project after this page loaded it. With nothing unsaved here, take the
+     newer copy; otherwise the writer chooses, because one of the two versions has to give way. */
+  async function changedElsewhere(theirs, unsaved) {
+    if (remoteBusy || S.conflict || !P()) return;
+    remoteBusy = true;
+    try {
+      if (!unsaved) { await reloadProject("Brought up to date: this project was changed in another tab or on another device."); return; }
+      S.conflict = true; // holds back project saves until there is an answer
+      const title = P().title;
+      const r = await ask("This project was changed somewhere else", `Another tab or device saved “${esc(title)}” after this page opened it, and this page has changes of its own. <b>Load the latest</b> drops what was changed here since it last saved. <b>Keep this version</b> replaces the other one, including any scenes added or moved there.`, [["Load the latest"], ["Keep this version", "danger"]]);
+      S.conflict = false;
+      if (!P()) return;
+      if (r === 0) { dropLocalChanges(); await reloadProject("Loaded the latest version."); }
+      else if (r === 1) { S.rev = theirs; saveProject(); toast("Kept this version."); }
+      else toast("Nothing was saved over. You will be asked again at the next change.", { ms: 6000 });
+    } finally { remoteBusy = false; }
+  }
+  /* Called when this page comes back into view. */
+  async function checkRemote() {
+    if (remoteBusy || S.conflict || !P()) return;
+    if (!$("#library").hidden) { if (await refreshMeta()) renderLibrary(); return; }
+    if ($("#desk").hidden) return;
+    const p = P(); let theirs;
+    try { theirs = await storedRev(p.id); } catch { return; }
+    if (P() === p && theirs !== S.rev) changedElsewhere(theirs, localChanges());
   }
   function showDesk() {
     const d = $("#desk");
@@ -2327,7 +2542,7 @@ const UI = (() => {
   function setMode(m, force) {
     if (S.mode === "write" && m !== "write") Editor.flush();
     if (!force && m === S.mode) return;
-    S.mode = m; P().mode = m; saveProjectSoon();
+    S.mode = m; saveView();
     $$("#modes [data-mode]").forEach(b => { b.setAttribute("aria-selected", b.dataset.mode === m ? "true" : "false"); b.tabIndex = b.dataset.mode === m ? 0 : -1; });
     renderStage(); renderStatus();
   }
@@ -2341,11 +2556,11 @@ const UI = (() => {
   }
   function select(id, opts = {}) {
     if (S.mode === "write") Editor.flush();
-    S.sel = id; P().sel = id;
+    S.sel = id;
     const n = id && node(id);
     S.active = n && n.type === "scene" ? id : null;
-    if (n) ancestors(id).forEach(a => { if (node(a).collapsed) node(a).collapsed = false; });
-    saveProjectSoon();
+    if (n) ancestors(id).forEach(a => { if (node(a).collapsed) { node(a).collapsed = false; saveProjectSoon(); } });
+    saveView();
     renderBinder();
     if (opts.mode && opts.mode !== S.mode) setMode(opts.mode); else if (S.mode === "write" || S.mode === "board") renderStage();
     renderInspector(); renderStatus();
@@ -2720,7 +2935,7 @@ const UI = (() => {
     Store.put(keyC(p.id), codex || { entries: [] });
     S.project = p; reindex();
     Store.put(keyP(p.id), p);
-    const sum = summaryOf(p); S.meta.projects = S.meta.projects.filter(x => x.id !== p.id); S.meta.projects.push(sum); saveMeta();
+    metaUpsert(summaryOf(p)); saveMeta();
     await openProject(p.id);
     showDesk();
   }
@@ -2737,7 +2952,7 @@ const UI = (() => {
       const b = await backupOf(id, false); const copy = b.project; const oldId = copy.id; copy.id = uid(); copy.title += " (copy)"; copy.created = now(); copy.sample = false;
       for (const [nid, html] of Object.entries(b.texts)) Store.put(keyT(copy.id, nid), html);
       Store.put(keyC(copy.id), b.codex); Store.put(keyP(copy.id), copy);
-      S.meta.projects.push({ ...sum, id: copy.id, title: copy.title, updated: now(), sample: false }); saveMeta(); renderLibrary();
+      metaUpsert({ ...sum, id: copy.id, title: copy.title, updated: now(), sample: false }); saveMeta(); renderLibrary();
       toast("Duplicated “" + esc(sum.title) + "”."); void oldId;
     }
     if (act === "backup") { const b = await backupOf(id, true); saveFile(fileSafe(sum.title) + ".astrolabe.json", JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects: [b] }), "application/json"); }
@@ -2747,10 +2962,11 @@ const UI = (() => {
       if (r !== 2) return;
       const p = await Store.get(keyP(id));
       if (p) Object.values(p.nodes || {}).forEach(n => { if (n.type === "scene") { Store.del(keyT(id, n.id)); Store.del(keyS(id, n.id)); } });
-      Store.del(keyP(id)); Store.del(keyC(id));
-      S.meta.projects = S.meta.projects.filter(x => x.id !== id); saveMeta();
+      Store.del(keyP(id)); Store.del(keyC(id)); Store.del(keyR(id));
+      metaRemove(id); saveMeta();
       if (S.project && S.project.id === id) S.project = null;
       if (lsGet("last") === id) lsSet("last", null);
+      lsSet("view." + id, null);
       renderLibrary(); toast("Deleted “" + esc(sum.title) + "”.");
     }
   }
@@ -2886,7 +3102,9 @@ const UI = (() => {
   }
   async function backupAll() {
     const projects = [];
-    for (const s of S.meta.projects) { try { projects.push(await backupOf(s.id, true)); } catch (e) { console.warn("backup skipped", s.id, e); } }
+    const skipped = [];
+    for (const s of S.meta.projects) { try { projects.push(await backupOf(s.id, true)); } catch (e) { console.warn("backup skipped", s.id, e); skipped.push(s.title); } }
+    if (skipped.length) toast("Not in this backup, because it could not be read: " + skipped.map(esc).join(", ") + ".", { err: true, ms: 10000 });
     const ok = await saveFile("astrolabe-backup-" + dayKey() + ".json", JSON.stringify({ kind: "astrolabe-backup", v: 1, exported: now(), projects }), "application/json");
     if (ok !== false) { S.meta.settings.lastBackup = now(); saveMeta(); if (!$("#library").hidden) renderLibrary(); }
   }
@@ -2898,20 +3116,24 @@ const UI = (() => {
       const items = data && data.kind === "astrolabe-backup" ? data.projects : data && data.project ? [data] : null;
       if (!items || !items.length) { toast("That file is not an Astrolabe backup.", { err: true }); return; }
       let n = 0;
-      for (const it of items) {
-        const p = it.project; if (!p || !p.id || !p.nodes) continue;
+      for (const raw of items) {
+        let it = null; try { it = cleanBackupItem(raw); } catch (e) { console.warn("backup item rejected", e); }
+        if (!it) continue;
+        const p = it.project;
         normalizeProject(p);
         if (S.meta.projects.some(x => x.id === p.id)) {
           const r = await ask("“" + p.title + "” is already in your library", "Replace the copy here with the one in the backup, or keep both?", [["Skip"], ["Replace", "danger"], ["Keep both", "gild"]]);
           if (r <= 0) continue;
           if (r === 2) { p.id = uid(); p.title += " (restored)"; }
         }
-        for (const [nid, html] of Object.entries(it.texts || {})) Store.put(keyT(p.id, nid), html);
-        for (const [nid, s] of Object.entries(it.snaps || {})) Store.put(keyS(p.id, nid), s);
-        Store.put(keyC(p.id), it.codex || { entries: [] });
-        Store.put(keyP(p.id), p);
+        for (const [nid, html] of Object.entries(it.texts)) Store.put(keyT(p.id, nid), html);
+        for (const [nid, s] of Object.entries(it.snaps)) Store.put(keyS(p.id, nid), s);
+        Store.put(keyC(p.id), it.codex);
+        p.rev = uid(); // a tab that has the replaced copy open will notice and reload
+        Store.put(keyP(p.id), p); Store.put(keyR(p.id), { rev: p.rev, t: now() });
+        lsSet("view." + p.id, null);
         const prev = S.project; S.project = p; reindex(); const sum = summaryOf(p); S.project = prev; if (prev) reindex();
-        S.meta.projects = S.meta.projects.filter(x => x.id !== p.id); S.meta.projects.push(sum); n++;
+        metaUpsert(sum); n++;
       }
       saveMeta(); showLibrary(); toast(n ? `Restored ${n} project${n === 1 ? "" : "s"}.` : "Nothing was restored.");
       return;
@@ -3038,7 +3260,8 @@ ${body}<p class="end">END</p></body></html>`;
         const fmt = $('input[name="ex-fmt"]:checked').value;
         const o = { heads: $("#ex-heads").value, sep: $("#ex-sep").value, font: $("#ex-font").value, contact: $("#ex-contact").value };
         lsSet("contact", o.contact);
-        const out = await buildExport(fmt, $("#ex-scope").value || null, o);
+        let out; try { out = await buildExport(fmt, $("#ex-scope").value || null, o); }
+        catch (err) { console.warn("export failed", err); toast("The export could not be built: " + esc((err && err.message) || "storage did not answer") + ".", { err: true, ms: 8000 }); return; }
         m.close();
         const ok = await saveFile(out.name, out.data, out.mime);
         if (ok !== false && fmt === "json") { S.meta.settings.lastBackup = now(); saveMetaSoon(); }
@@ -3193,13 +3416,14 @@ ${body}<p class="end">END</p></body></html>`;
         if (k === "typewriter") return toggleTypewriter();
         if (k === "focus") return toggleFocus();
         if (k === "snapshot") return snapshotActive();
+        if (k === "retry") return renderStage();
         if (k === "addscene") { const n = addNode("scene", S.active || S.sel); renderBinder(); openScene(n.id); return; }
         if (k === "addchapter") { const n = addNode("chapter", S.active || S.sel); renderBinder(); select(n.id, { mode: "write" }); return; }
       }
       const a = e.target.closest("[data-act]"); if (a) { Views.act(a.dataset.act, a); return; }
       const card = e.target.closest(".card[data-id]");
       if (card && S.mode === "board" && S.sel !== card.dataset.id) {
-        S.sel = card.dataset.id; P().sel = S.sel; S.active = S.sel;
+        S.sel = card.dataset.id; S.active = S.sel; saveView();
         $$(".card.sel", stage).forEach(x => x.classList.remove("sel")); card.classList.add("sel");
         renderBinder(); renderInspector(); renderStatus();
       }
@@ -3213,7 +3437,7 @@ ${body}<p class="end">END</p></body></html>`;
     showLibrary, showDesk, setMode, renderStage, select, openScene,
     renderBinder, markBinderActive, updateLabels, updateCounts, renderInspector, renderInspectorSoon, refreshMentions,
     renderStatus, toggleFocus, toggleBinder, toggleInspector, syncPanelButtons, toggleTypewriter, palette, settingsDialog, exportDialog, snapshotActive, stepScene, renameInline, backupAll,
-    renderLibrary, newProjectDialog,
+    renderLibrary, newProjectDialog, changedElsewhere, checkRemote,
     bind() { bindBinder(); bindInspector(); bindLibrary(); bindChrome(); },
   };
 })();
@@ -3270,7 +3494,14 @@ async function boot() {
     el.textContent = s.text; el.title = s.detail || (Store.kind() === "cloud" ? "Saved to your private archive" : Store.kind() === "local" ? "Saved in this browser" : "Not kept after this page closes");
   });
   const kind = await Store.init(msg => { $("#bootMsg").textContent = msg; });
-  try { await loadMeta(); } catch (e) { console.warn("meta load failed", e); }
+  // The library must be read before anything can be saved: starting from an empty list after a failed
+  // read would let the next save replace the real one.
+  let failed = null;
+  for (let i = 0; i < 3; i++) {
+    try { await loadMeta(); failed = null; break; }
+    catch (e) { failed = e; console.warn("library read failed", e); await new Promise(r => setTimeout(r, 700 * (i + 1))); }
+  }
+  if (failed) throw new Error("your library could not be read (" + ((failed && failed.message) || "storage did not answer") + "). Nothing has been changed.");
   applySettings();
   UI.bind(); Editor.bind($("#stage")); Views.bind($("#stage")); bindKeys();
   $("#boot").hidden = true; $("#app").hidden = false;
@@ -3283,15 +3514,21 @@ async function boot() {
 }
 
 window.addEventListener("beforeunload", e => {
-  if (P()) flushAll();
+  if (P()) flushAll(true);
   if (Store.busy() || (Store.kind() === "memory" && S.meta.projects.length)) { e.preventDefault(); e.returnValue = ""; }
 });
-document.addEventListener("visibilitychange", () => { if (document.hidden && P()) flushAll(); });
+const checkRemoteSoon = debounce(() => UI.checkRemote(), 200);
+document.addEventListener("visibilitychange", () => { if (document.hidden) { if (P()) flushAll(true); } else checkRemoteSoon(); });
+window.addEventListener("focus", checkRemoteSoon);
 setInterval(() => { if (P() && !document.hidden) UI.renderStatus(); }, 60000);
 
 boot().catch(e => {
   console.error(e);
   $("#bootMsg").textContent = "Astrolabe could not start: " + (e && e.message ? e.message : e);
+  if (!$("#bootRetry")) {
+    const b = document.createElement("button"); b.id = "bootRetry"; b.type = "button"; b.className = "btn"; b.textContent = "Try again";
+    b.onclick = () => location.reload(); $("#boot").appendChild(b);
+  }
 });
 
 })();
