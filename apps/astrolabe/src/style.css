@@ -747,8 +747,7 @@ kbd { font-family: var(--f-hud); font-size: 11px; padding: 1px 6px; border: 1px 
 .tome.new:hover .plus { transform: rotate(90deg) scale(1.1); }
 .ring .fg { filter: drop-shadow(0 0 3px var(--gild-soft)); }
 
-/* The manuscript: a quiet column so the stars stay out of the lines, and a rule under each chapter head */
-.manuscript { min-height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--page) 86%, transparent) 9%, color-mix(in srgb, var(--page) 86%, transparent) 91%, transparent); }
+/* The manuscript: a rule under each chapter head */
 .ms-chapter h2 { font-size: 28px; }
 .ms-chapter .orn { display: none; }
 .ms-chapter::after {
