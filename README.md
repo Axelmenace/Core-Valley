@@ -2,6 +2,8 @@
 
 Home of the **Operative Mode Framework**: a coordination protocol for collaborative fiction (roleplay, simulation, co-authorship) in which the User fixes what they care about, the AI Operator elects the rest, and everything stays auditable over long Play.
 
+Also home of **Axel's Worldbuilding Framework** (Revision 05, Structuralist Edition), the `worldbuilding-analysis` skill: it analyzes, verifies and develops fictional settings as structures, System first, with a mechanical Conceit Graph checker.
+
 ## Layout
 
 ```
@@ -13,6 +15,13 @@ skills/
                              Activation Instruction, Standing Preferences, Play Menu (.md + .json),
                              Magic Specification sheet, examples/ (Arania: four linked magic systems)
     scripts/                 draw.py (Tool Draw / Oracle), menu_draw.py (Play Menu rolls), seal.py (Hash Seals)
+  worldbuilding-analysis/    Axel's Worldbuilding Framework, Revision 05 (Structuralist Edition)
+    SKILL.md                 Entry point: the Structuralist standpoint, Modal Test, tiers, modes of work
+    references/01–10         Ontology, pipeline, Conceit Graph, Structural Profile, analysis and
+                             verification protocols, generative mode, transmission, glossary, Rev 05 notes
+    assets/                  Conceit Graph template, analysis report, registers, reconciliation ledger,
+                             completion certificate, examples/ (The Salt Marches: graph + report)
+    scripts/                 conceit_graph.py (check, strike, order, seal, dot)
 archive/
   operative-mode-framework-draft-0.3.md   Deployable Working Draft 0.3, kept for reference and migration
 site/
@@ -54,6 +63,18 @@ The Mode is kept in the browser's local storage. Export the Record to keep it an
 python tools/build-site.py
 ```
 
+## Worldbuilding Analysis
+
+`skills/worldbuilding-analysis/` tiers a setting's Conceits by the Modal Test, Field and Domain; builds and checks a Conceit Graph; runs the Structural Profile (wholeness, closure, economy, grounding, self-regulation, consistency); separates authorial fact from in-world Lens belief; types conflicts L/S/P/Q, reconciles them and certifies to C0–C4; audits transmission for narrative or codex media; and generates setting structure. It triggers on worldbuilding, lore, setting analysis and world consistency, even when the framework is not named.
+
+The checker needs only Python 3:
+
+```
+python skills/worldbuilding-analysis/scripts/conceit_graph.py check skills/worldbuilding-analysis/assets/examples/salt-marches.json
+```
+
+Its other subcommands are `strike` (what loses its license if a Conceit is struck), `order` (definitional order for a codex), `seal` (SHA-256 seal of the canonical graph) and `dot` (Graphviz source).
+
 ## Installing
 
 **Claude Code, as a plugin**
@@ -70,7 +91,9 @@ cp -r skills/operative-mode ~/.claude/skills/        # all projects
 cp -r skills/operative-mode .claude/skills/          # this project only
 ```
 
-**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` under Settings → Capabilities → Skills.
+The same works for `skills/worldbuilding-analysis`.
+
+**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` and/or `dist/worldbuilding-analysis.zip` under Settings → Capabilities → Skills.
 
 The scripts need only Python 3 and the standard library. They are optional: without code execution the skill falls back to User Rolls and lower Commitment Levels.
 
