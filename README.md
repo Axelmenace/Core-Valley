@@ -1,6 +1,9 @@
 # Core-Valley
 
-Home of the **Operative Mode Framework**: a coordination protocol for collaborative fiction (roleplay, simulation, co-authorship) in which the User fixes what they care about, the AI Operator elects the rest, and everything stays auditable over long Play.
+Home of:
+
+- the **Operative Mode Framework**: a coordination protocol for collaborative fiction (roleplay, simulation, co-authorship) in which the User fixes what they care about, the AI Operator elects the rest, and everything stays auditable over long Play;
+- **Axel's Worldbuilding Framework, Revision 05 (Structuralist Edition)**, in its own section, [`worldbuilding/`](worldbuilding/): analysis, verification and development of fictional settings as structures, System first, with a Conceit Graph checker.
 
 ## Layout
 
@@ -15,6 +18,10 @@ skills/
     scripts/                 draw.py (Tool Draw / Oracle), menu_draw.py (Play Menu rolls), seal.py (Hash Seals)
 archive/
   operative-mode-framework-draft-0.3.md   Deployable Working Draft 0.3, kept for reference and migration
+  worldbuilding-framework-revision-04.md  Worldbuilding Framework Revision 04, the skill Revision 05 replaces
+worldbuilding/               Axel's Worldbuilding Framework, its own plugin ("worldbuilding")
+  skills/worldbuilding-analysis/   Revision 05, the current skill, with conceit_graph.py
+  projects/arania/           Revision 05 Audit of Arania (Project 49) and its Conceit Graph
 site/
   index.html                 The Operative Mode website: one self-contained file (built; do not edit by hand)
   src/                       Its source: page.html, style.css, data.js, app/*.js
@@ -22,15 +29,33 @@ apps/
   astrolabe/                 Astrolabe, a writing app for short stories, novellas, novels and serials
     index.html               One self-contained file (built; do not edit by hand)
     src/                     Its source: shell.html, style.css, js/*.js
+mods/
+  astrolabe-theme/           A Claude Code theme mod: Astrolabe's palette, backdrop and sound for the Claude apps
 .claude-plugin/              Plugin + marketplace manifests, so the repo installs as a Claude Code plugin
 tools/package-skills.sh      Builds dist/<skill>.zip for upload to claude.ai
 tools/build-site.py          Builds site/index.html from site/src and the skill's Play Menu
 tools/build-astrolabe.py     Builds apps/astrolabe/index.html from apps/astrolabe/src
 ```
 
+## Worldbuilding
+
+[`worldbuilding/`](worldbuilding/) is the dedicated home of Axel's Worldbuilding Framework, Revision 05 (Structuralist Edition), and installs as its own plugin, apart from Operative Mode. It analyzes, verifies and develops any fictional setting as a structure: Conceits tiered by the Modal Test, a Conceit Graph with a mechanical checker, the Structural Profile, Lens and Stance, conflict typing, reconciliation and certification to C0–C4. The section also holds the Revision 05 Audit of Arania. See [`worldbuilding/README.md`](worldbuilding/README.md).
+
+```
+/plugin install worldbuilding --marketplace axelmenace/core-valley
+```
+
 ## Astrolabe
 
 `apps/astrolabe/index.html` is a drafting and planning app for long-form fiction, styled after an astrolabe and a star chart. It has a binder of parts, chapters and scenes (arcs and episodes for serials), a manuscript page with focus and typewriter modes, a corkboard, an outline, a plot-thread matrix, a codex for characters, places, lore and tech, progress charts with goals, deadlines, sprints and serial release dates, snapshots, and export to Markdown, text and standard manuscript format. Open it from disk or any static host. See [`apps/astrolabe/README.md`](apps/astrolabe/README.md).
+
+## Astrolabe theme for Claude
+
+`mods/astrolabe-theme/` dresses the Claude desktop and mobile apps in Astrolabe's colours: brass and instrument teal on a night sky in dark mode, brass inked on vellum in light mode. Behind the conversation sits a star chart with a brass astrolabe in the top-right corner, its rete turning once every twelve minutes. Headings are engraved in serif, your messages sit in a brass-rimmed bubble, and an optional observatory soundscape plays once you press the speaker in the title bar. `/astrolabe still`, `/astrolabe plain` and `/astrolabe off` tone it down or put the app's own look back. See [`mods/astrolabe-theme/README.md`](mods/astrolabe-theme/README.md).
+
+```
+/plugin install astrolabe-theme --marketplace axelmenace/core-valley
+```
 
 ## The website
 
@@ -70,16 +95,22 @@ cp -r skills/operative-mode ~/.claude/skills/        # all projects
 cp -r skills/operative-mode .claude/skills/          # this project only
 ```
 
-**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` under Settings → Capabilities → Skills.
+**claude.ai / Claude desktop.** Run `./tools/package-skills.sh`, then upload `dist/operative-mode.zip` under Settings → Capabilities → Skills. The same run builds `dist/worldbuilding-analysis.zip` from the worldbuilding section.
+
+The Worldbuilding Framework installs on its own; see [`worldbuilding/README.md`](worldbuilding/README.md).
 
 The scripts need only Python 3 and the standard library. They are optional: without code execution the skill falls back to User Rolls and lower Commitment Levels.
 
 ## Version history
 
+**Operative Mode Framework**
+
 | Draft | Where | Notes |
 |---|---|---|
 | 0.3 | `archive/` | Mode Sheet A.1–A.21, eleven proposition statuses, the "Open Encounter" worked example |
 | 0.4 | `skills/operative-mode/` | Baseline + Deltas, Kernel and Touchstone, Pre-Mortem, Proving Scenes, Regression family of drift, Stake/Voice Cards, Commitment Ladder, Play Menu, magic system construction (§25). See `references/12-migration-from-0-3.md` |
+
+**Worldbuilding Framework**: Revision 04 is in `archive/`, Revision 05 in `worldbuilding/skills/worldbuilding-analysis/`. See [`worldbuilding/README.md`](worldbuilding/README.md#version-history).
 
 ## Related
 
