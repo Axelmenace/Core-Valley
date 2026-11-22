@@ -10,6 +10,11 @@
       "description": "Operative Mode Framework (Draft 0.4) as an installable skill."
     },
     {
+      "name": "worldbuilding",
+      "source": "./worldbuilding",
+      "description": "Axel's Worldbuilding Framework, Revision 05 (Structuralist Edition): analyze, verify and develop fictional settings as structures, with a Conceit Graph checker."
+    },
+    {
       "name": "astrolabe-theme",
       "source": "./mods/astrolabe-theme",
       "description": "Astrolabe look for the Claude desktop and mobile apps: brass on a night sky or on vellum, a slowly turning astrolabe backdrop, and an optional observatory soundscape."
